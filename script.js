@@ -459,32 +459,26 @@ function generateRandomName() {
 }
 
 // 生成随机猫咪
-function generateRandomCat(targetRarity = null, targetGender = null) {
-    const cat = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: generateRandomName(),
-        parents: [],
-        children: [],
-        breedingCooldown: 0,
-        isShopCat: false // 标记是否为商店猫咪
-    };
+function generateRandomCat(targetGender = null) {
+    const maxInitialRarity = parseInt(document.getElementById('initialRarity').value) || Infinity;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 100; // 防止无限循环
+    
+    while (attempts < MAX_ATTEMPTS) {
+        const cat = {
+            id: Math.random().toString(36).substr(2, 9),
+            name: generateRandomName(),
+            parents: [],
+            children: [],
+            breedingCooldown: 0,
+            isShopCat: false
+        };
 
-    // 计算每个属性的最低稀有度
-    const minRarities = {};
-    Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-        minRarities[attrName] = Math.min(...attrData.rarity);
-    });
-
-    Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-        let selectedIndex;
-        if (attrName === 'gender' && targetGender) {
-            selectedIndex = attrData.options.indexOf(targetGender);
-        } else {
-            // 如果指定了目标稀有度，选择不超过目标稀有度的选项
-            if (targetRarity !== null) {
-                const validOptions = attrData.options.map((_, i) => i)
-                    .filter(i => attrData.rarity[i] <= targetRarity);
-                selectedIndex = validOptions[Math.floor(Math.random() * validOptions.length)];
+        // 生成属性
+        Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
+            let selectedIndex;
+            if (attrName === 'gender' && targetGender) {
+                selectedIndex = attrData.options.indexOf(targetGender);
             } else {
                 // 根据权重随机选择
                 const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
@@ -494,21 +488,30 @@ function generateRandomCat(targetRarity = null, targetGender = null) {
                     return random <= 0;
                 });
             }
+            
+            if (selectedIndex === -1) selectedIndex = 0;
+            
+            cat[attrName] = {
+                value: attrData.options[selectedIndex],
+                rarity: attrData.rarity[selectedIndex]
+            };
+        });
+
+        // 计算总稀有度
+        cat.totalRarity = Object.values(cat)
+            .filter(value => value && typeof value === 'object' && 'rarity' in value)
+            .reduce((sum, attr) => sum + attr.rarity, 0);
+
+        // 检查是否满足稀有度阈值要求
+        if (cat.totalRarity <= maxInitialRarity) {
+            return cat;
         }
-        
-        if (selectedIndex === -1) selectedIndex = 0;
-        
-        cat[attrName] = {
-            value: attrData.options[selectedIndex],
-            rarity: attrData.rarity[selectedIndex]
-        };
-    });
 
-    // 计算总稀有度
-    cat.totalRarity = Object.values(cat)
-        .filter(value => value && typeof value === 'object' && 'rarity' in value)
-        .reduce((sum, attr) => sum + attr.rarity, 0);
+        attempts++;
+    }
 
+    // 如果多次尝试都无法生成符合条件的猫咪，返回最后一次生成的结果
+    console.warn('无法生成满足稀有度阈值的猫咪，使用最后一次生成的结果');
     return cat;
 }
 
@@ -1026,7 +1029,6 @@ document.getElementById('nextGeneration').addEventListener('click', () => {
 // 修改自动培育函数
 function startBreeding() {
     const generations = parseInt(document.getElementById('generationCount').value) || 1;
-    const initialRarity = parseInt(document.getElementById('initialRarity').value) || null;
     const breedingStrategy = document.getElementById('breedingStrategy').value;
     const results = document.getElementById('breedingResults');
     results.innerHTML = '';
@@ -1038,8 +1040,8 @@ function startBreeding() {
     
     // 生成初始猫咪（一公一母）
     let cats = [
-        generateRandomCat(initialRarity, '公'),
-        generateRandomCat(initialRarity, '母')
+        generateRandomCat('公'),
+        generateRandomCat('母')
     ];
     
     // 存储所有生成的猫咪
@@ -1144,8 +1146,8 @@ function initializeManualBreeding() {
     
     // 生成初始猫咪（一公一母）
     const initialCats = [
-        generateRandomCat(null, '公'),
-        generateRandomCat(null, '母')
+        generateRandomCat('公'),
+        generateRandomCat('母')
     ];
     
     initialCats.forEach(cat => {
