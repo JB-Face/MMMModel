@@ -1,0 +1,43 @@
+{
+    "attributes": {
+        "color": {
+            "options": ["黑色", "白色", "橘色", "灰色", "奶牛色"],
+            "weights": [20, 20, 20, 20, 20],
+            "rarity": [1, 1, 1, 1, 2],
+            "geneStrength": [80, 80, 80, 80, 60]
+        },
+        "pattern": {
+            "options": ["纯色", "虎斑", "奶牛纹", "玳瑁", "点状"],
+            "weights": [30, 20, 20, 15, 15],
+            "rarity": [1, 2, 2, 3, 3],
+            "geneStrength": [90, 75, 75, 60, 60]
+        },
+        "eyes": {
+            "options": ["黄色", "蓝色", "绿色", "异色瞳"],
+            "weights": [30, 30, 30, 10],
+            "rarity": [1, 1, 1, 5],
+            "geneStrength": [85, 85, 85, 40]
+        },
+        "tailLength": {
+            "options": ["短尾", "中等", "长尾", "无尾"],
+            "weights": [20, 40, 30, 10],
+            "rarity": [2, 1, 1, 4],
+            "geneStrength": [70, 90, 80, 50]
+        },
+        "personality": {
+            "options": ["温顺", "活泼", "高冷", "傲娇", "腹黑"],
+            "weights": [30, 25, 20, 15, 10],
+            "rarity": [1, 1, 2, 3, 4],
+            "geneStrength": [75, 75, 70, 60, 50]
+        },
+        "gender": {
+            "options": ["公", "母"],
+            "weights": [50, 50],
+            "rarity": [1, 1],
+            "geneStrength": [100, 100]
+        }
+    },
+    "breedingCooldown": 24,
+    "defaultMutationRate": 10,
+    "simulationHistory": []
+} 
