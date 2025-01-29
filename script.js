@@ -413,6 +413,8 @@ async function initGame() {
         });
         document.getElementById('exportResults').addEventListener('click', exportResults);
         document.getElementById('clearResults').addEventListener('click', clearResults);
+        document.getElementById('exportAttributes').addEventListener('click', exportAttributes);
+        document.getElementById('importAttributes').addEventListener('click', importAttributes);
 
         // 默认折叠所有面板
         document.querySelectorAll('.panel-content').forEach(panel => {
@@ -603,6 +605,14 @@ function breedCats(cat1, cat2) {
         newCat.breedingCooldown = gameData.breedingCooldown;
         cat1.breedingCooldown = gameData.breedingCooldown;
         cat2.breedingCooldown = gameData.breedingCooldown;
+
+        // 如果是手动培育模式，自动添加到培育池
+        if (document.getElementById('breedingMode').value === 'manual') {
+            breedingPool.set(newCat.id, newCat);
+            currentGenerationCats.set(newCat.id, newCat);
+            updateBreedingPoolDisplay();
+            updateParentSelectors();
+        }
         
         return newCat;
     } catch (error) {
@@ -882,4 +892,245 @@ function startBreeding() {
         finalCats: Array.from(allCats.values())
     });
     saveToLocalStorage();
+}
+
+// 手动培育相关变量
+let currentGeneration = 0;
+let breedingPool = new Map();
+let currentGenerationCats = new Map();
+
+// 切换培育模式
+function toggleBreedingMode() {
+    const mode = document.getElementById('breedingMode').value;
+    const autoControls = document.getElementById('autoBreedingControls');
+    const manualControls = document.getElementById('manualBreedingControls');
+    
+    if (mode === 'manual') {
+        autoControls.style.display = 'none';
+        manualControls.style.display = 'block';
+        initializeManualBreeding();
+    } else {
+        autoControls.style.display = 'block';
+        manualControls.style.display = 'none';
+    }
+}
+
+// 初始化手动培育
+function initializeManualBreeding() {
+    currentGeneration = 0;
+    breedingPool.clear();
+    currentGenerationCats.clear();
+    
+    // 生成初始猫咪（一公一母）
+    const initialCats = [
+        generateRandomCat(null, '公'),
+        generateRandomCat(null, '母')
+    ];
+    
+    initialCats.forEach(cat => {
+        breedingPool.set(cat.id, cat);
+        currentGenerationCats.set(cat.id, cat);
+    });
+    
+    updateBreedingPoolDisplay();
+    updateParentSelectors();
+}
+
+// 更新培育池显示
+function updateBreedingPoolDisplay() {
+    const poolDiv = document.getElementById('breedingPool');
+    poolDiv.innerHTML = '';
+    
+    currentGenerationCats.forEach(cat => {
+        const catCard = document.createElement('div');
+        catCard.className = 'cat-card';
+        catCard.innerHTML = `
+            <div class="cat-header">
+                <h3>稀有度: ${cat.totalRarity}</h3>
+                <span class="cat-gender">${cat.gender.value}</span>
+            </div>
+            <div class="cat-name">${cat.name || '未知'}</div>
+            ${displayCatAttributes(cat)}
+            <p>培育CD: ${cat.breedingCooldown}小时</p>
+            <button onclick="removeCatFromPool('${cat.id}')" class="delete-button">移除</button>
+        `;
+        poolDiv.appendChild(catCard);
+    });
+}
+
+// 更新父母选择器
+function updateParentSelectors() {
+    const parent1Select = document.getElementById('parent1');
+    const parent2Select = document.getElementById('parent2');
+    
+    parent1Select.innerHTML = '<option value="">选择父本</option>';
+    parent2Select.innerHTML = '<option value="">选择母本</option>';
+    
+    currentGenerationCats.forEach(cat => {
+        if (cat.breedingCooldown === 0) {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = `${cat.name} (${cat.gender.value}, 稀有度: ${cat.totalRarity})`;
+            
+            if (cat.gender.value === '公') {
+                parent1Select.appendChild(option);
+            } else {
+                parent2Select.appendChild(option);
+            }
+        }
+    });
+}
+
+// 从培育池移除猫咪
+function removeCatFromPool(catId) {
+    if (confirm('确定要移除这只猫咪吗？')) {
+        currentGenerationCats.delete(catId);
+        updateBreedingPoolDisplay();
+        updateParentSelectors();
+    }
+}
+
+// 添加新猫咪到培育池
+document.getElementById('addCat').addEventListener('click', () => {
+    const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+    
+    if (currentGenerationCats.size >= maxCats) {
+        alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
+        return;
+    }
+    
+    const newCat = generateRandomCat();
+    breedingPool.set(newCat.id, newCat);
+    currentGenerationCats.set(newCat.id, newCat);
+    updateBreedingPoolDisplay();
+    updateParentSelectors();
+});
+
+// 手动配对
+function breedPair() {
+    const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+    
+    if (currentGenerationCats.size >= maxCats) {
+        alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
+        return;
+    }
+    
+    const parent1Id = document.getElementById('parent1').value;
+    const parent2Id = document.getElementById('parent2').value;
+    
+    if (!parent1Id || !parent2Id) {
+        alert('请选择两只猫咪进行配对');
+        return;
+    }
+    
+    const parent1 = currentGenerationCats.get(parent1Id);
+    const parent2 = currentGenerationCats.get(parent2Id);
+    
+    if (!parent1 || !parent2) {
+        alert('选择的猫咪不存在');
+        return;
+    }
+    
+    const mutationRate = parseInt(document.getElementById('mutationRate').value) || gameData.defaultMutationRate;
+    const newCat = breedCats(parent1, parent2);
+    
+    if (newCat) {
+        currentGenerationCats.set(newCat.id, newCat);
+        breedingPool.set(newCat.id, newCat);
+        updateBreedingPoolDisplay();
+        updateParentSelectors();
+    } else {
+        alert('配对失败，请检查猫咪的性别和CD');
+    }
+}
+
+// 进入下一代
+document.getElementById('nextGeneration').addEventListener('click', () => {
+    if (currentGenerationCats.size === 0) {
+        alert('当前代没有猫咪');
+        return;
+    }
+    
+    // 显示当前代结果
+    const results = document.getElementById('breedingResults');
+    const previousGenRarity = currentGeneration === 0 ? null : 
+        Array.from(currentGenerationCats.values()).reduce((sum, cat) => sum + cat.totalRarity, 0) / currentGenerationCats.size;
+    
+    displayBreedingResults(
+        results,
+        Array.from(currentGenerationCats.values()),
+        breedingPool,
+        currentGeneration,
+        previousGenRarity
+    );
+    
+    // 重置CD
+    currentGenerationCats.forEach(cat => {
+        cat.breedingCooldown = 0;
+    });
+    
+    currentGeneration++;
+    updateBreedingPoolDisplay();
+    updateParentSelectors();
+});
+
+// 导出属性设置
+function exportAttributes() {
+    const attributesData = {
+        attributes: gameData.attributes,
+        breedingCooldown: gameData.breedingCooldown,
+        defaultMutationRate: gameData.defaultMutationRate
+    };
+    
+    const blob = new Blob([JSON.stringify(attributesData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cat_attributes_${new Date().toISOString().slice(0,19).replace(/[:-]/g, '')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// 导入属性设置
+function importAttributes() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                // 验证数据结构
+                if (!data.attributes) {
+                    throw new Error('无效的属性数据格式');
+                }
+                
+                // 更新游戏数据
+                gameData.attributes = data.attributes;
+                if (data.breedingCooldown) gameData.breedingCooldown = data.breedingCooldown;
+                if (data.defaultMutationRate) gameData.defaultMutationRate = data.defaultMutationRate;
+                
+                // 重新渲染界面
+                renderAttributeList();
+                renderControls();
+                saveToLocalStorage();
+                
+                alert('属性设置导入成功！');
+            } catch (error) {
+                console.error('导入属性设置失败:', error);
+                alert('导入失败: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
+    input.click();
 }

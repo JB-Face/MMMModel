@@ -36,7 +36,11 @@
                                 </div>
                                 <div id="attributeListPanel" class="panel-content">
                                     <div id="attributeList"></div>
-                                    <button id="addNewAttribute" class="secondary-button">添加新属性</button>
+                                    <div class="attribute-actions">
+                                        <button id="addNewAttribute" class="secondary-button">添加新属性</button>
+                                        <button id="exportAttributes" class="secondary-button">导出属性设置</button>
+                                        <button id="importAttributes" class="secondary-button">导入属性设置</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -112,9 +116,26 @@
                                 </select>
                                 <div class="parameter-tip">选择猫咪配对的策略</div>
                             </div>
+
+                            <div class="parameter-group">
+                                <label for="breedingMode">培育模式</label>
+                                <select id="breedingMode" onchange="toggleBreedingMode()">
+                                    <option value="auto">自动培育</option>
+                                    <option value="manual">手动培育</option>
+                                </select>
+                                <div class="parameter-tip">选择自动或手动培育模式</div>
+                            </div>
+
+                            <div class="parameter-group">
+                                <label for="maxCats">最大猫咪数量</label>
+                                <input type="number" id="maxCats" min="2" value="10">
+                                <div class="parameter-tip">设置手动培育时最大可持有的猫咪数量（至少2只）</div>
+                            </div>
                             
-                            <button id="startBreeding">开始培育</button>
-                            <button id="randomCat">随机生成猫咪</button>
+                            <div id="autoBreedingControls">
+                                <button id="startBreeding">开始培育</button>
+                                <button id="randomCat">随机生成猫咪</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -133,6 +154,29 @@
                         <button id="clearResults" class="secondary-button">清空结果</button>
                     </div>
                     <div id="breedingResults"></div>
+                </div>
+
+                <div id="manualBreedingControls" style="display: none;" class="manual-breeding-section">
+                    <h2>手动培育</h2>
+                    <div class="breeding-pool">
+                        <h4>培育池</h4>
+                        <div id="breedingPool"></div>
+                        <button id="addCat">添加新猫咪</button>
+                    </div>
+                    
+                    <div class="breeding-pair">
+                        <h4>配对选择</h4>
+                        <div class="pair-selection">
+                            <select id="parent1"></select>
+                            <span>×</span>
+                            <select id="parent2"></select>
+                        </div>
+                        <button onclick="breedPair()" id="breedPair">配对</button>
+                    </div>
+                    
+                    <div class="generation-control">
+                        <button id="nextGeneration">进入下一代</button>
+                    </div>
                 </div>
             </div>
         </div>
