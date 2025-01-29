@@ -13,7 +13,7 @@
 
 ## 如何使用
 
-1. 直接访问：[在线演示](https://你的用户名.github.io/MMMModel/)
+1. 直接访问：[在线演示](https://JB-Face.github.io/MMMModel/)
 2. 或者下载到本地运行：
    - 克隆仓库
    - 直接打开 index.html
@@ -22,7 +22,7 @@
 
 1. 克隆仓库：
 ```bash
-git clone https://github.com/你的用户名/MMMModel.git
+git clone https://github.com/JB-Face/MMMModel.git
 ```
 
 2. 直接在浏览器中打开 index.html 即可运行
