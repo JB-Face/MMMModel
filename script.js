@@ -1,37 +1,37 @@
 // 默认游戏数据
 const DEFAULT_GAME_DATA = {
     attributes: {
-        color: {
+        毛色: {
             options: ["黑色", "白色", "橘色", "灰色", "奶牛色"],
             weights: [20, 20, 20, 20, 20],
             rarity: [1, 1, 1, 1, 2],
             geneStrength: [80, 80, 80, 80, 60]
         },
-        pattern: {
+        花纹: {
             options: ["纯色", "虎斑", "奶牛纹", "玳瑁", "点状"],
             weights: [30, 20, 20, 15, 15],
             rarity: [1, 2, 2, 3, 3],
             geneStrength: [90, 75, 75, 60, 60]
         },
-        eyes: {
+        眼睛: {
             options: ["黄色", "蓝色", "绿色", "异色瞳"],
             weights: [30, 30, 30, 10],
             rarity: [1, 1, 1, 5],
             geneStrength: [85, 85, 85, 40]
         },
-        tailLength: {
+        尾巴: {
             options: ["短尾", "中等", "长尾", "无尾"],
             weights: [20, 40, 30, 10],
             rarity: [2, 1, 1, 4],
             geneStrength: [70, 90, 80, 50]
         },
-        personality: {
+        性格: {
             options: ["温顺", "活泼", "高冷", "傲娇", "腹黑"],
             weights: [30, 25, 20, 15, 10],
             rarity: [1, 1, 2, 3, 4],
             geneStrength: [75, 75, 70, 60, 50]
         },
-        gender: {
+        性别: {
             options: ["公", "母"],
             weights: [50, 50],
             rarity: [1, 1],
@@ -174,7 +174,7 @@ function saveAttributeEdit(oldAttrName) {
 
 // 删除属性
 function deleteAttribute(attrName) {
-    if (attrName === 'gender') {
+    if (attrName === '性别') {
         alert('性别属性不能删除');
         return;
     }
@@ -460,9 +460,32 @@ function generateRandomName() {
 
 // 生成随机猫咪
 function generateRandomCat(targetGender = null) {
-    const maxInitialRarity = parseInt(document.getElementById('initialRarity').value) || Infinity;
+    const minRarity = parseInt(document.getElementById('initialRarityMin').value) || 1;
+    const maxRarity = parseInt(document.getElementById('initialRarityMax').value) || 10;
+    
+    // 检查阈值设置是否合理
+    const minPossibleRarity = Object.values(gameData.attributes)
+        .reduce((sum, attr) => sum + Math.min(...attr.rarity), 0);
+    const maxPossibleRarity = Object.values(gameData.attributes)
+        .reduce((sum, attr) => sum + Math.max(...attr.rarity), 0);
+    
+    if (minRarity > maxRarity) {
+        alert('稀有度下限不能大于上限！已自动调整为合理范围。');
+        document.getElementById('initialRarityMin').value = minPossibleRarity;
+        document.getElementById('initialRarityMax').value = maxPossibleRarity;
+        return generateRandomCat(targetGender);
+    }
+    
+    if (minRarity < minPossibleRarity || maxRarity > maxPossibleRarity) {
+        alert(`当前属性设置下，可能的稀有度范围为 ${minPossibleRarity} - ${maxPossibleRarity}。\n已自动调整为合理范围。`);
+        document.getElementById('initialRarityMin').value = Math.max(minRarity, minPossibleRarity);
+        document.getElementById('initialRarityMax').value = Math.min(maxRarity, maxPossibleRarity);
+        return generateRandomCat(targetGender);
+    }
+    
     let attempts = 0;
     const MAX_ATTEMPTS = 100; // 防止无限循环
+    let lastCat = null;
     
     while (attempts < MAX_ATTEMPTS) {
         const cat = {
@@ -477,7 +500,7 @@ function generateRandomCat(targetGender = null) {
         // 生成属性
         Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
             let selectedIndex;
-            if (attrName === 'gender' && targetGender) {
+            if (attrName === '性别' && targetGender) {
                 selectedIndex = attrData.options.indexOf(targetGender);
             } else {
                 // 根据权重随机选择
@@ -502,17 +525,19 @@ function generateRandomCat(targetGender = null) {
             .filter(value => value && typeof value === 'object' && 'rarity' in value)
             .reduce((sum, attr) => sum + attr.rarity, 0);
 
-        // 检查是否满足稀有度阈值要求
-        if (cat.totalRarity <= maxInitialRarity) {
+        lastCat = cat;
+        
+        // 检查是否满足稀有度范围要求
+        if (cat.totalRarity >= minRarity && cat.totalRarity <= maxRarity) {
             return cat;
         }
 
         attempts++;
     }
 
-    // 如果多次尝试都无法生成符合条件的猫咪，返回最后一次生成的结果
-    console.warn('无法生成满足稀有度阈值的猫咪，使用最后一次生成的结果');
-    return cat;
+    // 如果多次尝试都无法生成符合条件的猫咪
+    alert(`在${MAX_ATTEMPTS}次尝试后仍无法生成满足稀有度范围(${minRarity}-${maxRarity})的猫咪。\n将使用最后一次生成的结果(稀有度: ${lastCat.totalRarity})。`);
+    return lastCat;
 }
 
 // 根据基因强度选择属性
@@ -557,8 +582,8 @@ function selectAttributeBasedOnGeneStrength(parent1Attr, parent2Attr, attrData) 
 function breedCats(cat1, cat2) {
     try {
         // 检查性别和CD
-        if (!cat1 || !cat2 || !cat1.gender || !cat2.gender ||
-            cat1.gender.value === cat2.gender.value || 
+        if (!cat1 || !cat2 || !cat1.性别 || !cat2.性别 ||
+            cat1.性别.value === cat2.性别.value || 
             cat1.breedingCooldown > 0 || cat2.breedingCooldown > 0) {
             return null;
         }
@@ -686,7 +711,7 @@ function displayCurrentCat(cat) {
     catCard.innerHTML = `
         <div class="cat-header">
             <h3>稀有度: ${cat.totalRarity}</h3>
-            <span class="cat-gender">${cat.gender.value}</span>
+            <span class="cat-gender">${cat.性别.value}</span>
         </div>
         <div class="cat-name">${cat.name || '未知'}</div>
         ${displayCatAttributes(cat)}
@@ -852,7 +877,7 @@ function displayBreedingResults(results, cats, allCats, generation = 0, previous
             familyInfo += '<p>父母：' + cat.parents.map(parentId => {
                 const parent = allCats.get(parentId);
                 if (parent) {
-                    return `${parent.name}（${parent.gender.value}）`;
+                    return `${parent.name}（${parent.性别.value}）`;
                 }
                 return '未知';
             }).join('、') + '</p>';
@@ -866,7 +891,7 @@ function displayBreedingResults(results, cats, allCats, generation = 0, previous
         catCard.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
-                <span class="cat-gender">${cat.gender.value}</span>
+                <span class="cat-gender">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
             ${displayCatAttributes(cat)}
@@ -909,7 +934,7 @@ function displayShopCats() {
         catCard.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
-                <span class="cat-gender">${cat.gender.value}</span>
+                <span class="cat-gender">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
             ${displayCatAttributes(cat)}
@@ -1067,7 +1092,7 @@ function startBreeding() {
         for (const cat1 of allCats.values()) {
             for (const cat2 of allCats.values()) {
                 if (cat1.id !== cat2.id && 
-                    cat1.gender.value !== cat2.gender.value && 
+                    cat1.性别.value !== cat2.性别.value && 
                     cat1.breedingCooldown === 0 && 
                     cat2.breedingCooldown === 0) {
                     possiblePairs.push([cat1, cat2]);
@@ -1170,7 +1195,7 @@ function updateBreedingPoolDisplay() {
         catCard.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
-                <span class="cat-gender">${cat.gender.value}</span>
+                <span class="cat-gender">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
             ${displayCatAttributes(cat)}
@@ -1193,9 +1218,9 @@ function updateParentSelectors() {
         if (cat.breedingCooldown === 0) {
             const option = document.createElement('option');
             option.value = cat.id;
-            option.textContent = `${cat.name} (${cat.gender.value}, 稀有度: ${cat.totalRarity})`;
+            option.textContent = `${cat.name} (${cat.性别.value}, 稀有度: ${cat.totalRarity})`;
             
-            if (cat.gender.value === '公') {
+            if (cat.性别.value === '公') {
                 parent1Select.appendChild(option);
             } else {
                 parent2Select.appendChild(option);

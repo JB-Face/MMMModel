@@ -4,7 +4,7 @@
  * @Author: JBFace
  * @Date: 2025-01-29 22:25:13
  * @LastEditors: JBFace
- * @LastEditTime: 2025-01-30 01:39:15
+ * @LastEditTime: 2025-01-30 02:13:03
 -->
 <!DOCTYPE html>
 <html lang="zh">
@@ -101,20 +101,26 @@
                             </div>
                             
                             <div class="parameter-group">
-                                <label for="initialRarity">初始猫咪目标稀有度</label>
-                                <input type="number" id="initialRarity" min="1" placeholder="可选">
-                                <div class="parameter-tip">设置初始猫咪的目标稀有度总和，留空则随机生成</div>
+                                <label for="initialRarityMin">初始猫咪稀有度下限</label>
+                                <input type="number" id="initialRarityMin" min="1" value="20">
+                                <div class="parameter-tip">设置初始猫咪的最低稀有度总和</div>
                             </div>
                             
                             <div class="parameter-group">
+                                <label for="initialRarityMax">初始猫咪稀有度上限</label>
+                                <input type="number" id="initialRarityMax" min="1" value="100">
+                                <div class="parameter-tip">设置初始猫咪的最高稀有度总和</div>
+                            </div>
+
+                            <div class="parameter-group">
                                 <label for="generationCount">繁殖代数</label>
-                                <input type="number" id="generationCount" value="1" min="1" required>
+                                <input type="number" id="generationCount" value="10" min="1" required>
                                 <div class="parameter-tip">设置要模拟的繁殖代数，至少1代</div>
                             </div>
 
                             <div class="parameter-group">
                                 <label for="rarityThreshold">稀有度统计阈值</label>
-                                <input type="number" id="rarityThreshold" min="1" value="10">
+                                <input type="number" id="rarityThreshold" min="1" value="50">
                                 <div class="parameter-tip">统计超过此稀有度的猫咪数量</div>
                             </div>
 

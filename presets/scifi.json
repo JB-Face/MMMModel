@@ -73,10 +73,10 @@
     "breedingCooldown": 24,
     "defaultMutationRate": 15,
     "names": [
-        "Alpha", "Beta", "Gamma", "Delta", "Omega",
-        "Neo", "Matrix", "Cyber", "Quantum", "Vector",
-        "Binary", "Data", "Core", "Pixel", "Grid",
-        "Nova", "Nexus", "Zero", "Prime", "Void"
+        "阿尔法", "贝塔", "伽马", "德尔塔", "欧米伽",
+        "量子", "矩阵", "赛博", "数据", "向量",
+        "二进制", "核心", "像素", "网格", "新星",
+        "零点", "质数", "虚空", "奇点", "超维"
     ],
     "titles": [
         "机械师", "黑客", "探索者", "数据师", "量子师",
