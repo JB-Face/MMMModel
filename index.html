@@ -4,7 +4,7 @@
  * @Author: JBFace
  * @Date: 2025-01-29 22:25:13
  * @LastEditors: JBFace
- * @LastEditTime: 2025-01-29 23:07:09
+ * @LastEditTime: 2025-01-30 01:39:15
 -->
 <!DOCTYPE html>
 <html lang="zh">
@@ -16,7 +16,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>猫咪培育模拟器</h1>
+        <h1>猫咪培育模拟器0.2</h1>
         
         <div class="main-content">
             <div class="control-panel">
@@ -35,6 +35,16 @@
                                     <span class="toggle-icon">▼</span>
                                 </div>
                                 <div id="attributeListPanel" class="panel-content">
+                                    <div class="parameter-group">
+                                        <label for="presetSelect">预设配置</label>
+                                        <select id="presetSelect">
+                                            <option value="">选择预设...</option>
+                                            <option value="玄幻">玄幻风格</option>
+                                            <option value="现实">现实风格</option>
+                                            <option value="科幻">科幻风格</option>
+                                        </select>
+                                        <div class="parameter-tip">选择预设配置将覆盖当前的属性设置</div>
+                                    </div>
                                     <div id="attributeList"></div>
                                     <div class="attribute-actions">
                                         <button id="addNewAttribute" class="secondary-button">添加新属性</button>
@@ -121,9 +131,11 @@
                                 <label for="breedingMode">培育模式</label>
                                 <select id="breedingMode" onchange="toggleBreedingMode()">
                                     <option value="auto">自动培育</option>
+                                    <option value="auto_shop">自动培育+商店</option>
                                     <option value="manual">手动培育</option>
+                                    <option value="manual_shop">手动培育+商店</option>
                                 </select>
-                                <div class="parameter-tip">选择自动或手动培育模式</div>
+                                <div class="parameter-tip">选择培育模式</div>
                             </div>
 
                             <div class="parameter-group">
@@ -158,10 +170,13 @@
 
                 <div id="manualBreedingControls" style="display: none;" class="manual-breeding-section">
                     <h2>手动培育</h2>
+                    <div id="shopCats" class="shop-section">
+                        <!-- 商店猫咪将在这里显示 -->
+                    </div>
                     <div class="breeding-pool">
                         <h4>培育池</h4>
                         <div id="breedingPool"></div>
-                        <button id="addCat">添加新猫咪</button>
+                        <button id="addCat">添加随机猫咪</button>
                     </div>
                     
                     <div class="breeding-pair">
