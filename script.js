@@ -256,10 +256,12 @@ function closeAttributeDialog() {
 // 切换面板显示状态
 function togglePanel(panelId) {
     const panel = document.getElementById(panelId);
-    const header = panel.previousElementSibling;
+    if (!panel) return;
+    
+    const header = panel.closest('.collapsible-section').querySelector('.section-header');
     const icon = header.querySelector('.toggle-icon');
     
-    if (!panel || !header || !icon) return;
+    if (!header || !icon) return;
     
     panel.classList.toggle('collapsed');
     icon.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
@@ -410,28 +412,101 @@ async function initGame() {
         renderControls();
 
         // 添加事件监听
-        document.getElementById('addNewAttribute').addEventListener('click', addNewAttribute);
-        document.getElementById('startBreeding').addEventListener('click', startBreeding);
-        document.getElementById('randomCat').addEventListener('click', () => {
-            const cat = generateRandomCat();
-            displayCurrentCat(cat);
-        });
-        document.getElementById('exportResults').addEventListener('click', exportResults);
-        document.getElementById('clearResults').addEventListener('click', clearResults);
-        document.getElementById('exportAttributes').addEventListener('click', exportAttributes);
-        document.getElementById('importAttributes').addEventListener('click', importAttributes);
+        const elements = {
+            addNewAttribute: document.getElementById('addNewAttribute'),
+            startBreeding: document.getElementById('startBreeding'),
+            randomCat: document.getElementById('randomCat'),
+            exportResults: document.getElementById('exportResults'),
+            clearResults: document.getElementById('clearResults'),
+            exportAttributes: document.getElementById('exportAttributes'),
+            importAttributes: document.getElementById('importAttributes'),
+            presetSelect: document.getElementById('presetSelect'),
+            breedingMode: document.getElementById('breedingMode')
+        };
+
+        // 检查并添加事件监听器
+        if (elements.addNewAttribute) {
+            elements.addNewAttribute.addEventListener('click', addNewAttribute);
+        }
+        if (elements.startBreeding) {
+            elements.startBreeding.addEventListener('click', startBreeding);
+        }
+        if (elements.randomCat) {
+            elements.randomCat.addEventListener('click', () => {
+                const cat = generateRandomCat();
+                displayCurrentCat(cat);
+            });
+        }
+        if (elements.exportResults) {
+            elements.exportResults.addEventListener('click', exportResults);
+        }
+        if (elements.clearResults) {
+            elements.clearResults.addEventListener('click', clearResults);
+        }
+        if (elements.exportAttributes) {
+            elements.exportAttributes.addEventListener('click', exportAttributes);
+        }
+        if (elements.importAttributes) {
+            elements.importAttributes.addEventListener('click', importAttributes);
+        }
         
         // 添加预设选择事件监听
-        document.getElementById('presetSelect').addEventListener('change', (e) => {
-            if (e.target.value && confirm(`确定要加载 ${e.target.value} 预设吗？这将覆盖当前的属性设置。`)) {
-                loadPreset(e.target.value);
+        if (elements.presetSelect) {
+            elements.presetSelect.addEventListener('change', (e) => {
+                if (e.target.value && confirm(`确定要加载 ${e.target.value} 预设吗？这将覆盖当前的属性设置。`)) {
+                    loadPreset(e.target.value);
+                }
+            });
+        }
+
+        // 添加培育模式切换事件监听
+        if (elements.breedingMode) {
+            elements.breedingMode.addEventListener('change', toggleBreedingMode);
+        }
+
+        // 初始化面板状态
+        document.querySelectorAll('.section-header').forEach(header => {
+            const panel = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            if (panel && icon) {
+                panel.classList.add('collapsed');
+                icon.textContent = '▼';
             }
         });
-
-        // 默认折叠所有面板
-        document.querySelectorAll('.panel-content').forEach(panel => {
-            panel.classList.add('collapsed');
-        });
+        
+        // 添加进入下一代按钮的事件监听
+        const nextGenButton = document.getElementById('nextGeneration');
+        if (nextGenButton) {
+            nextGenButton.addEventListener('click', () => {
+                if (currentGenerationCats.size === 0) {
+                    alert('当前代没有猫咪');
+                    return;
+                }
+                
+                // 显示当前代结果
+                const results = document.getElementById('breedingResults');
+                const previousGenRarity = currentGeneration === 0 ? null : 
+                    Array.from(currentGenerationCats.values()).reduce((sum, cat) => sum + cat.totalRarity, 0) / currentGenerationCats.size;
+                
+                displayBreedingResults(
+                    results,
+                    Array.from(currentGenerationCats.values()),
+                    breedingPool,
+                    currentGeneration,
+                    previousGenRarity
+                );
+                
+                // 重置CD
+                currentGenerationCats.forEach(cat => {
+                    cat.breedingCooldown = 0;
+                });
+                
+                currentGeneration++;
+                generateShopCats(); // 生成新的商店猫咪
+                updateBreedingPoolDisplay();
+                updateParentSelectors();
+            });
+        }
         
     } catch (error) {
         console.error('初始化游戏失败:', error);
@@ -927,19 +1002,66 @@ function displayShopCats() {
     const shopDiv = document.getElementById('shopCats');
     if (!shopDiv) return;
     
-    shopDiv.innerHTML = '<h4>商店猫咪</h4>';
+    shopDiv.innerHTML = '';
     shopCats.forEach((cat, index) => {
         const catCard = document.createElement('div');
         catCard.className = `cat-card ${cat.totalRarity > (parseInt(document.getElementById('rarityThreshold').value) || 10) ? 'high-rarity' : ''}`;
-        catCard.innerHTML = `
+        
+        // 构建基本信息区域
+        const catInfo = document.createElement('div');
+        catInfo.className = 'cat-info';
+        catInfo.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
                 <span class="cat-gender">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
-            ${displayCatAttributes(cat)}
+        `;
+        
+        // 构建属性区域
+        const catAttributes = document.createElement('div');
+        catAttributes.className = 'cat-attributes';
+        
+        // 过滤并显示属性
+        Object.entries(cat)
+            .filter(([key, value]) => {
+                return key !== 'totalRarity' && 
+                       key !== 'breedingCooldown' && 
+                       key !== 'id' && 
+                       key !== 'parents' && 
+                       key !== 'children' && 
+                       key !== 'name' && 
+                       key !== 'mutations' && 
+                       key !== 'inheritanceInfo' &&
+                       value && 
+                       typeof value === 'object' &&
+                       'value' in value;
+            })
+            .forEach(([key, value]) => {
+                const attributeDiv = document.createElement('div');
+                attributeDiv.className = 'cat-attribute';
+                const isMutated = cat.mutations && cat.mutations.has(key);
+                const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
+                attributeDiv.innerHTML = `
+                    <span>${key}: ${value.value}</span>
+                    <span class="${rarityClass}">[${value.rarity}]</span>
+                    ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
+                `;
+                catAttributes.appendChild(attributeDiv);
+            });
+        
+        // 构建操作区域
+        const catActions = document.createElement('div');
+        catActions.className = 'cat-actions';
+        catActions.innerHTML = `
             <button onclick="addShopCatToPool(${index})" class="primary-button">添加到培育池</button>
         `;
+        
+        // 组装卡片
+        catCard.appendChild(catInfo);
+        catCard.appendChild(catAttributes);
+        catCard.appendChild(catActions);
+        
         shopDiv.appendChild(catCard);
     });
 }
@@ -992,170 +1114,50 @@ function toggleBreedingMode() {
     const manualControls = document.getElementById('manualBreedingControls');
     const shopDiv = document.getElementById('shopCats');
     
-    // 重置所有显示
-    autoControls.style.display = 'none';
-    manualControls.style.display = 'none';
-    if (shopDiv) shopDiv.style.display = 'none';
+    // 检查元素是否存在
+    if (autoControls) {
+        autoControls.style.display = 'none';
+    }
+    if (manualControls) {
+        manualControls.style.display = 'none';
+    }
+    if (shopDiv) {
+        shopDiv.style.display = 'none';
+    }
     
     // 根据模式设置显示
     switch (mode) {
         case 'auto':
-            autoControls.style.display = 'block';
+            if (autoControls) {
+                autoControls.style.display = 'block';
+            }
             break;
         case 'auto_shop':
-            autoControls.style.display = 'block';
-            shopDiv.style.display = 'block';
-            generateShopCats();
+            if (autoControls) {
+                autoControls.style.display = 'block';
+            }
+            if (shopDiv) {
+                shopDiv.style.display = 'block';
+                generateShopCats();
+            }
             break;
         case 'manual':
-            manualControls.style.display = 'block';
-            initializeManualBreeding();
+            if (manualControls) {
+                manualControls.style.display = 'block';
+                initializeManualBreeding();
+            }
             break;
         case 'manual_shop':
-            manualControls.style.display = 'block';
-            shopDiv.style.display = 'block';
-            initializeManualBreeding();
-            generateShopCats();
+            if (manualControls) {
+                manualControls.style.display = 'block';
+                initializeManualBreeding();
+            }
+            if (shopDiv) {
+                shopDiv.style.display = 'block';
+                generateShopCats();
+            }
             break;
     }
-}
-
-// 修改进入下一代函数
-document.getElementById('nextGeneration').addEventListener('click', () => {
-    if (currentGenerationCats.size === 0) {
-        alert('当前代没有猫咪');
-        return;
-    }
-    
-    // 显示当前代结果
-    const results = document.getElementById('breedingResults');
-    const previousGenRarity = currentGeneration === 0 ? null : 
-        Array.from(currentGenerationCats.values()).reduce((sum, cat) => sum + cat.totalRarity, 0) / currentGenerationCats.size;
-    
-    displayBreedingResults(
-        results,
-        Array.from(currentGenerationCats.values()),
-        breedingPool,
-        currentGeneration,
-        previousGenRarity
-    );
-    
-    // 重置CD
-    currentGenerationCats.forEach(cat => {
-        cat.breedingCooldown = 0;
-    });
-    
-    currentGeneration++;
-    generateShopCats(); // 生成新的商店猫咪
-    updateBreedingPoolDisplay();
-    updateParentSelectors();
-});
-
-// 修改自动培育函数
-function startBreeding() {
-    const generations = parseInt(document.getElementById('generationCount').value) || 1;
-    const breedingStrategy = document.getElementById('breedingStrategy').value;
-    const results = document.getElementById('breedingResults');
-    results.innerHTML = '';
-    
-    if (generations < 1) {
-        alert('请输入有效的代数（至少为1）');
-        return;
-    }
-    
-    // 生成初始猫咪（一公一母）
-    let cats = [
-        generateRandomCat('公'),
-        generateRandomCat('母')
-    ];
-    
-    // 存储所有生成的猫咪
-    const allCats = new Map();
-    cats.forEach(cat => allCats.set(cat.id, cat));
-    
-    // 显示初始代
-    let previousGenRarity = null;
-    previousGenRarity = displayBreedingResults(results, cats, allCats, 0, null);
-    
-    // 开始繁殖循环
-    for (let i = 0; i < generations; i++) {
-        // 生成商店猫咪
-        generateShopCats();
-        const shopCat = autoSelectShopCat();
-        if (shopCat) {
-            cats.push(shopCat);
-            allCats.set(shopCat.id, shopCat);
-        }
-        
-        // 获取所有可能的配对
-        let possiblePairs = [];
-        for (const cat1 of allCats.values()) {
-            for (const cat2 of allCats.values()) {
-                if (cat1.id !== cat2.id && 
-                    cat1.性别.value !== cat2.性别.value && 
-                    cat1.breedingCooldown === 0 && 
-                    cat2.breedingCooldown === 0) {
-                    possiblePairs.push([cat1, cat2]);
-                }
-            }
-        }
-        
-        // 根据策略排序配对
-        if (breedingStrategy === 'highestRarity') {
-            possiblePairs.sort((a, b) => {
-                const rarityA = a[0].totalRarity + a[1].totalRarity;
-                const rarityB = b[0].totalRarity + b[1].totalRarity;
-                return rarityB - rarityA;
-            });
-        } else {
-            // 随机打乱配对顺序
-            possiblePairs = possiblePairs.sort(() => Math.random() - 0.5);
-        }
-        
-        // 进行配对繁殖
-        const newCats = [];
-        while (possiblePairs.length > 0) {
-            const [cat1, cat2] = possiblePairs.shift();
-            
-            // 移除其他包含这两只猫的配对
-            possiblePairs = possiblePairs.filter(pair => 
-                !pair.includes(cat1) && !pair.includes(cat2)
-            );
-            
-            const newCat = breedCats(cat1, cat2);
-            if (newCat) {
-                newCats.push(newCat);
-                allCats.set(newCat.id, newCat);
-            }
-        }
-        
-        // 更新所有猫的CD
-        for (const cat of allCats.values()) {
-            if (cat.breedingCooldown > 0) {
-                cat.breedingCooldown = Math.max(0, cat.breedingCooldown - 24);
-            }
-        }
-        
-        if (newCats.length === 0) {
-            const endNote = document.createElement('p');
-            endNote.className = 'end-note';
-            endNote.textContent = '由于没有可配对的猫咪，繁殖在此代结束。';
-            results.appendChild(endNote);
-            break;
-        }
-        
-        // 显示新一代
-        previousGenRarity = displayBreedingResults(results, newCats, allCats, i + 1, previousGenRarity);
-        cats = newCats;
-    }
-    
-    // 保存模拟结果
-    gameData.simulationHistory.push({
-        date: new Date().toISOString(),
-        generations: generations,
-        finalCats: Array.from(allCats.values())
-    });
-    saveToLocalStorage();
 }
 
 // 手动培育相关变量
