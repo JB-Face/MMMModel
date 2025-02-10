@@ -71,9 +71,9 @@ function renderAttributeList() {
     attributeList.innerHTML = '';
 
     Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-        const attrDiv = document.createElement('div');
-        attrDiv.className = 'attribute-list-item';
-        attrDiv.innerHTML = `
+                const attrDiv = document.createElement('div');
+                attrDiv.className = 'attribute-list-item';
+                attrDiv.innerHTML = `
             <div class="attribute-header">
                 <span class="attribute-name">${attrName}</span>
                 <div class="attribute-actions">
@@ -999,7 +999,7 @@ function generateShopCats() {
 
 // 显示商店猫咪
 function displayShopCats() {
-    const shopDiv = document.getElementById('shopCats');
+    const shopDiv = document.getElementById('shop-section');
     if (!shopDiv) return;
     
     shopDiv.innerHTML = '';
