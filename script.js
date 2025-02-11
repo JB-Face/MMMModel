@@ -380,7 +380,7 @@ function updateGeneStrength(attrName, index, value) {
 }
 
 // 修改初始化函数
-async function initGame() {
+function initGame() {
     try {
         // 初始化默认数据
         gameData = { ...DEFAULT_GAME_DATA };
@@ -402,125 +402,147 @@ async function initGame() {
                     }
                 });
             }
-            if (parsedData.simulationHistory) {
-                gameData.simulationHistory = parsedData.simulationHistory;
-            }
         }
 
-        // 初始化界面
+        // 渲染界面
         renderAttributeList();
         renderControls();
 
-        // 添加事件监听
-        const elements = {
-            addNewAttribute: document.getElementById('addNewAttribute'),
-            startBreeding: document.getElementById('startBreeding'),
-            randomCat: document.getElementById('randomCat'),
-            exportResults: document.getElementById('exportResults'),
-            clearResults: document.getElementById('clearResults'),
-            exportAttributes: document.getElementById('exportAttributes'),
-            importAttributes: document.getElementById('importAttributes'),
-            presetSelect: document.getElementById('presetSelect'),
-            breedingMode: document.getElementById('breedingMode')
-        };
-
-        // 检查并添加事件监听器
-        if (elements.addNewAttribute) {
-            elements.addNewAttribute.addEventListener('click', addNewAttribute);
-        }
-        if (elements.startBreeding) {
-            elements.startBreeding.addEventListener('click', startBreeding);
-        }
-        if (elements.randomCat) {
-            elements.randomCat.addEventListener('click', () => {
-                const cat = generateRandomCat();
-                displayCurrentCat(cat);
-            });
-        }
-        if (elements.exportResults) {
-            elements.exportResults.addEventListener('click', exportResults);
-        }
-        if (elements.clearResults) {
-            elements.clearResults.addEventListener('click', clearResults);
-        }
-        if (elements.exportAttributes) {
-            elements.exportAttributes.addEventListener('click', exportAttributes);
-        }
-        if (elements.importAttributes) {
-            elements.importAttributes.addEventListener('click', importAttributes);
-        }
-        
-        // 添加预设选择事件监听
-        if (elements.presetSelect) {
-            elements.presetSelect.addEventListener('change', (e) => {
-                if (e.target.value && confirm(`确定要加载 ${e.target.value} 预设吗？这将覆盖当前的属性设置。`)) {
-                    loadPreset(e.target.value);
-                }
-            });
+        // 根据不同模式初始化
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('auto.html')) {
+            // 自动模式初始化
+            const initialCat = generateRandomCat();
+            displayCurrentCat(initialCat);
+            
+            // 启用相关按钮
+            const startBreedingBtn = document.getElementById('startBreeding');
+            const randomCatBtn = document.getElementById('randomCat');
+            if (startBreedingBtn) startBreedingBtn.disabled = false;
+            if (randomCatBtn) randomCatBtn.disabled = false;
+        } else if (currentPath.includes('auto_shop.html')) {
+            // 自动+商店模式初始化
+            const initialCat = generateRandomCat();
+            displayCurrentCat(initialCat);
+            generateShopCats();
+        } else if (currentPath.includes('manual.html')) {
+            // 手动模式初始化
+            initializeManualBreeding();
+        } else if (currentPath.includes('manual_shop.html')) {
+            // 手动+商店模式初始化
+            initializeManualBreeding();
+            generateShopCats();
         }
 
-        // 添加培育模式切换事件监听
-        if (elements.breedingMode) {
-            elements.breedingMode.addEventListener('change', toggleBreedingMode);
-        }
+        // 绑定事件监听器
+        bindEventListeners();
 
-        // 初始化面板状态
-        document.querySelectorAll('.section-header').forEach(header => {
-            const panel = header.nextElementSibling;
-            const icon = header.querySelector('.toggle-icon');
-            if (panel && icon) {
-                panel.classList.add('collapsed');
-                icon.textContent = '▼';
-            }
-        });
-        
-        // 添加进入下一代按钮的事件监听
-        const nextGenButton = document.getElementById('nextGeneration');
-        if (nextGenButton) {
-            nextGenButton.addEventListener('click', () => {
-                if (currentGenerationCats.size === 0) {
-                    alert('当前代没有猫咪');
-                    return;
-                }
-                
-                // 显示当前代结果
-                const results = document.getElementById('breedingResults');
-                const previousGenRarity = currentGeneration === 0 ? null : 
-                    Array.from(currentGenerationCats.values()).reduce((sum, cat) => sum + cat.totalRarity, 0) / currentGenerationCats.size;
-                
-                displayBreedingResults(
-                    results,
-                    Array.from(currentGenerationCats.values()),
-                    breedingPool,
-                    currentGeneration,
-                    previousGenRarity
-                );
-                
-                // 重置CD
-                currentGenerationCats.forEach(cat => {
-                    cat.breedingCooldown = 0;
-                });
-                
-                currentGeneration++;
-                generateShopCats(); // 生成新的商店猫咪
-                updateBreedingPoolDisplay();
-                updateParentSelectors();
-            });
-        }
-        
     } catch (error) {
         console.error('初始化游戏失败:', error);
         alert('初始化游戏失败: ' + error.message);
     }
 }
 
-// 保存数据到localStorage
-function saveToLocalStorage() {
-    try {
-        localStorage.setItem('catBreederData', JSON.stringify(gameData));
-    } catch (error) {
-        console.error('保存数据失败:', error);
+// 添加事件监听器绑定函数
+function bindEventListeners() {
+    // 获取所有需要绑定事件的元素
+    const elements = {
+        addNewAttribute: document.getElementById('addNewAttribute'),
+        startBreeding: document.getElementById('startBreeding'),
+        randomCat: document.getElementById('randomCat'),
+        exportResults: document.getElementById('exportResults'),
+        clearResults: document.getElementById('clearResults'),
+        exportAttributes: document.getElementById('exportAttributes'),
+        importAttributes: document.getElementById('importAttributes'),
+        presetSelect: document.getElementById('presetSelect'),
+        addRandomCat: document.getElementById('addRandomCat'),
+        breedPair: document.getElementById('breedPair'),
+        startSimulation: document.getElementById('startSimulation'),
+        refreshShop: document.getElementById('refreshShop'),
+        nextGeneration: document.getElementById('nextGeneration')
+    };
+
+    // 绑定事件
+    if (elements.addNewAttribute) {
+        elements.addNewAttribute.addEventListener('click', addNewAttribute);
     }
+    if (elements.startBreeding) {
+        elements.startBreeding.addEventListener('click', startBreeding);
+    }
+    if (elements.randomCat) {
+        elements.randomCat.addEventListener('click', () => {
+            const cat = generateRandomCat();
+            displayCurrentCat(cat);
+        });
+    }
+    if (elements.exportResults) {
+        elements.exportResults.addEventListener('click', exportResults);
+    }
+    if (elements.clearResults) {
+        elements.clearResults.addEventListener('click', clearResults);
+    }
+    if (elements.exportAttributes) {
+        elements.exportAttributes.addEventListener('click', exportAttributes);
+    }
+    if (elements.importAttributes) {
+        elements.importAttributes.addEventListener('click', importAttributes);
+    }
+    if (elements.addRandomCat) {
+        elements.addRandomCat.addEventListener('click', () => {
+            const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+            if (currentGenerationCats.size >= maxCats) {
+                alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
+                return;
+            }
+            const newCat = generateRandomCat();
+            breedingPool.set(newCat.id, newCat);
+            currentGenerationCats.set(newCat.id, newCat);
+            updateBreedingPoolDisplay();
+            updateParentSelectors();
+        });
+    }
+    if (elements.breedPair) {
+        elements.breedPair.addEventListener('click', breedPair);
+    }
+    if (elements.startSimulation) {
+        elements.startSimulation.addEventListener('click', () => {
+            const cat = generateRandomCat();
+            displayCurrentCat(cat);
+        });
+    }
+    
+    // 添加预设选择事件监听
+    if (elements.presetSelect) {
+        elements.presetSelect.addEventListener('change', (e) => {
+            if (e.target.value && confirm(`确定要加载 ${e.target.value} 预设吗？这将覆盖当前的属性设置。`)) {
+                loadPreset(e.target.value);
+            }
+        });
+    }
+
+    // 添加刷新商店按钮的事件监听
+    if (elements.refreshShop) {
+        elements.refreshShop.addEventListener('click', refreshShop);
+    }
+
+    // 添加下一代按钮事件监听
+    if (elements.nextGeneration) {
+        elements.nextGeneration.addEventListener('click', () => {
+            proceedToNextGeneration();
+        });
+    }
+
+    // 初始化面板状态
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const panel = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            if (panel && icon) {
+                panel.classList.toggle('collapsed');
+                icon.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
+            }
+        });
+    });
 }
 
 // 当页面加载完成时初始化游戏
@@ -829,64 +851,63 @@ function exportResults() {
     URL.revokeObjectURL(url);
 }
 
-// 显示猫咪属性
+// 修改displayCatAttributes函数，添加默认阈值
 function displayCatAttributes(cat) {
-    const threshold = parseInt(document.getElementById('rarityThreshold').value) || 10;
+    const thresholdElement = document.getElementById('rarityThreshold');
+    const threshold = thresholdElement ? parseInt(thresholdElement.value) || 50 : 50;
     const isHighRarity = cat.totalRarity > threshold;
     
-    return `
-        <div class="cat-card ${isHighRarity ? 'high-rarity' : ''} ${cat.isShopCat ? 'shop-cat' : ''}">
-            ${Object.entries(cat)
-                .filter(([key, value]) => {
-                    return key !== 'totalRarity' && 
-                           key !== 'breedingCooldown' && 
-                           key !== 'id' && 
-                           key !== 'parents' && 
-                           key !== 'children' && 
-                           key !== 'name' && 
-                           key !== 'mutations' && 
-                           key !== 'inheritanceInfo' &&
-                           value && 
-                           typeof value === 'object' &&
-                           'value' in value;
-                })
-                .map(([key, value]) => {
-                    const isMutated = cat.mutations && cat.mutations.has(key);
-                    const inheritanceInfo = cat.inheritanceInfo && cat.inheritanceInfo[key];
-                    const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
-                    
-                    let parentInfo = '';
-                    if (inheritanceInfo || isMutated) {
-                        const parent1 = inheritanceInfo ? inheritanceInfo.parent1 : { value: '未知', strength: 0 };
-                        const parent2 = inheritanceInfo ? inheritanceInfo.parent2 : { value: '未知', strength: 0 };
-                        
-                        // 获取父母属性的稀有度
-                        const parent1Rarity = getAttributeRarity(key, parent1.value);
-                        const parent2Rarity = getAttributeRarity(key, parent2.value);
-                        const parent1RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent1Rarity)))}`;
-                        const parent2RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent2Rarity)))}`;
-                        
-                        parentInfo = `
-                            <div class="parent-info">
-                                父: ${parent1.value} <span class="${parent1RarityClass}">[${parent1Rarity}]</span> (${parent1.strength}), 
-                                母: ${parent2.value} <span class="${parent2RarityClass}">[${parent2Rarity}]</span> (${parent2.strength})
-                            </div>
-                        `;
-                    }
-                    
-                    return `
-                        <div class="cat-attribute ${isMutated ? 'mutated' : ''}">
-                            <div>
-                                <span>${key}: ${value.value}</span>
-                                <span class="${rarityClass}">[${value.rarity}]</span>
-                                ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
-                            </div>
-                            ${parentInfo}
-                        </div>
-                    `;
-                }).join('')}
-        </div>
-    `;
+    let attributesHtml = '';
+    Object.entries(cat)
+        .filter(([key, value]) => {
+            return key !== 'totalRarity' && 
+                   key !== 'breedingCooldown' && 
+                   key !== 'id' && 
+                   key !== 'parents' && 
+                   key !== 'children' && 
+                   key !== 'name' && 
+                   key !== 'mutations' && 
+                   key !== 'inheritanceInfo' &&
+                   value && 
+                   typeof value === 'object' &&
+                   'value' in value;
+        })
+        .forEach(([key, value]) => {
+            const isMutated = cat.mutations && cat.mutations.has(key);
+            const inheritanceInfo = cat.inheritanceInfo && cat.inheritanceInfo[key];
+            const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
+            
+            let parentInfo = '';
+            if (inheritanceInfo || isMutated) {
+                const parent1 = inheritanceInfo ? inheritanceInfo.parent1 : { value: '未知', strength: 0 };
+                const parent2 = inheritanceInfo ? inheritanceInfo.parent2 : { value: '未知', strength: 0 };
+                
+                const parent1Rarity = getAttributeRarity(key, parent1.value);
+                const parent2Rarity = getAttributeRarity(key, parent2.value);
+                const parent1RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent1Rarity)))}`;
+                const parent2RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent2Rarity)))}`;
+                
+                parentInfo = `
+                    <div class="parent-info">
+                        父: ${parent1.value} <span class="${parent1RarityClass}">[${parent1Rarity}]</span> (${parent1.strength}), 
+                        母: ${parent2.value} <span class="${parent2RarityClass}">[${parent2Rarity}]</span> (${parent2.strength})
+                    </div>
+                `;
+            }
+            
+            attributesHtml += `
+                <div class="cat-attribute ${isMutated ? 'mutated' : ''}">
+                    <div>
+                        <span>${key}: ${value.value}</span>
+                        <span class="${rarityClass}">[${value.rarity}]</span>
+                        ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
+                    </div>
+                    ${parentInfo}
+                </div>
+            `;
+        });
+    
+    return attributesHtml;
 }
 
 // 获取属性的稀有度值
@@ -897,90 +918,125 @@ function getAttributeRarity(attrName, value) {
 }
 
 // 显示繁殖结果
-function displayBreedingResults(results, cats, allCats, generation = 0, previousGenRarity = null) {
-    const generationDiv = document.createElement('div');
-    generationDiv.className = 'generation-container';
-    
-    // 添加代数标记
-    const generationMarker = document.createElement('div');
-    generationMarker.className = 'generation-marker';
-    generationMarker.textContent = `第 ${generation} 代`;
-    generationDiv.appendChild(generationMarker);
-    
-    // 计算当前代的平均稀有度
-    const currentGenRarity = cats.reduce((sum, cat) => sum + cat.totalRarity, 0) / cats.length;
-    
-    // 添加代际统计
-    const statsDiv = document.createElement('div');
-    statsDiv.className = 'generation-stats';
-    let rarityChange = '';
-    if (previousGenRarity !== null) {
-        const change = currentGenRarity - previousGenRarity;
-        rarityChange = `
-            <p>较上代变化: <span class="${change >= 0 ? 'rarity-gain' : 'rarity-loss'}">
-                ${change >= 0 ? '+' : ''}${change.toFixed(2)}
-            </span></p>
-        `;
-    }
-    
-    // 计算超过阈值的猫咪数量
-    const threshold = parseInt(document.getElementById('rarityThreshold').value) || 10;
-    const highRarityCats = cats.filter(cat => cat.totalRarity > threshold).length;
-    
-    statsDiv.innerHTML = `
-        <h4>第 ${generation} 代统计</h4>
-        <p>猫咪数量: ${cats.length}</p>
-        <p>平均稀有度: ${currentGenRarity.toFixed(2)}</p>
-        ${rarityChange}
-        <p>高稀有度(>${threshold})猫咪: ${highRarityCats}</p>
-    `;
-    generationDiv.appendChild(statsDiv);
-
-    // 创建猫咪容器
-    const catsContainer = document.createElement('div');
-    catsContainer.className = 'generation-cats';
-    
-    // 显示当前代的所有猫咪
-    cats.forEach(cat => {
-        const catCard = document.createElement('div');
-        catCard.className = 'cat-card';
+function displayBreedingResults(results, cats, allCats, day = 0, previousDayRarity = null) {
+    try {
+        console.log('开始显示繁殖结果，猫咪数量:', cats.length);
         
-        // 构建家族关系信息
-        let familyInfo = '';
-        if (cat.parents.length > 0) {
-            familyInfo = '<div class="family-info"><h4>家族关系：</h4>';
-            familyInfo += '<p>父母：' + cat.parents.map(parentId => {
-                const parent = allCats.get(parentId);
-                if (parent) {
-                    return `${parent.name}（${parent.性别.value}）`;
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'generation-container';
+        
+        // 添加天数标记
+        const dayMarker = document.createElement('div');
+        dayMarker.className = 'generation-marker';
+        dayMarker.textContent = `第 ${day} 天`;
+        dayDiv.appendChild(dayMarker);
+        
+        // 计算当前天的平均稀有度
+        let currentDayRarity = 0;
+        try {
+            currentDayRarity = cats.reduce((sum, cat) => {
+                if (typeof cat.totalRarity !== 'number') {
+                    console.warn('猫咪缺少稀有度数据:', cat);
+                    return sum;
                 }
-                return '未知';
-            }).join('、') + '</p>';
-            
-            if (cat.children.length > 0) {
-                familyInfo += '<p>后代数量：' + cat.children.length + '</p>';
-            }
-            familyInfo += '</div>';
+                return sum + cat.totalRarity;
+            }, 0) / cats.length;
+        } catch (error) {
+            console.error('计算平均稀有度时出错:', error);
+            currentDayRarity = 0;
         }
         
-        catCard.innerHTML = `
-            <div class="cat-header">
-                <h3>稀有度: ${cat.totalRarity}</h3>
-                <span class="cat-gender">${cat.性别.value}</span>
-            </div>
-            <div class="cat-name">${cat.name || '未知'}</div>
-            ${displayCatAttributes(cat)}
-            <p>培育CD: ${cat.breedingCooldown}小时</p>
-            ${familyInfo}
-        `;
+        // 添加统计信息
+        const statsDiv = document.createElement('div');
+        statsDiv.className = 'generation-stats';
+        let rarityChange = '';
+        if (previousDayRarity !== null) {
+            const change = currentDayRarity - previousDayRarity;
+            rarityChange = `
+                <p>较昨天变化: <span class="${change >= 0 ? 'rarity-gain' : 'rarity-loss'}">
+                    ${change >= 0 ? '+' : ''}${change.toFixed(2)}
+                </span></p>
+            `;
+        }
         
-        catsContainer.appendChild(catCard);
-    });
+        // 计算超过阈值的猫咪数量
+        const threshold = parseInt(document.getElementById('rarityThreshold')?.value || 50);
+        const highRarityCats = cats.filter(cat => cat.totalRarity > threshold).length;
+        
+        statsDiv.innerHTML = `
+            <h4>第 ${day} 天统计</h4>
+            <p>猫咪数量: ${cats.length}</p>
+            <p>平均稀有度: ${currentDayRarity.toFixed(2)}</p>
+            ${rarityChange}
+            <p>高稀有度(>${threshold})猫咪: ${highRarityCats}</p>
+        `;
+        dayDiv.appendChild(statsDiv);
 
-    generationDiv.appendChild(catsContainer);
-    results.appendChild(generationDiv);
-    
-    return currentGenRarity;
+        // 创建猫咪容器
+        const catsContainer = document.createElement('div');
+        catsContainer.className = 'generation-cats';
+        
+        // 显示当前天的所有猫咪
+        cats.forEach((cat, index) => {
+            try {
+                if (!cat || typeof cat !== 'object') {
+                    console.warn(`跳过无效的猫咪数据 [${index}]:`, cat);
+                    return;
+                }
+
+                const catCard = document.createElement('div');
+                catCard.className = 'cat-card';
+                
+                // 验证必要的属性
+                if (!cat.性别 || !cat.性别.value) {
+                    console.warn(`猫咪 [${index}] 缺少性别数据:`, cat);
+                    cat.性别 = { value: '未知' };
+                }
+                
+                // 构建家族关系信息
+                let familyInfo = '';
+                if (Array.isArray(cat.parents) && cat.parents.length > 0) {
+                    familyInfo = '<div class="family-info"><h4>家族关系：</h4>';
+                    familyInfo += '<p>父母：' + cat.parents.map(parentId => {
+                        const parent = allCats.get(parentId);
+                        if (parent && parent.性别 && parent.name) {
+                            return `${parent.name}（${parent.性别.value}）`;
+                        }
+                        return '未知';
+                    }).join('、') + '</p>';
+                    
+                    if (Array.isArray(cat.children) && cat.children.length > 0) {
+                        familyInfo += '<p>后代数量：' + cat.children.length + '</p>';
+                    }
+                    familyInfo += '</div>';
+                }
+                
+                catCard.innerHTML = `
+                    <div class="cat-header">
+                        <h3>稀有度: ${cat.totalRarity || 0}</h3>
+                        <span class="cat-gender">${cat.性别.value}</span>
+                    </div>
+                    <div class="cat-name">${cat.name || '未知'}</div>
+                    ${displayCatAttributes(cat)}
+                    <p>培育CD: ${cat.breedingCooldown || 0}小时</p>
+                    ${familyInfo}
+                `;
+                
+                catsContainer.appendChild(catCard);
+            } catch (catError) {
+                console.error(`处理猫咪 [${index}] 时出错:`, catError);
+            }
+        });
+
+        dayDiv.appendChild(catsContainer);
+        results.appendChild(dayDiv);
+        
+        console.log('繁殖结果显示完成');
+        return currentDayRarity;
+    } catch (error) {
+        console.error('显示繁殖结果时出错:', error);
+        throw error;
+    }
 }
 
 // 商店相关变量
@@ -992,6 +1048,7 @@ function generateShopCats() {
     for (let i = 0; i < 4; i++) {
         const cat = generateRandomCat();
         cat.isShopCat = true;
+        cat.price = Math.floor(cat.totalRarity * 10); // 设置价格
         shopCats.push(cat);
     }
     displayShopCats();
@@ -999,68 +1056,25 @@ function generateShopCats() {
 
 // 显示商店猫咪
 function displayShopCats() {
-    const shopDiv = document.getElementById('shop-section');
+    const shopDiv = document.getElementById('shopCats');
     if (!shopDiv) return;
     
     shopDiv.innerHTML = '';
     shopCats.forEach((cat, index) => {
         const catCard = document.createElement('div');
-        catCard.className = `cat-card ${cat.totalRarity > (parseInt(document.getElementById('rarityThreshold').value) || 10) ? 'high-rarity' : ''}`;
+        const threshold = parseInt(document.getElementById('rarityThreshold')?.value || 50);
+        catCard.className = `cat-card ${cat.totalRarity > threshold ? 'high-rarity' : ''}`;
         
-        // 构建基本信息区域
-        const catInfo = document.createElement('div');
-        catInfo.className = 'cat-info';
-        catInfo.innerHTML = `
+        catCard.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
                 <span class="cat-gender">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
+            ${displayCatAttributes(cat)}
+            <p>价格: ${Math.floor(cat.totalRarity * 10)} 金币</p>
+            <button onclick="addShopCatToPool(${index})" class="primary-button">购买</button>
         `;
-        
-        // 构建属性区域
-        const catAttributes = document.createElement('div');
-        catAttributes.className = 'cat-attributes';
-        
-        // 过滤并显示属性
-        Object.entries(cat)
-            .filter(([key, value]) => {
-                return key !== 'totalRarity' && 
-                       key !== 'breedingCooldown' && 
-                       key !== 'id' && 
-                       key !== 'parents' && 
-                       key !== 'children' && 
-                       key !== 'name' && 
-                       key !== 'mutations' && 
-                       key !== 'inheritanceInfo' &&
-                       value && 
-                       typeof value === 'object' &&
-                       'value' in value;
-            })
-            .forEach(([key, value]) => {
-                const attributeDiv = document.createElement('div');
-                attributeDiv.className = 'cat-attribute';
-                const isMutated = cat.mutations && cat.mutations.has(key);
-                const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
-                attributeDiv.innerHTML = `
-                    <span>${key}: ${value.value}</span>
-                    <span class="${rarityClass}">[${value.rarity}]</span>
-                    ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
-                `;
-                catAttributes.appendChild(attributeDiv);
-            });
-        
-        // 构建操作区域
-        const catActions = document.createElement('div');
-        catActions.className = 'cat-actions';
-        catActions.innerHTML = `
-            <button onclick="addShopCatToPool(${index})" class="primary-button">添加到培育池</button>
-        `;
-        
-        // 组装卡片
-        catCard.appendChild(catInfo);
-        catCard.appendChild(catAttributes);
-        catCard.appendChild(catActions);
         
         shopDiv.appendChild(catCard);
     });
@@ -1161,13 +1175,13 @@ function toggleBreedingMode() {
 }
 
 // 手动培育相关变量
-let currentGeneration = 0;
+let currentDay = 0;
 let breedingPool = new Map();
 let currentGenerationCats = new Map();
 
 // 初始化手动培育
 function initializeManualBreeding() {
-    currentGeneration = 0;
+    currentDay = 0;
     breedingPool.clear();
     currentGenerationCats.clear();
     
@@ -1366,18 +1380,137 @@ function breedPair() {
     }
 }
 
-// 添加随机猫咪按钮事件监听
-document.getElementById('addCat').addEventListener('click', () => {
-    const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
-    
-    if (currentGenerationCats.size >= maxCats) {
-        alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
-        return;
+// 添加刷新商店函数
+function refreshShop() {
+    generateShopCats();
+}
+
+// 添加进入下一天的功能
+function proceedToNextGeneration() {
+    try {
+        console.log('开始进入下一天处理...');
+        
+        // 检查游戏数据
+        if (typeof gameData === 'undefined') {
+            throw new Error('游戏数据未初始化');
+        }
+        console.log('游戏数据检查通过');
+
+        // 检查必要的变量是否已初始化
+        if (typeof currentGenerationCats === 'undefined') {
+            throw new Error('当前猫咪数据未初始化');
+        }
+        if (typeof currentDay === 'undefined') {
+            currentDay = 0;
+        }
+        console.log('当前天数:', currentDay);
+        console.log('当前猫咪数量:', currentGenerationCats.size);
+
+        // 检查是否有猫咪
+        if (!currentGenerationCats || currentGenerationCats.size < 1) {
+            alert('需要至少一只猫咪才能进入下一天！');
+            return;
+        }
+
+        // 记录当前的繁殖结果
+        const results = document.getElementById('breedingResults');
+        if (!results) {
+            throw new Error('找不到繁殖结果显示区域 (breedingResults)');
+        }
+        console.log('获取到繁殖结果显示区域');
+
+        // 转换当前猫咪数据
+        const currentCats = Array.from(currentGenerationCats.values());
+        console.log('当前猫咪数组长度:', currentCats.length);
+
+        if (!currentCats || currentCats.length === 0) {
+            throw new Error('当前猫咪数据转换失败');
+        }
+
+        try {
+            // 显示繁殖结果
+            console.log('开始显示繁殖结果...');
+            displayBreedingResults(results, currentCats, currentGenerationCats, currentDay);
+            console.log('繁殖结果显示完成');
+        } catch (displayError) {
+            console.error('显示繁殖结果时出错:', displayError);
+            throw new Error('显示繁殖结果失败: ' + displayError.message);
+        }
+
+        // 增加天数
+        currentDay++;
+        console.log('进入新的一天:', currentDay);
+
+        // 重置所有猫咪的繁殖CD
+        try {
+            currentGenerationCats.forEach((cat, id) => {
+                if (cat) {
+                    cat.breedingCooldown = Math.max(0, cat.breedingCooldown - 24);
+                } else {
+                    console.warn('发现无效的猫咪数据，ID:', id);
+                }
+            });
+            console.log('更新繁殖CD完成');
+        } catch (resetError) {
+            console.error('更新繁殖CD时出错:', resetError);
+            throw new Error('更新繁殖CD失败: ' + resetError.message);
+        }
+
+        // 刷新商店（如果在商店模式下）
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('shop')) {
+            try {
+                console.log('开始刷新商店...');
+                generateShopCats();
+                console.log('商店刷新完成');
+            } catch (shopError) {
+                console.error('刷新商店时出错:', shopError);
+            }
+        }
+
+        // 更新界面
+        try {
+            console.log('开始更新界面...');
+            updateBreedingPoolDisplay();
+            updateParentSelectors();
+            console.log('界面更新完成');
+        } catch (updateError) {
+            console.error('更新界面时出错:', updateError);
+            throw new Error('更新界面失败: ' + updateError.message);
+        }
+
+        // 保存当前状态
+        try {
+            console.log('开始保存状态...');
+            saveToLocalStorage();
+            console.log('状态保存完成');
+        } catch (saveError) {
+            console.error('保存状态时出错:', saveError);
+        }
+
+        // 显示提示信息
+        alert(`已进入第 ${currentDay} 天！`);
+        console.log('进入下一天处理完成');
+        
+    } catch (error) {
+        console.error('进入下一天时出错:', error);
+        console.error('错误堆栈:', error.stack);
+        alert('进入下一天失败: ' + error.message);
     }
-    
-    const newCat = generateRandomCat();
-    breedingPool.set(newCat.id, newCat);
-    currentGenerationCats.set(newCat.id, newCat);
-    updateBreedingPoolDisplay();
-    updateParentSelectors();
-});
+}
+
+// 修改保存函数
+function saveToLocalStorage() {
+    try {
+        const dataToSave = {
+            attributes: gameData.attributes,
+            breedingCooldown: gameData.breedingCooldown,
+            defaultMutationRate: gameData.defaultMutationRate,
+            currentDay: currentDay,
+            simulationHistory: gameData.simulationHistory
+        };
+        localStorage.setItem('catBreederData', JSON.stringify(dataToSave));
+    } catch (error) {
+        console.error('保存数据失败:', error);
+    }
+}

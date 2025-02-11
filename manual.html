@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手动培育模式 - 猫咪培育模拟器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>猫咪培育模拟器0.2 - 手动培育模式</h1>
+            <a href="index.html" class="back-link">返回首页</a>
+        </header>
+
+        <!-- 开始游戏区域 -->
+        <div class="start-game-section">
+            <h2>准备开始手动培育之旅</h2>
+            <p>在这个模式中，您可以完全控制猫咪的配对过程，自由选择配对对象。</p>
+            <p>游戏开始时，系统会为您生成两只初始猫咪。</p>
+            <button class="start-game-button" onclick="startGame()">开始游戏</button>
+        </div>
+
+        <!-- 游戏主要内容 -->
+        <div class="game-content">
+            <div class="control-section">
+                <div class="control-panel-wrapper">
+                    <!-- 左侧属性设置面板 -->
+                    <div class="control-panel attribute-panel">
+                        <h2>属性设置</h2>
+                        <div class="panel-content">
+                            <div class="parameter-group">
+                                <label for="presetSelect">预设配置</label>
+                                <select id="presetSelect">
+                                    <option value="">选择预设...</option>
+                                    <option value="玄幻">玄幻风格</option>
+                                    <option value="现实">现实风格</option>
+                                    <option value="科幻">科幻风格</option>
+                                </select>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('attributeList')">
+                                    <h3>属性列表</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="attributeList" class="section-content">
+                                    <div id="attributeControls"></div>
+                                    <div class="attribute-actions">
+                                        <button id="addNewAttribute" class="secondary-button">添加属性</button>
+                                        <button id="exportAttributes" class="secondary-button">导出设置</button>
+                                        <button id="importAttributes" class="secondary-button">导入设置</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('weightControls')">
+                                    <h3>权重设置</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="weightControls" class="section-content"></div>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('rarityControls')">
+                                    <h3>稀有度设置</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="rarityControls" class="section-content"></div>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('geneStrengthControls')">
+                                    <h3>基因强度设置</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="geneStrengthControls" class="section-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧培育设置面板 -->
+                    <div class="control-panel breeding-panel">
+                        <h2>培育设置</h2>
+                        <div class="panel-content">
+                            <div class="breeding-controls">
+                                <div class="parameter-group">
+                                    <label for="mutationRate">变异概率 (%)</label>
+                                    <input type="number" id="mutationRate" min="0" max="100" value="10" step="1">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="initialRarityMin">初始猫咪稀有度下限</label>
+                                    <input type="number" id="initialRarityMin" min="1" value="20">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="initialRarityMax">初始猫咪稀有度上限</label>
+                                    <input type="number" id="initialRarityMax" min="1" value="100">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="maxCats">最大猫咪数量</label>
+                                    <input type="number" id="maxCats" min="2" value="10">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 添加开始模拟按钮 -->
+            <button id="startSimulation" class="start-simulation-button">开始模拟</button>
+
+            <!-- 手动培育区域 -->
+            <div class="manual-breeding-section">
+                <div class="breeding-pool">
+                    <h2>培育池</h2>
+                    <div id="breedingPool" class="cats-display"></div>
+                    <button id="addRandomCat" class="secondary-button">添加随机猫咪</button>
+                </div>
+
+                <div class="breeding-pair">
+                    <h2>配对选择</h2>
+                    <div class="pair-selection">
+                        <select id="parent1" class="parent-select" aria-label="选择父本">
+                            <option value="">选择父本...</option>
+                        </select>
+                        <span class="breeding-symbol">×</span>
+                        <select id="parent2" class="parent-select" aria-label="选择母本">
+                            <option value="">选择母本...</option>
+                        </select>
+                        <button id="breedPair" class="primary-button">配对</button>
+                    </div>
+                </div>
+
+                <div class="offspring-section">
+                    <h2>后代展示</h2>
+                    <div id="offspringDisplay" class="cats-display"></div>
+                </div>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="results-section">
+                <div class="breeding-history">
+                    <div class="history-header">
+                        <h2>培育历史</h2>
+                        <div class="history-actions">
+                            <button id="exportResults" class="secondary-button">导出结果</button>
+                            <button id="clearResults" class="secondary-button">清空结果</button>
+                        </div>
+                    </div>
+                    <div id="breedingResults" class="history-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function startGame() {
+            document.querySelector('.start-game-section').classList.add('hidden');
+            document.querySelector('.game-content').classList.add('active');
+            // 这里可以添加游戏初始化的代码
+            // 生成初始猫咪等
+        }
+    </script>
+</body>
+
+</html>

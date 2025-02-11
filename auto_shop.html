@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动培育+商店模式 - 猫咪培育模拟器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>猫咪培育模拟器0.2 - 自动培育+商店模式</h1>
+            <a href="index.html" class="back-link">返回首页</a>
+        </header>
+
+        <!-- 开始游戏区域 -->
+        <div class="start-game-section">
+            <h2>准备开始自动培育+商店之旅</h2>
+            <p>在这个模式中，系统将自动为您的猫咪进行配对和繁殖，同时您可以在商店购买特殊的猫咪。</p>
+            <p>初始金币：1000</p>
+            <button class="start-game-button" onclick="startGame()">开始游戏</button>
+        </div>
+
+        <!-- 游戏主要内容 -->
+        <div class="game-content">
+            <div class="control-section">
+                <div class="control-panel-wrapper">
+                    <!-- 左侧属性设置面板 -->
+                    <div class="control-panel attribute-panel">
+                        <h2>属性设置</h2>
+                        <div class="panel-content">
+                            <div class="parameter-group">
+                                <label for="presetSelect">预设配置</label>
+                                <select id="presetSelect">
+                                    <option value="">选择预设...</option>
+                                    <option value="玄幻">玄幻风格</option>
+                                    <option value="现实">现实风格</option>
+                                    <option value="科幻">科幻风格</option>
+                                </select>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('attributeList')">
+                                    <h3>属性列表</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="attributeList" class="section-content">
+                                    <div id="attributeControls"></div>
+                                    <div class="attribute-actions">
+                                        <button id="addNewAttribute" class="secondary-button">添加属性</button>
+                                        <button id="exportAttributes" class="secondary-button">导出设置</button>
+                                        <button id="importAttributes" class="secondary-button">导入设置</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('weightControls')">
+                                    <h3>权重设置</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="weightControls" class="section-content"></div>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('rarityControls')">
+                                    <h3>稀有度设置</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="rarityControls" class="section-content"></div>
+                            </div>
+
+                            <div class="collapsible-section">
+                                <div class="section-header" onclick="togglePanel('geneStrengthControls')">
+                                    <h3>基因强度设置</h3>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div id="geneStrengthControls" class="section-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧培育设置面板 -->
+                    <div class="control-panel breeding-panel">
+                        <h2>培育设置</h2>
+                        <div class="panel-content">
+                            <div class="breeding-controls">
+                                <div class="parameter-group">
+                                    <label for="mutationRate">变异概率 (%)</label>
+                                    <input type="number" id="mutationRate" min="0" max="100" value="10" step="1">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="initialRarityMin">初始猫咪稀有度下限</label>
+                                    <input type="number" id="initialRarityMin" min="1" value="20">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="initialRarityMax">初始猫咪稀有度上限</label>
+                                    <input type="number" id="initialRarityMax" min="1" value="100">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="generationCount">繁殖代数</label>
+                                    <input type="number" id="generationCount" value="10" min="1" required>
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="rarityThreshold">稀有度统计阈值</label>
+                                    <input type="number" id="rarityThreshold" min="1" value="50">
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="breedingStrategy">培育策略</label>
+                                    <select id="breedingStrategy">
+                                        <option value="random">随机配对</option>
+                                        <option value="highestRarity">优先高稀有度配对</option>
+                                    </select>
+                                </div>
+
+                                <div class="parameter-group">
+                                    <label for="maxCats">最大猫咪数量</label>
+                                    <input type="number" id="maxCats" min="2" value="10">
+                                </div>
+
+                                <div class="breeding-actions">
+                                    <button id="startBreeding" class="primary-button">开始培育</button>
+                                    <button id="randomCat" class="secondary-button">随机生成</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 添加开始模拟按钮 -->
+            <button id="startSimulation" class="start-simulation-button">开始模拟</button>
+
+            <!-- 商店区域 -->
+            <div class="shop-section">
+                <h2>商店</h2>
+                <div class="shop-controls">
+                    <button id="refreshShop" class="secondary-button">刷新商店</button>
+                    <span id="shopCoins" class="coin-display">金币: 1000</span>
+                </div>
+                <div id="shopCats" class="shop-items"></div>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="results-section">
+                <div class="current-generation">
+                    <h2>当前代猫咪</h2>
+                    <div id="currentCats" class="cats-display"></div>
+                </div>
+
+                <div class="breeding-history">
+                    <div class="history-header">
+                        <h2>培育历史</h2>
+                        <div class="history-actions">
+                            <button id="exportResults" class="secondary-button">导出结果</button>
+                            <button id="clearResults" class="secondary-button">清空结果</button>
+                        </div>
+                    </div>
+                    <div id="breedingResults" class="history-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function startGame() {
+            document.querySelector('.start-game-section').classList.add('hidden');
+            document.querySelector('.game-content').classList.add('active');
+            // 这里可以添加游戏初始化的代码
+            // 初始化金币等
+        }
+    </script>
+</body>
+
+</html>
