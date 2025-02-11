@@ -40,6 +40,9 @@ const DEFAULT_GAME_DATA = {
     },
     breedingCooldown: 24,
     defaultMutationRate: 10,
+    initialMaxBreedingCooldown: 24,
+    cdReductionPerBreeding: 8,
+    coinMultiplier: 1,
     simulationHistory: []
 };
 
@@ -64,6 +67,17 @@ const PRESETS = {
     "现实": "presets/realistic.json",
     "科幻": "presets/scifi.json"
 };
+
+// 添加金币相关变量
+let playerCoins = 1000; // 初始金币
+
+// 更新金币显示
+function updateCoinsDisplay() {
+    const coinsDisplay = document.getElementById('shopCoins');
+    if (coinsDisplay) {
+        coinsDisplay.textContent = `金币: ${playerCoins}`;
+    }
+}
 
 // 渲染属性列表
 function renderAttributeList() {
@@ -255,16 +269,42 @@ function closeAttributeDialog() {
 
 // 切换面板显示状态
 function togglePanel(panelId) {
+    console.log('切换面板:', panelId);
     const panel = document.getElementById(panelId);
-    if (!panel) return;
+    if (!panel) {
+        console.warn('找不到面板元素:', panelId);
+        return;
+    }
     
     const header = panel.closest('.collapsible-section').querySelector('.section-header');
     const icon = header.querySelector('.toggle-icon');
     
-    if (!header || !icon) return;
+    if (!header || !icon) {
+        console.warn('找不到面板头部或图标元素');
+        return;
+    }
     
-    panel.classList.toggle('collapsed');
-    icon.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
+    const isExpanded = panel.classList.contains('expanded');
+    console.log('当前状态:', isExpanded ? '展开' : '折叠');
+    
+    // 切换展开状态
+    if (isExpanded) {
+        panel.classList.remove('expanded');
+        icon.textContent = '▼';
+        // 添加一个短暂的延迟以确保过渡效果正常
+        setTimeout(() => {
+            panel.style.display = 'none';
+        }, 300);
+    } else {
+        panel.style.display = 'block';
+        // 使用requestAnimationFrame确保display:block生效后再添加expanded类
+        requestAnimationFrame(() => {
+            panel.classList.add('expanded');
+            icon.textContent = '▲';
+        });
+    }
+    
+    console.log('切换后状态:', panel.classList.contains('expanded') ? '展开' : '折叠');
 }
 
 // 渲染控制面板
@@ -349,6 +389,54 @@ function renderControls() {
             `;
             geneStrengthControls.appendChild(geneStrengthPanel);
         });
+
+        // 添加初始最大CD设置控件
+        const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
+        if (breedingPanel) {
+            const cdControl = document.createElement('div');
+            cdControl.className = 'parameter-group';
+            cdControl.innerHTML = `
+                <label for="initialMaxCD">初始最大CD值</label>
+                <input type="number" 
+                       id="initialMaxCD" 
+                       min="8" 
+                       value="${gameData.initialMaxBreedingCooldown || 24}" 
+                       onchange="updateInitialMaxCD(this.value)">
+            `;
+            breedingPanel.insertBefore(cdControl, breedingPanel.firstChild);
+        }
+
+        // 添加CD减少值设置控件
+        if (breedingPanel) {
+            const cdReductionControl = document.createElement('div');
+            cdReductionControl.className = 'parameter-group';
+            cdReductionControl.innerHTML = `
+                <label for="cdReductionPerBreeding">每次交配减少CD值</label>
+                <input type="number" 
+                       id="cdReductionPerBreeding" 
+                       min="1" 
+                       max="24"
+                       value="${gameData.cdReductionPerBreeding || 8}" 
+                       onchange="updateCDReduction(this.value)">
+            `;
+            breedingPanel.insertBefore(cdReductionControl, breedingPanel.firstChild);
+        }
+
+        // 添加金币倍率设置控件
+        if (breedingPanel) {
+            const coinMultiplierControl = document.createElement('div');
+            coinMultiplierControl.className = 'parameter-group';
+            coinMultiplierControl.innerHTML = `
+                <label for="coinMultiplier">每日金币产出倍率</label>
+                <input type="number" 
+                       id="coinMultiplier" 
+                       min="0.1" 
+                       step="0.1"
+                       value="${gameData.coinMultiplier || 1}" 
+                       onchange="updateCoinMultiplier(this.value)">
+            `;
+            breedingPanel.insertBefore(coinMultiplierControl, breedingPanel.firstChild);
+        }
     } catch (error) {
         console.error('渲染控制面板失败:', error);
         alert('渲染控制面板失败: ' + error.message);
@@ -379,12 +467,49 @@ function updateGeneStrength(attrName, index, value) {
     }
 }
 
+// 添加更新初始最大CD的函数
+function updateInitialMaxCD(value) {
+    const newValue = parseInt(value);
+    if (newValue >= 8) {
+        gameData.initialMaxBreedingCooldown = newValue;
+        saveToLocalStorage();
+    } else {
+        alert('初始最大CD值不能小于8');
+        document.getElementById('initialMaxCD').value = gameData.initialMaxBreedingCooldown || 24;
+    }
+}
+
+// 添加更新CD减少值的函数
+function updateCDReduction(value) {
+    const newValue = parseInt(value);
+    if (newValue >= 1 && newValue <= 24) {
+        gameData.cdReductionPerBreeding = newValue;
+        saveToLocalStorage();
+    } else {
+        alert('每次交配减少CD值必须在1到24之间');
+        document.getElementById('cdReductionPerBreeding').value = gameData.cdReductionPerBreeding || 8;
+    }
+}
+
+// 添加更新金币倍率的函数
+function updateCoinMultiplier(value) {
+    const newValue = parseFloat(value);
+    if (newValue >= 0.1) {
+        gameData.coinMultiplier = newValue;
+        saveToLocalStorage();
+    } else {
+        alert('金币倍率不能小于0.1');
+        document.getElementById('coinMultiplier').value = gameData.coinMultiplier || 1;
+    }
+}
+
 // 修改初始化函数
 function initGame() {
     try {
         // 初始化默认数据
         gameData = { ...DEFAULT_GAME_DATA };
         nameData = { ...DEFAULT_NAME_DATA };
+        playerCoins = 1000; // 重置初始金币
 
         // 从localStorage加载用户修改的数据
         const savedData = localStorage.getItem('catBreederData');
@@ -401,6 +526,9 @@ function initGame() {
                         gameData.attributes[key] = value;
                     }
                 });
+            }
+            if (parsedData.playerCoins !== undefined) {
+                playerCoins = parsedData.playerCoins;
             }
         }
 
@@ -436,6 +564,9 @@ function initGame() {
 
         // 绑定事件监听器
         bindEventListeners();
+
+        // 更新金币显示
+        updateCoinsDisplay();
 
     } catch (error) {
         console.error('初始化游戏失败:', error);
@@ -509,6 +640,16 @@ function bindEventListeners() {
             const cat = generateRandomCat();
             displayCurrentCat(cat);
         });
+        
+        // 在开始模拟按钮后添加重新模拟按钮（如果不存在）
+        if (!document.getElementById('resetSimulation')) {
+            const resetButton = document.createElement('button');
+            resetButton.id = 'resetSimulation';
+            resetButton.className = 'start-simulation-button';
+            resetButton.textContent = '重新模拟';
+            resetButton.onclick = resetSimulation;
+            elements.startSimulation.parentNode.insertBefore(resetButton, elements.startSimulation.nextSibling);
+        }
     }
     
     // 添加预设选择事件监听
@@ -535,11 +676,13 @@ function bindEventListeners() {
     // 初始化面板状态
     document.querySelectorAll('.section-header').forEach(header => {
         header.addEventListener('click', () => {
+            console.log('面板头部被点击');
             const panel = header.nextElementSibling;
-            const icon = header.querySelector('.toggle-icon');
-            if (panel && icon) {
-                panel.classList.toggle('collapsed');
-                icon.textContent = panel.classList.contains('collapsed') ? '▼' : '▲';
+            const panelId = panel.id;
+            if (panelId) {
+                togglePanel(panelId);
+            } else {
+                console.warn('面板缺少 ID');
             }
         });
     });
@@ -590,7 +733,8 @@ function generateRandomCat(targetGender = null) {
             name: generateRandomName(),
             parents: [],
             children: [],
-            breedingCooldown: 0,
+            breedingCooldown: gameData.initialMaxBreedingCooldown || 24,
+            maxBreedingCooldown: gameData.initialMaxBreedingCooldown || 24,
             isShopCat: false
         };
 
@@ -678,10 +822,11 @@ function selectAttributeBasedOnGeneStrength(parent1Attr, parent2Attr, attrData) 
 // 繁殖猫咪
 function breedCats(cat1, cat2) {
     try {
-        // 检查性别和CD
+        // 检查CD是否足够
+        const requiredCD = gameData.cdReductionPerBreeding || 8;
         if (!cat1 || !cat2 || !cat1.性别 || !cat2.性别 ||
             cat1.性别.value === cat2.性别.value || 
-            cat1.breedingCooldown > 0 || cat2.breedingCooldown > 0) {
+            cat1.breedingCooldown < requiredCD || cat2.breedingCooldown < requiredCD) {
             return null;
         }
         
@@ -692,8 +837,18 @@ function breedCats(cat1, cat2) {
             children: [],
             mutations: new Set(),
             inheritanceInfo: {},
-            breedingCooldown: 0
+            breedingCooldown: gameData.initialMaxBreedingCooldown || 24,
+            maxBreedingCooldown: gameData.initialMaxBreedingCooldown || 24
         };
+        
+        // 更新父母的CD和最大CD
+        const cdReduction = gameData.cdReductionPerBreeding || 8;
+        cat1.breedingCooldown = Math.max(0, cat1.breedingCooldown - cdReduction);
+        cat2.breedingCooldown = Math.max(0, cat2.breedingCooldown - cdReduction);
+        
+        // 减少父母的最大CD，但不低于8
+        cat1.maxBreedingCooldown = Math.max(8, cat1.maxBreedingCooldown - cdReduction);
+        cat2.maxBreedingCooldown = Math.max(8, cat2.maxBreedingCooldown - cdReduction);
         
         // 更新父母的children数组
         cat1.children.push(newCat.id);
@@ -785,11 +940,6 @@ function breedCats(cat1, cat2) {
         newCat.totalRarity = Object.values(newCat)
             .filter(value => value && typeof value === 'object' && 'rarity' in value)
             .reduce((sum, attr) => sum + attr.rarity, 0);
-        
-        // 设置繁殖CD
-        newCat.breedingCooldown = gameData.breedingCooldown;
-        cat1.breedingCooldown = gameData.breedingCooldown;
-        cat2.breedingCooldown = gameData.breedingCooldown;
 
         return newCat;
     } catch (error) {
@@ -808,11 +958,11 @@ function displayCurrentCat(cat) {
     catCard.innerHTML = `
         <div class="cat-header">
             <h3>稀有度: ${cat.totalRarity}</h3>
-            <span class="cat-gender">${cat.性别.value}</span>
+            <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>
         </div>
         <div class="cat-name">${cat.name || '未知'}</div>
         ${displayCatAttributes(cat)}
-        <p>培育CD: ${cat.breedingCooldown}小时</p>
+        <p>培育CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown}点</p>
     `;
     
     currentCats.innerHTML = '';
@@ -907,7 +1057,10 @@ function displayCatAttributes(cat) {
             `;
         });
     
-    return attributesHtml;
+    return `
+        ${attributesHtml}
+        <p>培育CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown}点</p>
+    `;
 }
 
 // 获取属性的稀有度值
@@ -1014,11 +1167,10 @@ function displayBreedingResults(results, cats, allCats, day = 0, previousDayRari
                 catCard.innerHTML = `
                     <div class="cat-header">
                         <h3>稀有度: ${cat.totalRarity || 0}</h3>
-                        <span class="cat-gender">${cat.性别.value}</span>
+                        <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>
                     </div>
                     <div class="cat-name">${cat.name || '未知'}</div>
                     ${displayCatAttributes(cat)}
-                    <p>培育CD: ${cat.breedingCooldown || 0}小时</p>
                     ${familyInfo}
                 `;
                 
@@ -1063,12 +1215,12 @@ function displayShopCats() {
     shopCats.forEach((cat, index) => {
         const catCard = document.createElement('div');
         const threshold = parseInt(document.getElementById('rarityThreshold')?.value || 50);
-        catCard.className = `cat-card ${cat.totalRarity > threshold ? 'high-rarity' : ''}`;
+        catCard.className = `shop-cat-card ${cat.totalRarity > threshold ? 'high-rarity' : ''}`;
         
         catCard.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
-                <span class="cat-gender">${cat.性别.value}</span>
+                <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
             ${displayCatAttributes(cat)}
@@ -1091,6 +1243,17 @@ function addShopCatToPool(index) {
     
     const cat = shopCats[index];
     if (!cat) return;
+    
+    // 检查金币是否足够
+    const price = Math.floor(cat.totalRarity * 10);
+    if (playerCoins < price) {
+        alert(`金币不足！需要 ${price} 金币。`);
+        return;
+    }
+    
+    // 扣除金币
+    playerCoins -= price;
+    updateCoinsDisplay();
     
     breedingPool.set(cat.id, cat);
     currentGenerationCats.set(cat.id, cat);
@@ -1211,11 +1374,11 @@ function updateBreedingPoolDisplay() {
         catCard.innerHTML = `
             <div class="cat-header">
                 <h3>稀有度: ${cat.totalRarity}</h3>
-                <span class="cat-gender">${cat.性别.value}</span>
+                <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>
             </div>
             <div class="cat-name">${cat.name || '未知'}</div>
             ${displayCatAttributes(cat)}
-            <p>培育CD: ${cat.breedingCooldown}小时</p>
+            <p>培育CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown}点</p>
             <button onclick="removeCatFromPool('${cat.id}')" class="delete-button">移除</button>
         `;
         poolDiv.appendChild(catCard);
@@ -1230,11 +1393,13 @@ function updateParentSelectors() {
     parent1Select.innerHTML = '<option value="">选择父本</option>';
     parent2Select.innerHTML = '<option value="">选择母本</option>';
     
+    const requiredCD = gameData.cdReductionPerBreeding || 8;
+    
     currentGenerationCats.forEach(cat => {
-        if (cat.breedingCooldown === 0) {
+        if (cat.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
             const option = document.createElement('option');
             option.value = cat.id;
-            option.textContent = `${cat.name} (${cat.性别.value}, 稀有度: ${cat.totalRarity})`;
+            option.textContent = `${cat.name} (${cat.性别.value}, 稀有度: ${cat.totalRarity}, CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown})`;
             
             if (cat.性别.value === '公') {
                 parent1Select.appendChild(option);
@@ -1441,11 +1606,15 @@ function proceedToNextGeneration() {
         currentDay++;
         console.log('进入新的一天:', currentDay);
 
-        // 重置所有猫咪的繁殖CD
+        // 修改CD恢复逻辑
         try {
             currentGenerationCats.forEach((cat, id) => {
                 if (cat) {
-                    cat.breedingCooldown = Math.max(0, cat.breedingCooldown - 24);
+                    // 每天恢复24点CD，但不超过最大值
+                    cat.breedingCooldown = Math.min(
+                        cat.maxBreedingCooldown,
+                        cat.breedingCooldown + 24
+                    );
                 } else {
                     console.warn('发现无效的猫咪数据，ID:', id);
                 }
@@ -1479,17 +1648,18 @@ function proceedToNextGeneration() {
             throw new Error('更新界面失败: ' + updateError.message);
         }
 
-        // 保存当前状态
-        try {
-            console.log('开始保存状态...');
-            saveToLocalStorage();
-            console.log('状态保存完成');
-        } catch (saveError) {
-            console.error('保存状态时出错:', saveError);
-        }
-
-        // 显示提示信息
-        alert(`已进入第 ${currentDay} 天！`);
+        // 修改金币计算逻辑
+        let dailyIncome = 0;
+        currentGenerationCats.forEach(cat => {
+            dailyIncome += Math.floor(cat.totalRarity * 10 * (gameData.coinMultiplier || 1));
+        });
+        
+        playerCoins += dailyIncome;
+        console.log(`获得每日金币: ${dailyIncome} (倍率: ${gameData.coinMultiplier || 1})`);
+        updateCoinsDisplay();
+        
+        // 显示金币获得提示
+        alert(`已进入第 ${currentDay} 天！\n今日获得金币: ${dailyIncome} (倍率: ${gameData.coinMultiplier || 1})`);
         console.log('进入下一天处理完成');
         
     } catch (error) {
@@ -1507,10 +1677,42 @@ function saveToLocalStorage() {
             breedingCooldown: gameData.breedingCooldown,
             defaultMutationRate: gameData.defaultMutationRate,
             currentDay: currentDay,
-            simulationHistory: gameData.simulationHistory
+            simulationHistory: gameData.simulationHistory,
+            playerCoins: playerCoins,
+            initialMaxBreedingCooldown: gameData.initialMaxBreedingCooldown,
+            cdReductionPerBreeding: gameData.cdReductionPerBreeding,
+            coinMultiplier: gameData.coinMultiplier
         };
         localStorage.setItem('catBreederData', JSON.stringify(dataToSave));
     } catch (error) {
         console.error('保存数据失败:', error);
+    }
+}
+
+// 添加重新模拟功能
+function resetSimulation() {
+    if (confirm('确定要重新开始模拟吗？这将清空所有当前数据。')) {
+        // 重置所有相关数据
+        currentDay = 0;
+        breedingPool.clear();
+        currentGenerationCats.clear();
+        playerCoins = 1000;
+        
+        // 清空显示区域
+        const breedingResults = document.getElementById('breedingResults');
+        if (breedingResults) {
+            breedingResults.innerHTML = '';
+        }
+        
+        // 重新初始化游戏
+        initGame();
+        
+        // 如果在商店模式下，刷新商店
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('shop')) {
+            generateShopCats();
+        }
+        
+        alert('模拟已重置！');
     }
 }
