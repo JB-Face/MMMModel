@@ -1049,12 +1049,19 @@ function breedCats(cat1, cat2) {
                         const parent2Values = parent2Value ? parent2Value.values : [];
                         const allParentValues = [...new Set([...parent1Values, ...parent2Values])];
                         
+                        // 计算父母的词条数量平均值
+                        const avgTraits = (parent1Values.length + parent2Values.length) / 2;
+                        // 处理小数部分
+                        const baseTraits = Math.floor(avgTraits);
+                        const extraTrait = Math.random() < (avgTraits - baseTraits) ? 1 : 0;
+                        // 最终的词条数量
+                        const targetTraits = Math.min(baseTraits + extraTrait, attrData.maxSelect || 3);
+                        
                         const selectedValues = [];
                         const selectedRarities = [];
-                        const maxSelect = attrData.maxSelect || 3;
                         
-                        // 从父母的特征中随机选择
-                        while (selectedValues.length < maxSelect && allParentValues.length > 0) {
+                        // 从父母的所有词条中随机选择
+                        while (selectedValues.length < targetTraits && allParentValues.length > 0) {
                             const randomIndex = Math.floor(Math.random() * allParentValues.length);
                             const selectedValue = allParentValues[randomIndex];
                             const attrIndex = attrData.options.indexOf(selectedValue);
@@ -1064,10 +1071,11 @@ function breedCats(cat1, cat2) {
                                 selectedRarities.push(attrData.rarity[attrIndex]);
                             }
                             
+                            // 移除已选择的词条，避免重复
                             allParentValues.splice(randomIndex, 1);
                         }
                         
-                        // 如果没有继承到任何特征，随机生成一个
+                        // 如果没有继承到任何词条，随机生成一个
                         if (selectedValues.length === 0) {
                             const randomIndex = Math.floor(Math.random() * attrData.options.length);
                             selectedValues.push(attrData.options[randomIndex]);
