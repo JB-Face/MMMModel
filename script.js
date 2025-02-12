@@ -288,13 +288,13 @@ function togglePanel(panelId) {
     console.log('当前状态:', isExpanded ? '展开' : '折叠');
     
     // 切换展开状态
-    if (isExpanded) {
-        panel.classList.remove('expanded');
-        icon.textContent = '▼';
-        // 添加一个短暂的延迟以确保过渡效果正常
-        setTimeout(() => {
+    if (isExpanded &&  panel.classList.contains('expanded')) {
+        requestAnimationFrame(() => {
+            panel.classList.remove('expanded');
+            icon.textContent = '▼';
             panel.style.display = 'none';
-        }, 300);
+        });
+
     } else {
         panel.style.display = 'block';
         // 使用requestAnimationFrame确保display:block生效后再添加expanded类

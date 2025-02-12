@@ -111,18 +111,17 @@ body {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out;
-    padding: 0;
-    background: #fff;
     opacity: 0;
     visibility: hidden;
+    display: none;
 }
 
 .section-content.expanded {
-    max-height: 800px;
-    padding: 15px;
-    overflow-y: auto;
+    max-height: 2000px;
     opacity: 1;
     visibility: visible;
+    display: block;
+    padding: 15px;
 }
 
 .section-content::-webkit-scrollbar {
