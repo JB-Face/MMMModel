@@ -716,7 +716,7 @@ function generateRandomName() {
 }
 
 // 生成随机猫咪
-function generateRandomCat(targetGender = null) {
+function generateRandomCat(targetGender = null, isInitialCat = false) {
     const minRarity = parseInt(document.getElementById('initialRarityMin').value) || 1;
     const maxRarity = parseInt(document.getElementById('initialRarityMax').value) || 10;
     
@@ -750,7 +750,7 @@ function generateRandomCat(targetGender = null) {
             name: generateRandomName(),
             parents: [],
             children: [],
-            breedingCooldown: gameData.initialMaxBreedingCooldown || 24,
+            breedingCooldown: isInitialCat ? (gameData.initialMaxBreedingCooldown || 24) : 0,
             maxBreedingCooldown: gameData.initialMaxBreedingCooldown || 24,
             isShopCat: false
         };
@@ -855,7 +855,7 @@ function breedCats(cat1, cat2) {
             mutations: new Set(),
             aberrations: new Set(),
             inheritanceInfo: {},
-            breedingCooldown: gameData.initialMaxBreedingCooldown || 24,
+            breedingCooldown: 0,
             maxBreedingCooldown: gameData.initialMaxBreedingCooldown || 24
         };
         
@@ -1365,16 +1365,19 @@ function initializeManualBreeding() {
     breedingPool.clear();
     currentGenerationCats.clear();
     
-    // 生成初始猫咪（一公一母）
-    const initialCats = [
-        generateRandomCat('公'),
-        generateRandomCat('母')
-    ];
+    // 生成初始猫咪（一公一母），传入true表示是初始猫咪
+    const initialMale = generateRandomCat('公', true);
+    const initialFemale = generateRandomCat('母', true);
     
-    initialCats.forEach(cat => {
-        breedingPool.set(cat.id, cat);
-        currentGenerationCats.set(cat.id, cat);
-    });
+    // 确保两只初始猫咪的CD都是满的
+    initialMale.breedingCooldown = initialMale.maxBreedingCooldown;
+    initialFemale.breedingCooldown = initialFemale.maxBreedingCooldown;
+    
+    // 添加到培育池
+    breedingPool.set(initialMale.id, initialMale);
+    breedingPool.set(initialFemale.id, initialFemale);
+    currentGenerationCats.set(initialMale.id, initialMale);
+    currentGenerationCats.set(initialFemale.id, initialFemale);
     
     updateBreedingPoolDisplay();
     updateParentSelectors();
