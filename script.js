@@ -40,6 +40,8 @@ const DEFAULT_GAME_DATA = {
     },
     breedingCooldown: 24,
     defaultMutationRate: 10,
+    defaultAberrationRate: 5,
+    aberrationBonus: 2,
     initialMaxBreedingCooldown: 24,
     cdReductionPerBreeding: 8,
     coinMultiplier: 1,
@@ -437,6 +439,21 @@ function renderControls() {
             `;
             breedingPanel.insertBefore(coinMultiplierControl, breedingPanel.firstChild);
         }
+
+        // 添加异变概率控制
+        const aberrationControl = document.createElement('div');
+        aberrationControl.className = 'parameter-group';
+        aberrationControl.innerHTML = `
+            <label for="aberrationRate">异变概率 (%)</label>
+            <input type="number" 
+                   id="aberrationRate" 
+                   min="0" 
+                   max="100" 
+                   value="${gameData.defaultAberrationRate || 5}" 
+                   step="1">
+            <p class="parameter-description">异变不会遗传，但会提升稀有度</p>
+        `;
+        breedingPanel.insertBefore(aberrationControl, breedingPanel.firstChild);
     } catch (error) {
         console.error('渲染控制面板失败:', error);
         alert('渲染控制面板失败: ' + error.message);
@@ -836,6 +853,7 @@ function breedCats(cat1, cat2) {
             parents: [cat1.id, cat2.id],
             children: [],
             mutations: new Set(),
+            aberrations: new Set(),
             inheritanceInfo: {},
             breedingCooldown: gameData.initialMaxBreedingCooldown || 24,
             maxBreedingCooldown: gameData.initialMaxBreedingCooldown || 24
@@ -854,8 +872,9 @@ function breedCats(cat1, cat2) {
         cat1.children.push(newCat.id);
         cat2.children.push(newCat.id);
         
-        // 获取变异率
+        // 获取变异率和异变率
         const mutationRate = parseInt(document.getElementById('mutationRate').value) || gameData.defaultMutationRate;
+        const aberrationRate = parseInt(document.getElementById('aberrationRate').value) || gameData.defaultAberrationRate;
         
         // 确保所有必要的属性都被初始化
         Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
@@ -870,8 +889,18 @@ function breedCats(cat1, cat2) {
                 const parent1Strength = parent1Value ? (attrData.geneStrength[attrData.options.indexOf(parent1Value)] || 50) : 0;
                 const parent2Strength = parent2Value ? (attrData.geneStrength[attrData.options.indexOf(parent2Value)] || 50) : 0;
 
-                // 检查是否发生变异
-                if (Math.random() * 100 < mutationRate) {
+                // 首先检查是否发生异变
+                if (Math.random() * 100 < aberrationRate) {
+                    // 发生异变
+                    const aberrationIndex = Math.floor(Math.random() * attrData.options.length);
+                    const baseRarity = attrData.rarity[aberrationIndex] || 1;
+                    newCat[attrName] = {
+                        value: attrData.options[aberrationIndex],
+                        rarity: baseRarity * (gameData.aberrationBonus || 2),
+                        isAberration: true
+                    };
+                    newCat.aberrations.add(attrName);
+                } else if (Math.random() * 100 < mutationRate) {
                     // 发生变异
                     const mutationIndex = Math.floor(Math.random() * attrData.options.length);
                     newCat[attrName] = {
@@ -879,22 +908,9 @@ function breedCats(cat1, cat2) {
                         rarity: attrData.rarity[mutationIndex] || 1
                     };
                     newCat.mutations.add(attrName);
-                    
-                    // 即使发生突变也记录父母信息
-                    newCat.inheritanceInfo[attrName] = {
-                        parent1: {
-                            value: parent1Value,
-                            strength: parent1Strength
-                        },
-                        parent2: {
-                            value: parent2Value,
-                            strength: parent2Strength
-                        }
-                    };
                 } else {
-                    // 根据基因强度遗传
+                    // 正常遗传
                     if (!parent1Value || !parent2Value) {
-                        // 如果父母缺少该属性，随机生成
                         const randomIndex = Math.floor(Math.random() * attrData.options.length);
                         newCat[attrName] = {
                             value: attrData.options[randomIndex],
@@ -906,28 +922,26 @@ function breedCats(cat1, cat2) {
                             cat2[attrName],
                             attrData
                         );
-                        
                         newCat[attrName] = {
                             value: selectedAttr.value,
                             rarity: selectedAttr.rarity || 1
                         };
                     }
-                    
-                    // 记录继承信息
-                    newCat.inheritanceInfo[attrName] = {
-                        parent1: {
-                            value: parent1Value,
-                            strength: parent1Strength
-                        },
-                        parent2: {
-                            value: parent2Value,
-                            strength: parent2Strength
-                        }
-                    };
                 }
+                
+                // 记录继承信息
+                newCat.inheritanceInfo[attrName] = {
+                    parent1: {
+                        value: parent1Value,
+                        strength: parent1Strength
+                    },
+                    parent2: {
+                        value: parent2Value,
+                        strength: parent2Strength
+                    }
+                };
             } catch (error) {
                 console.error(`处理属性 ${attrName} 时出错:`, error);
-                // 出错时生成一个默认值
                 const defaultIndex = 0;
                 newCat[attrName] = {
                     value: attrData.options[defaultIndex],
@@ -1017,6 +1031,7 @@ function displayCatAttributes(cat) {
                    key !== 'children' && 
                    key !== 'name' && 
                    key !== 'mutations' && 
+                   key !== 'aberrations' &&
                    key !== 'inheritanceInfo' &&
                    value && 
                    typeof value === 'object' &&
@@ -1024,11 +1039,12 @@ function displayCatAttributes(cat) {
         })
         .forEach(([key, value]) => {
             const isMutated = cat.mutations && cat.mutations.has(key);
+            const isAberrated = cat.aberrations && cat.aberrations.has(key);
             const inheritanceInfo = cat.inheritanceInfo && cat.inheritanceInfo[key];
             const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
             
             let parentInfo = '';
-            if (inheritanceInfo || isMutated) {
+            if (inheritanceInfo || isMutated || isAberrated) {
                 const parent1 = inheritanceInfo ? inheritanceInfo.parent1 : { value: '未知', strength: 0 };
                 const parent2 = inheritanceInfo ? inheritanceInfo.parent2 : { value: '未知', strength: 0 };
                 
@@ -1046,11 +1062,12 @@ function displayCatAttributes(cat) {
             }
             
             attributesHtml += `
-                <div class="cat-attribute ${isMutated ? 'mutated' : ''}">
+                <div class="cat-attribute ${isMutated ? 'mutated' : ''} ${isAberrated ? 'aberrated' : ''}">
                     <div>
                         <span>${key}: ${value.value}</span>
                         <span class="${rarityClass}">[${value.rarity}]</span>
                         ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
+                        ${isAberrated ? '<span class="aberration-marker">异变</span>' : ''}
                     </div>
                     ${parentInfo}
                 </div>

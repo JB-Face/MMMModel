@@ -78,8 +78,15 @@
                     <div class="panel-content">
                         <div class="breeding-controls">
                             <div class="parameter-group">
-                                <label for="mutationRate">变异概率 (%)</label>
-                                <input type="number" id="mutationRate" min="0" max="100" value="10" step="1">
+                                <label for="mutationRate">变异率 (%)</label>
+                                <input type="number" id="mutationRate" min="0" max="100" value="10">
+                                <div class="description">每次繁殖时发生变异的概率</div>
+                            </div>
+
+                            <div class="parameter-group">
+                                <label for="aberrationRate">异变率 (%)</label>
+                                <input type="number" id="aberrationRate" min="0" max="100" value="5">
+                                <div class="description">每次繁殖时发生异变的概率，异变不会遗传且会提升稀有度</div>
                             </div>
 
                             <div class="parameter-group">

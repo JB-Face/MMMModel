@@ -1063,3 +1063,34 @@ body {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.cat-attribute.aberrated {
+    background-color: rgba(255, 215, 0, 0.1);
+    border-left: 3px solid gold;
+}
+
+.aberration-marker {
+    background-color: gold;
+    color: black;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+
+/* 调整现有的突变样式，使其与异变区分开 */
+
+.cat-attribute.mutated {
+    background-color: rgba(0, 255, 0, 0.1);
+    border-left: 3px solid lime;
+}
+
+.mutation-marker {
+    background-color: lime;
+    color: black;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
