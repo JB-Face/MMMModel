@@ -5,37 +5,51 @@ const DEFAULT_GAME_DATA = {
             options: ["黑色", "白色", "橘色", "灰色", "奶牛色"],
             weights: [20, 20, 20, 20, 20],
             rarity: [1, 1, 1, 1, 2],
-            geneStrength: [80, 80, 80, 80, 60]
+            geneStrength: [80, 80, 80, 80, 60],
+            isMultiSelect: false
         },
         花纹: {
             options: ["纯色", "虎斑", "奶牛纹", "玳瑁", "点状"],
             weights: [30, 20, 20, 15, 15],
             rarity: [1, 2, 2, 3, 3],
-            geneStrength: [90, 75, 75, 60, 60]
+            geneStrength: [90, 75, 75, 60, 60],
+            isMultiSelect: false
         },
         眼睛: {
             options: ["黄色", "蓝色", "绿色", "异色瞳"],
             weights: [30, 30, 30, 10],
             rarity: [1, 1, 1, 5],
-            geneStrength: [85, 85, 85, 40]
+            geneStrength: [85, 85, 85, 40],
+            isMultiSelect: false
         },
         尾巴: {
             options: ["短尾", "中等", "长尾", "无尾"],
             weights: [20, 40, 30, 10],
             rarity: [2, 1, 1, 4],
-            geneStrength: [70, 90, 80, 50]
+            geneStrength: [70, 90, 80, 50],
+            isMultiSelect: false
         },
         性格: {
             options: ["温顺", "活泼", "高冷", "傲娇", "腹黑"],
             weights: [30, 25, 20, 15, 10],
             rarity: [1, 1, 2, 3, 4],
-            geneStrength: [75, 75, 70, 60, 50]
+            geneStrength: [75, 75, 70, 60, 50],
+            isMultiSelect: false
         },
         性别: {
             options: ["公", "母"],
             weights: [50, 50],
             rarity: [1, 1],
-            geneStrength: [100, 100]
+            geneStrength: [100, 100],
+            isMultiSelect: false
+        },
+        特征: {
+            options: ["优雅", "敏捷", "强壮", "聪明", "胆小", "好奇"],
+            weights: [20, 20, 20, 20, 10, 10],
+            rarity: [2, 2, 2, 2, 1, 1],
+            geneStrength: [70, 70, 70, 70, 80, 80],
+            isMultiSelect: true,
+            maxSelect: 3 // 最多可以选择3个特征
         }
     },
     breedingCooldown: 24,
@@ -123,6 +137,15 @@ function editAttribute(attrName) {
                 <label>选项 (用逗号分隔):</label>
                 <input type="text" id="editAttrOptions" value="${attr.options.join(',')}">
             </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="editAttrMultiSelect" ${attr.isMultiSelect ? 'checked' : ''}> 允许多选
+                </label>
+            </div>
+            <div class="input-group" id="editMaxSelectGroup" style="display: ${attr.isMultiSelect ? 'block' : 'none'}">
+                <label>最大可选数量:</label>
+                <input type="number" id="editAttrMaxSelect" value="${attr.maxSelect || 3}" min="1">
+            </div>
             <div class="dialog-buttons">
                 <button onclick="saveAttributeEdit('${attrName}')" class="primary-button">保存</button>
                 <button onclick="closeAttributeDialog()" class="secondary-button">取消</button>
@@ -130,11 +153,17 @@ function editAttribute(attrName) {
         </div>
     `;
 
-    // 添加遮罩层
     const overlay = document.createElement('div');
     overlay.className = 'dialog-overlay';
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
+
+    // 添加多选复选框的事件监听
+    const multiSelectCheckbox = document.getElementById('editAttrMultiSelect');
+    const maxSelectGroup = document.getElementById('editMaxSelectGroup');
+    multiSelectCheckbox.addEventListener('change', function() {
+        maxSelectGroup.style.display = this.checked ? 'block' : 'none';
+    });
 }
 
 // 保存属性编辑
@@ -219,6 +248,15 @@ function addNewAttribute() {
                 <label>选项 (用逗号分隔):</label>
                 <input type="text" id="newAttrOptions" placeholder="例如: 黑色,白色,灰色">
             </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="newAttrMultiSelect"> 允许多选
+                </label>
+            </div>
+            <div class="input-group" id="maxSelectGroup" style="display: none;">
+                <label>最大可选数量:</label>
+                <input type="number" id="newAttrMaxSelect" value="3" min="1">
+            </div>
             <div class="dialog-buttons">
                 <button onclick="saveNewAttribute()" class="primary-button">保存</button>
                 <button onclick="closeAttributeDialog()" class="secondary-button">取消</button>
@@ -230,6 +268,13 @@ function addNewAttribute() {
     overlay.className = 'dialog-overlay';
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
+
+    // 添加多选复选框的事件监听
+    const multiSelectCheckbox = document.getElementById('newAttrMultiSelect');
+    const maxSelectGroup = document.getElementById('maxSelectGroup');
+    multiSelectCheckbox.addEventListener('change', function() {
+        maxSelectGroup.style.display = this.checked ? 'block' : 'none';
+    });
 }
 
 // 保存新属性
@@ -237,6 +282,8 @@ function saveNewAttribute() {
     const attrName = document.getElementById('newAttrName').value.trim();
     const optionsStr = document.getElementById('newAttrOptions').value.trim();
     const options = optionsStr.split(',').map(opt => opt.trim()).filter(opt => opt);
+    const isMultiSelect = document.getElementById('newAttrMultiSelect').checked;
+    const maxSelect = isMultiSelect ? parseInt(document.getElementById('newAttrMaxSelect').value) || 3 : 1;
 
     if (!attrName || options.length === 0) {
         alert('属性名和选项不能为空');
@@ -252,7 +299,9 @@ function saveNewAttribute() {
         options: options,
         weights: options.map(() => 50),
         rarity: options.map(() => 1),
-        geneStrength: options.map(() => 75)
+        geneStrength: options.map(() => 75),
+        isMultiSelect: isMultiSelect,
+        maxSelect: maxSelect
     };
 
     closeAttributeDialog();
@@ -757,31 +806,70 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
 
         // 生成属性
         Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-            let selectedIndex;
-            if (attrName === '性别' && targetGender) {
-                selectedIndex = attrData.options.indexOf(targetGender);
+            if (attrData.isMultiSelect) {
+                // 处理多选属性
+                const maxSelect = attrData.maxSelect || 3;
+                const selectedCount = Math.floor(Math.random() * maxSelect) + 1; // 至少选择1个
+                const selectedValues = [];
+                const selectedRarities = [];
+                
+                // 根据权重随机选择多个选项
+                for (let i = 0; i < selectedCount; i++) {
+                    const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
+                    let random = Math.random() * totalWeight;
+                    let selectedIndex = attrData.weights.findIndex(weight => {
+                        random -= weight;
+                        return random <= 0;
+                    });
+                    
+                    if (selectedIndex === -1) selectedIndex = 0;
+                    
+                    // 避免重复选择
+                    if (!selectedValues.includes(attrData.options[selectedIndex])) {
+                        selectedValues.push(attrData.options[selectedIndex]);
+                        selectedRarities.push(attrData.rarity[selectedIndex]);
+                    }
+                }
+                
+                cat[attrName] = {
+                    values: selectedValues,
+                    rarities: selectedRarities,
+                    isMultiSelect: true
+                };
             } else {
-                // 根据权重随机选择
-                const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
-                let random = Math.random() * totalWeight;
-                selectedIndex = attrData.weights.findIndex(weight => {
-                    random -= weight;
-                    return random <= 0;
-                });
+                // 处理单选属性
+                let selectedIndex;
+                if (attrName === '性别' && targetGender) {
+                    selectedIndex = attrData.options.indexOf(targetGender);
+                } else {
+                    const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
+                    let random = Math.random() * totalWeight;
+                    selectedIndex = attrData.weights.findIndex(weight => {
+                        random -= weight;
+                        return random <= 0;
+                    });
+                }
+                
+                if (selectedIndex === -1) selectedIndex = 0;
+                
+                cat[attrName] = {
+                    value: attrData.options[selectedIndex],
+                    rarity: attrData.rarity[selectedIndex]
+                };
             }
-            
-            if (selectedIndex === -1) selectedIndex = 0;
-            
-            cat[attrName] = {
-                value: attrData.options[selectedIndex],
-                rarity: attrData.rarity[selectedIndex]
-            };
         });
 
-        // 计算总稀有度
-        cat.totalRarity = Object.values(cat)
-            .filter(value => value && typeof value === 'object' && 'rarity' in value)
-            .reduce((sum, attr) => sum + attr.rarity, 0);
+        // 计算总稀有度（包括多选属性）
+        cat.totalRarity = Object.entries(cat)
+            .filter(([key, value]) => value && typeof value === 'object')
+            .reduce((sum, [key, value]) => {
+                if (value.isMultiSelect) {
+                    return sum + value.rarities.reduce((s, r) => s + r, 0);
+                } else if ('rarity' in value) {
+                    return sum + value.rarity;
+                }
+                return sum;
+            }, 0);
 
         lastCat = cat;
         
@@ -884,69 +972,161 @@ function breedCats(cat1, cat2) {
                 }
 
                 // 获取父母的属性值
-                const parent1Value = cat1[attrName] && cat1[attrName].value;
-                const parent2Value = cat2[attrName] && cat2[attrName].value;
-                const parent1Strength = parent1Value ? (attrData.geneStrength[attrData.options.indexOf(parent1Value)] || 50) : 0;
-                const parent2Strength = parent2Value ? (attrData.geneStrength[attrData.options.indexOf(parent2Value)] || 50) : 0;
+                const parent1Value = cat1[attrName];
+                const parent2Value = cat2[attrName];
 
                 // 首先检查是否发生异变
                 if (Math.random() * 100 < aberrationRate) {
-                    // 发生异变
-                    const aberrationIndex = Math.floor(Math.random() * attrData.options.length);
-                    const baseRarity = attrData.rarity[aberrationIndex] || 1;
-                    newCat[attrName] = {
-                        value: attrData.options[aberrationIndex],
-                        rarity: baseRarity * (gameData.aberrationBonus || 2),
-                        isAberration: true
-                    };
-                    newCat.aberrations.add(attrName);
+                    if (attrData.isMultiSelect) {
+                        // 多选属性的异变
+                        const maxSelect = attrData.maxSelect || 3;
+                        const selectedCount = Math.floor(Math.random() * maxSelect) + 1;
+                        const selectedValues = [];
+                        const selectedRarities = [];
+                        
+                        for (let i = 0; i < selectedCount; i++) {
+                            const idx = Math.floor(Math.random() * attrData.options.length);
+                            if (!selectedValues.includes(attrData.options[idx])) {
+                                selectedValues.push(attrData.options[idx]);
+                                selectedRarities.push(attrData.rarity[idx] * (gameData.aberrationBonus || 2));
+                            }
+                        }
+                        
+                        newCat[attrName] = {
+                            values: selectedValues,
+                            rarities: selectedRarities,
+                            isMultiSelect: true,
+                            isAberration: true
+                        };
+                        newCat.aberrations.add(attrName);
+                    } else {
+                        // 单选属性的异变
+                        const aberrationIndex = Math.floor(Math.random() * attrData.options.length);
+                        const baseRarity = attrData.rarity[aberrationIndex] || 1;
+                        newCat[attrName] = {
+                            value: attrData.options[aberrationIndex],
+                            rarity: baseRarity * (gameData.aberrationBonus || 2),
+                            isAberration: true
+                        };
+                        newCat.aberrations.add(attrName);
+                    }
                 } else if (Math.random() * 100 < mutationRate) {
-                    // 发生变异
-                    const mutationIndex = Math.floor(Math.random() * attrData.options.length);
-                    newCat[attrName] = {
-                        value: attrData.options[mutationIndex],
-                        rarity: attrData.rarity[mutationIndex] || 1
-                    };
-                    newCat.mutations.add(attrName);
+                    if (attrData.isMultiSelect) {
+                        // 多选属性的变异
+                        const maxSelect = attrData.maxSelect || 3;
+                        const selectedCount = Math.floor(Math.random() * maxSelect) + 1;
+                        const selectedValues = [];
+                        const selectedRarities = [];
+                        
+                        for (let i = 0; i < selectedCount; i++) {
+                            const idx = Math.floor(Math.random() * attrData.options.length);
+                            if (!selectedValues.includes(attrData.options[idx])) {
+                                selectedValues.push(attrData.options[idx]);
+                                selectedRarities.push(attrData.rarity[idx]);
+                            }
+                        }
+                        
+                        newCat[attrName] = {
+                            values: selectedValues,
+                            rarities: selectedRarities,
+                            isMultiSelect: true
+                        };
+                        newCat.mutations.add(attrName);
+                    } else {
+                        // 单选属性的变异
+                        const mutationIndex = Math.floor(Math.random() * attrData.options.length);
+                        newCat[attrName] = {
+                            value: attrData.options[mutationIndex],
+                            rarity: attrData.rarity[mutationIndex] || 1
+                        };
+                        newCat.mutations.add(attrName);
+                    }
                 } else {
                     // 正常遗传
-                    if (!parent1Value || !parent2Value) {
-                        const randomIndex = Math.floor(Math.random() * attrData.options.length);
+                    if (attrData.isMultiSelect) {
+                        // 多选属性的遗传
+                        const parent1Values = parent1Value ? parent1Value.values : [];
+                        const parent2Values = parent2Value ? parent2Value.values : [];
+                        const allParentValues = [...new Set([...parent1Values, ...parent2Values])];
+                        
+                        const selectedValues = [];
+                        const selectedRarities = [];
+                        const maxSelect = attrData.maxSelect || 3;
+                        
+                        // 从父母的特征中随机选择
+                        while (selectedValues.length < maxSelect && allParentValues.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * allParentValues.length);
+                            const selectedValue = allParentValues[randomIndex];
+                            const attrIndex = attrData.options.indexOf(selectedValue);
+                            
+                            if (attrIndex !== -1) {
+                                selectedValues.push(selectedValue);
+                                selectedRarities.push(attrData.rarity[attrIndex]);
+                            }
+                            
+                            allParentValues.splice(randomIndex, 1);
+                        }
+                        
+                        // 如果没有继承到任何特征，随机生成一个
+                        if (selectedValues.length === 0) {
+                            const randomIndex = Math.floor(Math.random() * attrData.options.length);
+                            selectedValues.push(attrData.options[randomIndex]);
+                            selectedRarities.push(attrData.rarity[randomIndex]);
+                        }
+                        
                         newCat[attrName] = {
-                            value: attrData.options[randomIndex],
-                            rarity: attrData.rarity[randomIndex] || 1
+                            values: selectedValues,
+                            rarities: selectedRarities,
+                            isMultiSelect: true
                         };
                     } else {
-                        const selectedAttr = selectAttributeBasedOnGeneStrength(
-                            cat1[attrName],
-                            cat2[attrName],
-                            attrData
-                        );
-                        newCat[attrName] = {
-                            value: selectedAttr.value,
-                            rarity: selectedAttr.rarity || 1
-                        };
+                        // 单选属性的遗传
+                        if (!parent1Value || !parent2Value) {
+                            const randomIndex = Math.floor(Math.random() * attrData.options.length);
+                            newCat[attrName] = {
+                                value: attrData.options[randomIndex],
+                                rarity: attrData.rarity[randomIndex] || 1
+                            };
+                        } else {
+                            const selectedAttr = selectAttributeBasedOnGeneStrength(
+                                parent1Value,
+                                parent2Value,
+                                attrData
+                            );
+                            newCat[attrName] = {
+                                value: selectedAttr.value,
+                                rarity: selectedAttr.rarity || 1
+                            };
+                        }
                     }
                 }
                 
                 // 记录继承信息
                 newCat.inheritanceInfo[attrName] = {
-                    parent1: {
-                        value: parent1Value,
-                        strength: parent1Strength
-                    },
-                    parent2: {
-                        value: parent2Value,
-                        strength: parent2Strength
-                    }
+                    parent1: parent1Value ? {
+                        value: parent1Value.isMultiSelect ? parent1Value.values.join('、') : parent1Value.value,
+                        strength: getAttributeStrength(attrName, parent1Value)
+                    } : { value: '未知', strength: 0 },
+                    parent2: parent2Value ? {
+                        value: parent2Value.isMultiSelect ? parent2Value.values.join('、') : parent2Value.value,
+                        strength: getAttributeStrength(attrName, parent2Value)
+                    } : { value: '未知', strength: 0 }
                 };
             } catch (error) {
                 console.error(`处理属性 ${attrName} 时出错:`, error);
-                const defaultIndex = 0;
-                newCat[attrName] = {
-                    value: attrData.options[defaultIndex],
-                    rarity: attrData.rarity[defaultIndex] || 1
-                };
+                // 出错时使用默认值
+                if (attrData.isMultiSelect) {
+                    newCat[attrName] = {
+                        values: [attrData.options[0]],
+                        rarities: [attrData.rarity[0] || 1],
+                        isMultiSelect: true
+                    };
+                } else {
+                    newCat[attrName] = {
+                        value: attrData.options[0],
+                        rarity: attrData.rarity[0] || 1
+                    };
+                }
             }
         });
         
@@ -1035,43 +1215,67 @@ function displayCatAttributes(cat) {
                    key !== 'inheritanceInfo' &&
                    value && 
                    typeof value === 'object' &&
-                   'value' in value;
+                   (value.isMultiSelect || 'value' in value);
         })
         .forEach(([key, value]) => {
             const isMutated = cat.mutations && cat.mutations.has(key);
             const isAberrated = cat.aberrations && cat.aberrations.has(key);
             const inheritanceInfo = cat.inheritanceInfo && cat.inheritanceInfo[key];
-            const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
             
-            let parentInfo = '';
-            if (inheritanceInfo || isMutated || isAberrated) {
-                const parent1 = inheritanceInfo ? inheritanceInfo.parent1 : { value: '未知', strength: 0 };
-                const parent2 = inheritanceInfo ? inheritanceInfo.parent2 : { value: '未知', strength: 0 };
+            if (value.isMultiSelect) {
+                // 处理多选属性的显示
+                const combinedRarity = value.rarities.reduce((sum, r) => sum + r, 0);
+                const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(combinedRarity)))}`;
                 
-                const parent1Rarity = getAttributeRarity(key, parent1.value);
-                const parent2Rarity = getAttributeRarity(key, parent2.value);
-                const parent1RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent1Rarity)))}`;
-                const parent2RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent2Rarity)))}`;
+                let valuesDisplay = value.values.map((val, idx) => {
+                    const valueRarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarities[idx])))}`;
+                    return `<span class="${valueRarityClass}">${val}[${value.rarities[idx]}]</span>`;
+                }).join('、');
                 
-                parentInfo = `
-                    <div class="parent-info">
-                        父: ${parent1.value} <span class="${parent1RarityClass}">[${parent1Rarity}]</span> (${parent1.strength}), 
-                        母: ${parent2.value} <span class="${parent2RarityClass}">[${parent2Rarity}]</span> (${parent2.strength})
+                attributesHtml += `
+                    <div class="cat-attribute ${isMutated ? 'mutated' : ''} ${isAberrated ? 'aberrated' : ''}">
+                        <div>
+                            <span>${key}: ${valuesDisplay}</span>
+                            <span class="${rarityClass}">[总: ${combinedRarity}]</span>
+                            ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
+                            ${isAberrated ? '<span class="aberration-marker">异变</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 原有的单选属性显示逻辑
+                const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(value.rarity)))}`;
+                
+                let parentInfo = '';
+                if (inheritanceInfo || isMutated || isAberrated) {
+                    const parent1 = inheritanceInfo ? inheritanceInfo.parent1 : { value: '未知', strength: 0 };
+                    const parent2 = inheritanceInfo ? inheritanceInfo.parent2 : { value: '未知', strength: 0 };
+                    
+                    const parent1Rarity = getAttributeRarity(key, parent1.value);
+                    const parent2Rarity = getAttributeRarity(key, parent2.value);
+                    const parent1RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent1Rarity)))}`;
+                    const parent2RarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(parent2Rarity)))}`;
+                    
+                    parentInfo = `
+                        <div class="parent-info">
+                            父: ${parent1.value} <span class="${parent1RarityClass}">[${parent1Rarity}]</span> (${parent1.strength}), 
+                            母: ${parent2.value} <span class="${parent2RarityClass}">[${parent2Rarity}]</span> (${parent2.strength})
+                        </div>
+                    `;
+                }
+                
+                attributesHtml += `
+                    <div class="cat-attribute ${isMutated ? 'mutated' : ''} ${isAberrated ? 'aberrated' : ''}">
+                        <div>
+                            <span>${key}: ${value.value}</span>
+                            <span class="${rarityClass}">[${value.rarity}]</span>
+                            ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
+                            ${isAberrated ? '<span class="aberration-marker">异变</span>' : ''}
+                        </div>
+                        ${parentInfo}
                     </div>
                 `;
             }
-            
-            attributesHtml += `
-                <div class="cat-attribute ${isMutated ? 'mutated' : ''} ${isAberrated ? 'aberrated' : ''}">
-                    <div>
-                        <span>${key}: ${value.value}</span>
-                        <span class="${rarityClass}">[${value.rarity}]</span>
-                        ${isMutated ? '<span class="mutation-marker">突变</span>' : ''}
-                        ${isAberrated ? '<span class="aberration-marker">异变</span>' : ''}
-                    </div>
-                    ${parentInfo}
-                </div>
-            `;
         });
     
     return `
@@ -1444,7 +1648,12 @@ function exportAttributes() {
     const attributesData = {
         attributes: gameData.attributes,
         breedingCooldown: gameData.breedingCooldown,
-        defaultMutationRate: gameData.defaultMutationRate
+        defaultMutationRate: gameData.defaultMutationRate,
+        defaultAberrationRate: gameData.defaultAberrationRate,
+        aberrationBonus: gameData.aberrationBonus,
+        initialMaxBreedingCooldown: gameData.initialMaxBreedingCooldown,
+        cdReductionPerBreeding: gameData.cdReductionPerBreeding,
+        coinMultiplier: gameData.coinMultiplier
     };
     
     const blob = new Blob([JSON.stringify(attributesData, null, 2)], { type: 'application/json' });
@@ -1482,6 +1691,11 @@ function importAttributes() {
                 gameData.attributes = data.attributes;
                 if (data.breedingCooldown) gameData.breedingCooldown = data.breedingCooldown;
                 if (data.defaultMutationRate) gameData.defaultMutationRate = data.defaultMutationRate;
+                if (data.defaultAberrationRate) gameData.defaultAberrationRate = data.defaultAberrationRate;
+                if (data.aberrationBonus) gameData.aberrationBonus = data.aberrationBonus;
+                if (data.initialMaxBreedingCooldown) gameData.initialMaxBreedingCooldown = data.initialMaxBreedingCooldown;
+                if (data.cdReductionPerBreeding) gameData.cdReductionPerBreeding = data.cdReductionPerBreeding;
+                if (data.coinMultiplier) gameData.coinMultiplier = data.coinMultiplier;
                 
                 // 重新渲染界面
                 renderAttributeList();
@@ -1712,6 +1926,18 @@ function saveToLocalStorage() {
 // 添加重新模拟功能
 function resetSimulation() {
     if (confirm('确定要重新开始模拟吗？这将清空所有当前数据。')) {
+        // 保存当前的属性设置
+        const currentAttributes = { ...gameData.attributes };
+        const currentSettings = {
+            breedingCooldown: gameData.breedingCooldown,
+            defaultMutationRate: gameData.defaultMutationRate,
+            defaultAberrationRate: gameData.defaultAberrationRate,
+            aberrationBonus: gameData.aberrationBonus,
+            initialMaxBreedingCooldown: gameData.initialMaxBreedingCooldown,
+            cdReductionPerBreeding: gameData.cdReductionPerBreeding,
+            coinMultiplier: gameData.coinMultiplier
+        };
+        
         // 重置所有相关数据
         currentDay = 0;
         breedingPool.clear();
@@ -1724,8 +1950,14 @@ function resetSimulation() {
             breedingResults.innerHTML = '';
         }
         
-        // 重新初始化游戏
-        initGame();
+        // 重新初始化游戏，但保留属性设置
+        gameData = { ...DEFAULT_GAME_DATA };
+        gameData.attributes = currentAttributes;
+        Object.assign(gameData, currentSettings);
+        
+        // 重新渲染界面
+        renderAttributeList();
+        renderControls();
         
         // 如果在商店模式下，刷新商店
         const currentPath = window.location.pathname;
@@ -1733,6 +1965,31 @@ function resetSimulation() {
             generateShopCats();
         }
         
-        alert('模拟已重置！');
+        // 根据不同模式初始化
+        if (currentPath.includes('manual')) {
+            initializeManualBreeding();
+        } else if (currentPath.includes('auto')) {
+            const initialCat = generateRandomCat();
+            displayCurrentCat(initialCat);
+        }
+        
+        alert('模拟已重置！属性设置已保留。');
+    }
+}
+
+// 获取属性的基因强度
+function getAttributeStrength(attrName, attrValue) {
+    if (!gameData.attributes[attrName] || !attrValue) return 0;
+    
+    if (attrValue.isMultiSelect) {
+        // 对于多选属性，返回所有选中值的平均基因强度
+        return attrValue.values.reduce((sum, value) => {
+            const index = gameData.attributes[attrName].options.indexOf(value);
+            return sum + (index >= 0 ? gameData.attributes[attrName].geneStrength[index] : 0);
+        }, 0) / attrValue.values.length;
+    } else {
+        // 对于单选属性，返回选中值的基因强度
+        const index = gameData.attributes[attrName].options.indexOf(attrValue.value);
+        return index >= 0 ? gameData.attributes[attrName].geneStrength[index] : 0;
     }
 }
