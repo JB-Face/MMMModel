@@ -379,14 +379,36 @@ function renderControls() {
         const weightControls = document.getElementById('weightControls');
         const rarityControls = document.getElementById('rarityControls');
         const geneStrengthControls = document.getElementById('geneStrengthControls');
+        const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
         
         if (!weightControls || !rarityControls || !geneStrengthControls) {
             throw new Error('找不到必要的DOM元素');
         }
         
+        // 清空所有控制面板
         weightControls.innerHTML = '';
         rarityControls.innerHTML = '';
         geneStrengthControls.innerHTML = '';
+
+        // 清理培育设置面板中的动态添加控件
+        if (breedingPanel) {
+            const dynamicControls = [
+                'initialMaxCD',
+                'cdReductionPerBreeding',
+                'coinMultiplier',
+                'aberrationRate'
+            ];
+            
+            dynamicControls.forEach(id => {
+                const control = breedingPanel.querySelector(`#${id}`);
+                if (control) {
+                    const group = control.closest('.parameter-group');
+                    if (group) {
+                        group.remove();
+                    }
+                }
+            });
+        }
         
         if (!gameData || !gameData.attributes) {
             throw new Error('游戏数据未正确加载');
@@ -441,15 +463,17 @@ function renderControls() {
             const geneStrengthPanel = document.createElement('div');
             geneStrengthPanel.className = 'attribute-item';
             geneStrengthPanel.innerHTML = `
-                <label>${attrName} 基因强度设置:</label>
+                <label>${attrName} 基因强度设置 (总和: <span class="gene-strength-total">100</span>):</label>
                 ${attrData.options.map((opt, idx) => `
                     <div>
                         <label>${opt}:</label>
                         <input type="number" 
-                               value="${attrData.geneStrength[idx] || 50}" 
+                               value="${attrData.geneStrength[idx].toFixed(1)}" 
                                min="0"
                                max="100"
+                               step="0.1"
                                onchange="updateGeneStrength('${attrName}', ${idx}, this.value)">
+                        <span class="strength-percentage">${attrData.geneStrength[idx].toFixed(1)}%</span>
                     </div>
                 `).join('')}
             `;
@@ -457,7 +481,6 @@ function renderControls() {
         });
 
         // 添加初始最大CD设置控件
-        const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
         if (breedingPanel) {
             const cdControl = document.createElement('div');
             cdControl.className = 'parameter-group';
@@ -542,9 +565,27 @@ function updateRarity(attrName, index, value) {
 
 // 更新基因强度
 function updateGeneStrength(attrName, index, value) {
-    if (gameData.attributes[attrName]) {
-        gameData.attributes[attrName].geneStrength[index] = parseInt(value) || 50;
-        saveToLocalStorage();
+    if (!gameData.attributes[attrName]) return;
+    gameData.attributes[attrName].geneStrength[index] = parseFloat(value);
+    normalizeGeneStrength(attrName);
+    renderControls();
+}
+
+// 标准化基因强度，使总和为100
+function normalizeGeneStrength(attrName) {
+    const attribute = gameData.attributes[attrName];
+    if (!attribute || !attribute.geneStrength) return;
+
+    // 计算当前总和
+    const total = attribute.geneStrength.reduce((sum, val) => sum + val, 0);
+    
+    if (total === 0) {
+        // 如果总和为0，平均分配
+        const equalValue = 100 / attribute.geneStrength.length;
+        attribute.geneStrength = attribute.geneStrength.map(() => equalValue);
+    } else {
+        // 标准化为总和100
+        attribute.geneStrength = attribute.geneStrength.map(val => (val / total) * 100);
     }
 }
 

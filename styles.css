@@ -970,7 +970,7 @@ body {
     padding: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    text-align: center;
+    text-align: right;
 }
 
 
@@ -1167,4 +1167,15 @@ body {
 .travel-button:disabled {
     background: #cccccc;
     cursor: not-allowed;
+}
+
+.strength-percentage {
+    margin-left: 8px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.gene-strength-total {
+    color: #4CAF50;
+    font-weight: bold;
 }
