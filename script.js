@@ -1,4 +1,19 @@
 // 默认游戏数据
+const POSTCARD_DATA = {
+    provinces: [
+        "北京", "天津", "河北", "山西", "内蒙古", "辽宁", "吉林", "黑龙江",
+        "上海", "江苏", "浙江", "安徽", "福建", "江西", "山东", "河南",
+        "湖北", "湖南", "广东", "广西", "海南", "重庆", "四川", "贵州",
+        "云南", "西藏", "陕西", "甘肃", "青海", "宁夏", "新疆", "香港",
+        "澳门", "台湾"
+    ],
+    cardTypes: [
+        { name: "N", rarity: 1, probability: 0.9 },
+        { name: "SR", rarity: 5, probability: 0.09 },
+        { name: "HR", rarity: 10, probability: 0.01 }
+    ]
+};
+
 const DEFAULT_GAME_DATA = {
     attributes: {
         毛色: {
@@ -801,7 +816,10 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
             children: [],
             breedingCooldown: isInitialCat ? (gameData.initialMaxBreedingCooldown || 24) : 0,
             maxBreedingCooldown: gameData.initialMaxBreedingCooldown || 24,
-            isShopCat: false
+            isShopCat: false,
+            postcards: [], // 添加明信片收藏
+            isTraveling: false, // 是否正在出游
+            travelReturnDay: 0 // 出游返回的天数
         };
 
         // 生成属性
@@ -1285,6 +1303,36 @@ function displayCatAttributes(cat) {
                 `;
             }
         });
+    
+    // 添加明信片收藏显示
+    if (cat.postcards && cat.postcards.length > 0) {
+        attributesHtml += `
+            <div class="postcards-collection">
+                <h4>明信片收藏 (${cat.postcards.length}张):</h4>
+                <div class="postcards-list">
+                    ${cat.postcards.map(card => `
+                        <div class="postcard ${card.type.toLowerCase()}">
+                            ${card.province} [${card.type}]
+                            <span class="rarity-${Math.floor(card.rarity/2)}">(稀有度:${card.rarity})</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // 添加出游状态显示
+    if (cat.isTraveling) {
+        attributesHtml += `
+            <div class="traveling-status">
+                <p>正在出游中 (将在第${cat.travelReturnDay}天返回)</p>
+            </div>
+        `;
+    } else if (cat.breedingCooldown >= 24) {
+        attributesHtml += `
+            <button onclick="sendCatTraveling('${cat.id}')" class="travel-button">出游</button>
+        `;
+    }
     
     return `
         ${attributesHtml}
@@ -1862,25 +1910,19 @@ function proceedToNextGeneration() {
         currentDay++;
         console.log('进入新的一天:', currentDay);
 
+        // 在CD恢复之前检查返回的猫咪
+        checkReturnedCats();
+        
         // 修改CD恢复逻辑
-        try {
-            currentGenerationCats.forEach((cat, id) => {
-                if (cat) {
-                    // 每天恢复24点CD，但不超过最大值
-                    cat.breedingCooldown = Math.min(
-                        cat.maxBreedingCooldown,
-                        cat.breedingCooldown + 24
-                    );
-                } else {
-                    console.warn('发现无效的猫咪数据，ID:', id);
-                }
-            });
-            console.log('更新繁殖CD完成');
-        } catch (resetError) {
-            console.error('更新繁殖CD时出错:', resetError);
-            throw new Error('更新繁殖CD失败: ' + resetError.message);
-        }
-
+        currentGenerationCats.forEach((cat, id) => {
+            if (cat && !cat.isTraveling) { // 只有不在出游的猫咪才恢复CD
+                cat.breedingCooldown = Math.min(
+                    cat.maxBreedingCooldown,
+                    cat.breedingCooldown + 24
+                );
+            }
+        });
+        
         // 刷新商店（如果在商店模式下）
         const currentPath = window.location.pathname;
         if (currentPath.includes('shop')) {
@@ -2027,4 +2069,71 @@ function getAttributeStrength(attrName, attrValue) {
         const index = gameData.attributes[attrName].options.indexOf(attrValue.value);
         return index >= 0 ? gameData.attributes[attrName].geneStrength[index] : 0;
     }
+}
+
+// 添加出游功能
+function sendCatTraveling(catId) {
+    const cat = currentGenerationCats.get(catId);
+    if (!cat) return;
+    
+    if (cat.isTraveling) {
+        alert('这只猫咪已经在出游了！');
+        return;
+    }
+    
+    if (cat.breedingCooldown < 24) {
+        alert('猫咪需要满CD才能出游！');
+        return;
+    }
+    
+    cat.isTraveling = true;
+    cat.travelReturnDay = currentDay + 1;
+    cat.breedingCooldown = 0; // 出游消耗所有CD
+    
+    updateBreedingPoolDisplay();
+    updateParentSelectors();
+    alert(`${cat.name} 出发去旅行了！将在明天带回明信片~`);
+}
+
+// 生成明信片
+function generatePostcard() {
+    // 随机选择一个省份
+    const province = POSTCARD_DATA.provinces[Math.floor(Math.random() * POSTCARD_DATA.provinces.length)];
+    
+    // 根据概率选择卡片类型
+    const random = Math.random();
+    let cardType;
+    let sum = 0;
+    for (const type of POSTCARD_DATA.cardTypes) {
+        sum += type.probability;
+        if (random <= sum) {
+            cardType = type;
+            break;
+        }
+    }
+    
+    return {
+        id: Math.random().toString(36).substr(2, 9),
+        province: province,
+        type: cardType.name,
+        rarity: cardType.rarity,
+        obtainDay: currentDay
+    };
+}
+
+// 检查并处理返回的猫咪
+function checkReturnedCats() {
+    currentGenerationCats.forEach(cat => {
+        if (cat.isTraveling && cat.travelReturnDay <= currentDay) {
+            // 生成明信片
+            const postcard = generatePostcard();
+            cat.postcards.push(postcard);
+            
+            // 重置出游状态
+            cat.isTraveling = false;
+            cat.travelReturnDay = 0;
+            
+            alert(`${cat.name} 带着一张来自${postcard.province}的${postcard.type}明信片回来了！`);
+        }
+    });
 }
