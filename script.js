@@ -1611,7 +1611,7 @@ function updateBreedingPoolDisplay() {
             <div class="cat-name">${cat.name || '未知'}</div>
             ${displayCatAttributes(cat)}
             <p>培育CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown}点</p>
-            <button onclick="removeCatFromPool('${cat.id}')" class="delete-button">移除</button>
+            <button onclick="removeCatFromPool('${cat.id}')" class="delete-button">回收</button>
         `;
         poolDiv.appendChild(catCard);
     });
@@ -1644,10 +1644,24 @@ function updateParentSelectors() {
 
 // 从培育池移除猫咪
 function removeCatFromPool(catId) {
-    if (confirm('确定要移除这只猫咪吗？')) {
+    const cat = currentGenerationCats.get(catId);
+    if (!cat) return;
+    
+    if (confirm('确定要回收这只猫咪吗？')) {
+        const recycleCoins = Math.round(cat.totalRarity * 5);
+        playerCoins += recycleCoins;
+        
+        // 从培育池中移除猫咪
         currentGenerationCats.delete(catId);
+        breedingPool.delete(catId);
+        
+        // 更新显示
         updateBreedingPoolDisplay();
         updateParentSelectors();
+        updateCoinsDisplay();
+        
+        // 显示回收获得的金币
+        alert(`回收成功！获得 ${recycleCoins} 金币`);
     }
 }
 
