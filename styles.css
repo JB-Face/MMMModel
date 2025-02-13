@@ -289,12 +289,47 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid #ddd;
 }
 
 .history-actions {
     display: flex;
     gap: 10px;
+}
+
+#toggleHistory {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#toggleHistory:hover {
+    background-color: #45a049;
+}
+
+#toggleHistory:active {
+    background-color: #3d8b40;
+}
+
+
+/* 当历史记录关闭时的样式 */
+
+#toggleHistory.disabled {
+    background-color: #f44336;
+}
+
+#toggleHistory.disabled:hover {
+    background-color: #da190b;
+}
+
+.breeding-history {
+    transition: display 0.3s ease-in-out;
 }
 
 

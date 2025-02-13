@@ -17,10 +17,10 @@ const POSTCARD_DATA = {
 const DEFAULT_GAME_DATA = {
     attributes: {
         毛色: {
-            options: ["黑色", "白色", "橘色", "灰色", "奶牛色"],
-            weights: [20, 20, 20, 20, 20],
-            rarity: [1, 1, 1, 1, 2],
-            geneStrength: [80, 80, 80, 80, 60],
+            options: ["白色", "黑色", "橘色", "灰色", "棕色", "三花", "玳瑁"],
+            weights: [20, 20, 20, 15, 15, 5, 5],
+            rarity: [1, 1, 1, 2, 2, 3, 3],
+            geneStrength: [80, 80, 80, 70, 70, 60, 60],
             isMultiSelect: false
         },
         花纹: {
@@ -72,7 +72,8 @@ const DEFAULT_GAME_DATA = {
     defaultAberrationRate: 5,
     aberrationBonus: 2,
     initialMaxBreedingCooldown: 24,
-    cdReductionPerBreeding: 8,
+    cdReductionPerBreeding: 8, // 修改这里，从1改为8
+    maxCDReductionPerBreeding: 6, // 添加这一行，设置默认值为6
     coinMultiplier: 1,
     simulationHistory: []
 };
@@ -382,10 +383,11 @@ function renderControls() {
         const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
         
         if (!weightControls || !rarityControls || !geneStrengthControls) {
-            throw new Error('找不到必要的DOM元素');
+            console.error('找不到必要的控制面板元素');
+            return;
         }
         
-        // 清空所有控制面板
+        // 清空现有内容
         weightControls.innerHTML = '';
         rarityControls.innerHTML = '';
         geneStrengthControls.innerHTML = '';
@@ -505,7 +507,7 @@ function renderControls() {
                        id="cdReductionPerBreeding" 
                        min="1" 
                        max="24"
-                       value="${gameData.cdReductionPerBreeding || 8}" 
+                       value="${gameData.cdReductionPerBreeding || 8}"  // 修改这里，从1改为8
                        onchange="updateCDReduction(this.value)">
             `;
             breedingPanel.insertBefore(cdReductionControl, breedingPanel.firstChild);
@@ -541,9 +543,25 @@ function renderControls() {
             <p class="parameter-description">异变不会遗传，但会提升稀有度</p>
         `;
         breedingPanel.insertBefore(aberrationControl, breedingPanel.firstChild);
+
+        // 添加最大CD减少值设置控件
+        if (breedingPanel) {
+            const maxCDReductionControl = document.createElement('div');
+            maxCDReductionControl.className = 'parameter-group';
+            maxCDReductionControl.innerHTML = `
+                <label for="maxCDReductionPerBreeding">每次交配减少最大CD值</label>
+                <input type="number" 
+                       id="maxCDReductionPerBreeding" 
+                       min="0" 
+                       max="24"
+                       value="${gameData.maxCDReductionPerBreeding || 6}" 
+                       onchange="updateMaxCDReduction(this.value)">
+                <div class="description">设置为0则不减少最大CD值</div>
+            `;
+            breedingPanel.insertBefore(maxCDReductionControl, breedingPanel.firstChild);
+        }
     } catch (error) {
-        console.error('渲染控制面板失败:', error);
-        alert('渲染控制面板失败: ' + error.message);
+        console.error('渲染控制面板时出错:', error);
     }
 }
 
@@ -609,7 +627,7 @@ function updateCDReduction(value) {
         saveToLocalStorage();
     } else {
         alert('每次交配减少CD值必须在1到24之间');
-        document.getElementById('cdReductionPerBreeding').value = gameData.cdReductionPerBreeding || 8;
+        document.getElementById('cdReductionPerBreeding').value = gameData.cdReductionPerBreeding || 8;  // 修改这里，从1改为8
     }
 }
 
@@ -622,6 +640,18 @@ function updateCoinMultiplier(value) {
     } else {
         alert('金币倍率不能小于0.1');
         document.getElementById('coinMultiplier').value = gameData.coinMultiplier || 1;
+    }
+}
+
+// 添加更新最大CD减少值的函数
+function updateMaxCDReduction(value) {
+    const newValue = parseInt(value);
+    if (newValue >= 0 && newValue <= 24) {
+        gameData.maxCDReductionPerBreeding = newValue;
+        saveToLocalStorage();
+    } else {
+        alert('每次交配减少最大CD值必须在0到24之间');
+        document.getElementById('maxCDReductionPerBreeding').value = gameData.maxCDReductionPerBreeding || 6;
     }
 }
 
@@ -987,7 +1017,7 @@ function selectAttributeBasedOnGeneStrength(parent1Attr, parent2Attr, attrData) 
 function breedCats(cat1, cat2) {
     try {
         // 检查CD是否足够
-        const requiredCD = gameData.cdReductionPerBreeding || 8;
+        const requiredCD = gameData.cdReductionPerBreeding || 8;  // 修改这里，从1改为8
         if (!cat1 || !cat2 || !cat1.性别 || !cat2.性别 ||
             cat1.性别.value === cat2.性别.value || 
             cat1.breedingCooldown < requiredCD || cat2.breedingCooldown < requiredCD) {
@@ -1007,13 +1037,16 @@ function breedCats(cat1, cat2) {
         };
         
         // 更新父母的CD和最大CD
-        const cdReduction = gameData.cdReductionPerBreeding || 8;
+        const cdReduction = gameData.cdReductionPerBreeding || 8;  // 修改这里，从1改为8
+        const maxCDReduction = gameData.maxCDReductionPerBreeding || 6;
         cat1.breedingCooldown = Math.max(0, cat1.breedingCooldown - cdReduction);
         cat2.breedingCooldown = Math.max(0, cat2.breedingCooldown - cdReduction);
         
         // 减少父母的最大CD，但不低于8
-        cat1.maxBreedingCooldown = Math.max(8, cat1.maxBreedingCooldown - cdReduction);
-        cat2.maxBreedingCooldown = Math.max(8, cat2.maxBreedingCooldown - cdReduction);
+        if (maxCDReduction > 0) {
+            cat1.maxBreedingCooldown = Math.max(8, cat1.maxBreedingCooldown - maxCDReduction);
+            cat2.maxBreedingCooldown = Math.max(8, cat2.maxBreedingCooldown - maxCDReduction);
+        }
         
         // 更新父母的children数组
         cat1.children.push(newCat.id);
