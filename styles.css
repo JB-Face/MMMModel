@@ -117,11 +117,12 @@ body {
 }
 
 .section-content.expanded {
-    max-height: 2000px;
+    max-height: 400px;
     opacity: 1;
     visibility: visible;
     display: block;
     padding: 15px;
+    overflow-y: auto;
 }
 
 .section-content::-webkit-scrollbar {

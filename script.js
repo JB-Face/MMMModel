@@ -1933,56 +1933,69 @@ function saveToLocalStorage() {
 
 // 添加重新模拟功能
 function resetSimulation() {
-    if (confirm('确定要重新开始模拟吗？这将清空所有当前数据。')) {
-        // 保存当前的属性设置
-        const currentAttributes = { ...gameData.attributes };
-        const currentSettings = {
-            breedingCooldown: gameData.breedingCooldown,
-            defaultMutationRate: gameData.defaultMutationRate,
-            defaultAberrationRate: gameData.defaultAberrationRate,
-            aberrationBonus: gameData.aberrationBonus,
-            initialMaxBreedingCooldown: gameData.initialMaxBreedingCooldown,
-            cdReductionPerBreeding: gameData.cdReductionPerBreeding,
-            coinMultiplier: gameData.coinMultiplier
-        };
-        
-        // 重置所有相关数据
-        currentDay = 0;
-        breedingPool.clear();
-        currentGenerationCats.clear();
-        playerCoins = 1000;
-        
-        // 清空显示区域
-        const breedingResults = document.getElementById('breedingResults');
-        if (breedingResults) {
-            breedingResults.innerHTML = '';
-        }
-        
-        // 重新初始化游戏，但保留属性设置
-        gameData = { ...DEFAULT_GAME_DATA };
-        gameData.attributes = currentAttributes;
-        Object.assign(gameData, currentSettings);
-        
-        // 重新渲染界面
-        renderAttributeList();
-        renderControls();
-        
-        // 如果在商店模式下，刷新商店
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('shop')) {
-            generateShopCats();
-        }
-        
-        // 根据不同模式初始化
-        if (currentPath.includes('manual')) {
-            initializeManualBreeding();
-        } else if (currentPath.includes('auto')) {
-            const initialCat = generateRandomCat();
-            displayCurrentCat(initialCat);
-        }
-        
-        alert('模拟已重置！属性设置已保留。');
+    if (!confirm('确定要重新开始模拟吗？当前进度将会丢失。')) {
+        return;
     }
+
+    // 保存当前的属性和设置
+    const currentAttributes = gameData.attributes;
+    const currentSettings = {
+        defaultMutationRate: gameData.defaultMutationRate,
+        defaultAberrationRate: gameData.defaultAberrationRate,
+        initialMaxBreedingCooldown: gameData.initialMaxBreedingCooldown,
+        cdReductionPerBreeding: gameData.cdReductionPerBreeding,
+        coinMultiplier: gameData.coinMultiplier
+    };
+
+    // 清空控制面板内容
+    document.getElementById('attributeControls').innerHTML = '';
+    document.getElementById('weightControls').innerHTML = '';
+    document.getElementById('rarityControls').innerHTML = '';
+    document.getElementById('geneStrengthControls').innerHTML = '';
+
+    // 重置游戏数据
+    gameData = {
+        ...gameData,
+        currentDay: 0,
+        breedingPool: [],
+        currentGenerationCats: [],
+        coins: 1000,
+        attributes: currentAttributes,
+        defaultMutationRate: currentSettings.defaultMutationRate,
+        defaultAberrationRate: currentSettings.defaultAberrationRate,
+        initialMaxBreedingCooldown: currentSettings.initialMaxBreedingCooldown,
+        cdReductionPerBreeding: currentSettings.cdReductionPerBreeding,
+        coinMultiplier: currentSettings.coinMultiplier
+    };
+
+    // 清空显示区域
+    document.getElementById('currentCats').innerHTML = '';
+    document.getElementById('breedingResults').innerHTML = '';
+    document.getElementById('breedingPool').innerHTML = '';
+    document.getElementById('offspringDisplay').innerHTML = '';
+
+    // 更新金币显示
+    updateCoinsDisplay();
+
+    // 重新渲染控制面板
+    renderControls();
+
+    // 根据模式初始化
+    if (isManualMode) {
+        initializeManualBreeding();
+    } else {
+        const randomCat = generateRandomCat();
+        displayCurrentCat(randomCat);
+        gameData.currentGenerationCats.push(randomCat);
+    }
+
+    // 如果是商店模式，刷新商店
+    if (document.getElementById('shopCats')) {
+        generateShopCats();
+        displayShopCats();
+    }
+
+    alert('模拟已重置，属性设置已保留。');
 }
 
 // 获取属性的基因强度
