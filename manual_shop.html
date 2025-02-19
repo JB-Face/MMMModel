@@ -27,9 +27,9 @@
         <!-- 游戏主要内容 -->
         <div class="game-content">
             <div class="control-section active">
-                <div class="control-panel-wrapper">
-                    <!-- 左侧属性设置面板 -->
-                    <div class="control-panel attribute-panel">
+                <!-- <div class="control-panel-wrapper"> -->
+                <!-- 左侧属性设置面板 -->
+                <!-- <div class="control-panel attribute-panel">
                         <h2>属性设置</h2>
                         <div class="panel-content">
                             <div class="parameter-group">
@@ -84,36 +84,36 @@
                                 <div id="geneStrengthControls" class="section-content"></div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <!-- 右侧培育设置面板 -->
-                    <div class="control-panel breeding-panel">
-                        <h2>培育设置</h2>
-                        <div class="panel-content">
-                            <div class="breeding-controls">
-                                <div class="parameter-group">
-                                    <label for="mutationRate">变异概率 (%)</label>
-                                    <input type="number" id="mutationRate" min="0" max="100" value="10" step="1">
-                                </div>
+                <!-- 右侧培育设置面板 -->
+                <div class="control-panel breeding-panel">
+                    <h2>培育设置</h2>
+                    <div class="panel-content">
+                        <div class="breeding-controls">
+                            <div class="parameter-group">
+                                <label for="mutationRate">变异概率 (%)</label>
+                                <input type="number" id="mutationRate" min="0" max="100" value="10" step="1">
+                            </div>
 
-                                <div class="parameter-group">
-                                    <label for="initialRarityMin">初始猫咪稀有度下限</label>
-                                    <input type="number" id="initialRarityMin" min="1" value="20">
-                                </div>
+                            <div class="parameter-group">
+                                <label for="initialRarityMin">初始猫咪稀有度下限</label>
+                                <input type="number" id="initialRarityMin" min="1" value="20">
+                            </div>
 
-                                <div class="parameter-group">
-                                    <label for="initialRarityMax">初始猫咪稀有度上限</label>
-                                    <input type="number" id="initialRarityMax" min="1" value="100">
-                                </div>
+                            <div class="parameter-group">
+                                <label for="initialRarityMax">初始猫咪稀有度上限</label>
+                                <input type="number" id="initialRarityMax" min="1" value="100">
+                            </div>
 
-                                <div class="parameter-group">
-                                    <label for="maxCats">最大猫咪数量</label>
-                                    <input type="number" id="maxCats" min="2" value="10">
-                                </div>
+                            <div class="parameter-group">
+                                <label for="maxCats">最大猫咪数量</label>
+                                <input type="number" id="maxCats" min="2" value="10">
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- </div> -->
             </div>
 
             <!-- 添加开始模拟按钮 -->
@@ -166,8 +166,11 @@
             <div class="results-section">
                 <div class="breeding-history">
                     <div class="history-header">
-                        <h2>繁殖历史</h2>
-                        <button id="toggleHistory" class="control-button">关闭历史记录</button>
+                        <h2>培育历史</h2>
+                        <div class="history-actions">
+                            <button id="exportResults" class="secondary-button">导出结果</button>
+                            <button id="clearResults" class="secondary-button">清空结果</button>
+                        </div>
                     </div>
                     <div id="breedingResults" class="history-content"></div>
                 </div>
