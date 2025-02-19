@@ -604,11 +604,13 @@ function normalizeGeneStrength(attrName) {
     
     if (total === 0) {
         // 如果总和为0，平均分配
-        const equalValue = 100 / attribute.geneStrength.length;
-        attribute.geneStrength = attribute.geneStrength.map(() => equalValue);
+        const equalValue = (100 / attribute.geneStrength.length).toFixed(1);
+        attribute.geneStrength = attribute.geneStrength.map(() => parseFloat(equalValue));
     } else {
-        // 标准化为总和100
-        attribute.geneStrength = attribute.geneStrength.map(val => (val / total) * 100);
+        // 标准化为总和100，并保留一位小数
+        attribute.geneStrength = attribute.geneStrength.map(val => 
+            parseFloat(((val / total) * 100).toFixed(1))
+        );
     }
 }
 
@@ -1333,8 +1335,8 @@ function displayCatAttributes(cat) {
                         
                         parentInfo = `
                             <div class="parent-info">
-                                父: ${parent1.value} <span class="${parent1RarityClass}">[${parent1Rarity}]</span> (${parent1.strength}), 
-                                母: ${parent2.value} <span class="${parent2RarityClass}">[${parent2Rarity}]</span> (${parent2.strength})
+                                父: ${parent1.value} <span class="${parent1RarityClass}">[${parent1Rarity}]</span> (${parent1.strength.toFixed(1)}), 
+                                母: ${parent2.value} <span class="${parent2RarityClass}">[${parent2Rarity}]</span> (${parent2.strength.toFixed(1)})
                             </div>
                         `;
                     }
@@ -1377,7 +1379,7 @@ function displayCatAttributes(cat) {
                 <p>正在出游中 (将在第${cat.travelReturnDay}天返回)</p>
             </div>
         `;
-    } else if (cat.breedingCooldown >= 24) {
+    } else if (cat.breedingCooldown >= cat.maxBreedingCooldown) {
         attributesHtml += `
             <button onclick="sendCatTraveling('${cat.id}')" class="travel-button">出游</button>
         `;
@@ -2130,7 +2132,7 @@ function sendCatTraveling(catId) {
         return;
     }
     
-    if (cat.breedingCooldown < 24) {
+    if (cat.breedingCooldown < cat.maxBreedingCooldown) {
         alert('猫咪需要满CD才能出游！');
         return;
     }
@@ -2176,7 +2178,7 @@ function checkReturnedCats() {
         if (cat.isTraveling && cat.travelReturnDay <= currentDay) {
             // 生成明信片
             const postcard = generatePostcard();
-            // if (!cat.postcards) cat.postcards = [];
+            if (!cat.postcards) cat.postcards = [];
             cat.postcards.push(postcard);
             
             // 重置出游状态
