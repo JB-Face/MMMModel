@@ -105,6 +105,16 @@ const PRESETS = {
     "科幻": "presets/scifi.json"
 };
 
+const GENE_DATA = [
+
+    ["W", "w"], // 梵色
+    ["i", "l", "S"], // 品种
+    ["B", "b", "O", "o"], // 颜色
+    ["D", "d"], //减淡
+    ["A", "a"], // 山猫
+    ["F", "f"] // 翎毛
+]
+
 // 添加金币相关变量
 let playerCoins = 1000; // 初始金币
 
@@ -385,6 +395,7 @@ function renderControls() {
         // const weightControls = document.getElementById('weightControls');
         // const rarityControls = document.getElementById('rarityControls');
         // const geneStrengthControls = document.getElementById('geneStrengthControls');
+        gameData = { ...DEFAULT_GAME_DATA };
         const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
         
         // if (!weightControls || !rarityControls || !geneStrengthControls) {
@@ -422,70 +433,70 @@ function renderControls() {
         }
         
         // 为每个属性创建控制面板
-        Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-            if (!attrData || !Array.isArray(attrData.expressed) || 
-                !Array.isArray(attrData.weights) || 
-                !Array.isArray(attrData.rarity) || 
-                !Array.isArray(attrData.geneStrength)) {
-                console.error(`属性 ${attrName} 数据结构不完整`);
-                return;
-            }
+        // Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
+        //     if (!attrData || !Array.isArray(attrData.expressed) || 
+        //         !Array.isArray(attrData.weights) || 
+        //         !Array.isArray(attrData.rarity) || 
+        //         !Array.isArray(attrData.geneStrength)) {
+        //         console.error(`属性 ${attrName} 数据结构不完整`);
+        //         return;
+        //     }
             
-            // 创建权重控制面板
-            // const weightPanel = document.createElement('div');
-            // weightPanel.className = 'attribute-item';
-            // weightPanel.innerHTML = `
-            //     <label>${attrName} 权重设置:</label>
-            //     ${attrData.expressed.map((opt, idx) => `
-            //         <div>
-            //             <label>${opt}:</label>
-            //             <input type="number" 
-            //                    value="${attrData.weights[idx] || 0}" 
-            //                    min="0" 
-            //                    max="100"
-            //                    onchange="updateWeight('${attrName}', ${idx}, this.value)">
-            //         </div>
-            //     `).join('')}
-            // `;
-            // weightControls.appendChild(weightPanel);
+        //     // 创建权重控制面板
+        //     // const weightPanel = document.createElement('div');
+        //     // weightPanel.className = 'attribute-item';
+        //     // weightPanel.innerHTML = `
+        //     //     <label>${attrName} 权重设置:</label>
+        //     //     ${attrData.expressed.map((opt, idx) => `
+        //     //         <div>
+        //     //             <label>${opt}:</label>
+        //     //             <input type="number" 
+        //     //                    value="${attrData.weights[idx] || 0}" 
+        //     //                    min="0" 
+        //     //                    max="100"
+        //     //                    onchange="updateWeight('${attrName}', ${idx}, this.value)">
+        //     //         </div>
+        //     //     `).join('')}
+        //     // `;
+        //     // weightControls.appendChild(weightPanel);
             
-            // 创建稀有度控制面板
-            // const rarityPanel = document.createElement('div');
-            // rarityPanel.className = 'attribute-item';
-            // rarityPanel.innerHTML = `
-            //     <label>${attrName} 稀有度设置:</label>
-            //     ${attrData.expressed.map((opt, idx) => `
-            //         <div>
-            //             <label>${opt}:</label>
-            //             <input type="number" 
-            //                    value="${attrData.rarity[idx] || 1}" 
-            //                    min="1"
-            //                    onchange="updateRarity('${attrName}', ${idx}, this.value)">
-            //         </div>
-            //     `).join('')}
-            // `;
-            // rarityControls.appendChild(rarityPanel);
+        //     // 创建稀有度控制面板
+        //     // const rarityPanel = document.createElement('div');
+        //     // rarityPanel.className = 'attribute-item';
+        //     // rarityPanel.innerHTML = `
+        //     //     <label>${attrName} 稀有度设置:</label>
+        //     //     ${attrData.expressed.map((opt, idx) => `
+        //     //         <div>
+        //     //             <label>${opt}:</label>
+        //     //             <input type="number" 
+        //     //                    value="${attrData.rarity[idx] || 1}" 
+        //     //                    min="1"
+        //     //                    onchange="updateRarity('${attrName}', ${idx}, this.value)">
+        //     //         </div>
+        //     //     `).join('')}
+        //     // `;
+        //     // rarityControls.appendChild(rarityPanel);
             
-            // 创建基因强度控制面板
-            // const geneStrengthPanel = document.createElement('div');
-            // geneStrengthPanel.className = 'attribute-item';
-            // geneStrengthPanel.innerHTML = `
-            //     <label>${attrName} 基因强度设置 (总和: <span class="gene-strength-total">100</span>):</label>
-            //     ${attrData.expressed.map((opt, idx) => `
-            //         <div>
-            //             <label>${opt}:</label>
-            //             <input type="number" 
-            //                    value="${attrData.geneStrength[idx].toFixed(1)}" 
-            //                    min="0"
-            //                    max="100"
-            //                    step="0.1"
-            //                    onchange="updateGeneStrength('${attrName}', ${idx}, this.value)">
-            //             <span class="strength-percentage">${attrData.geneStrength[idx].toFixed(1)}%</span>
-            //         </div>
-            //     `).join('')}
-            // `;
-            // geneStrengthControls.appendChild(geneStrengthPanel);
-        });
+        //     // 创建基因强度控制面板
+        //     // const geneStrengthPanel = document.createElement('div');
+        //     // geneStrengthPanel.className = 'attribute-item';
+        //     // geneStrengthPanel.innerHTML = `
+        //     //     <label>${attrName} 基因强度设置 (总和: <span class="gene-strength-total">100</span>):</label>
+        //     //     ${attrData.expressed.map((opt, idx) => `
+        //     //         <div>
+        //     //             <label>${opt}:</label>
+        //     //             <input type="number" 
+        //     //                    value="${attrData.geneStrength[idx].toFixed(1)}" 
+        //     //                    min="0"
+        //     //                    max="100"
+        //     //                    step="0.1"
+        //     //                    onchange="updateGeneStrength('${attrName}', ${idx}, this.value)">
+        //     //             <span class="strength-percentage">${attrData.geneStrength[idx].toFixed(1)}%</span>
+        //     //         </div>
+        //     //     `).join('')}
+        //     // `;
+        //     // geneStrengthControls.appendChild(geneStrengthPanel);
+        // });
 
         // 添加初始最大CD设置控件
         if (breedingPanel) {
@@ -664,32 +675,33 @@ function updateMaxCDReduction(value) {
 
 // 修改初始化函数
 async function initGame() {
-    try {
-        // 先使用默认数据初始化
-        gameData = { ...DEFAULT_GAME_DATA };
+
+        //0.43 先不使用json数据
+    //     // 先使用默认数据初始化
+    //     gameData = { ...DEFAULT_GAME_DATA };
         
-        // 尝试加载幻想风格数据
-        const response = await fetch('./presets/fantasy.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const fantasyData = await response.json();
+    //     // 尝试加载幻想风格数据
+    //     const response = await fetch('./presets/fantasy.json');
+    //     if (!response.ok) {
+    //         throw new Error(`HTTP error! status: ${response.status}`);
+    //     }
+    //     const fantasyData = await response.json();
         
-        // 合并数据，保留默认值作为后备
-        gameData = {
-            ...DEFAULT_GAME_DATA,
-            ...fantasyData,
-            attributes: {
-                ...DEFAULT_GAME_DATA.attributes,
-                ...(fantasyData.attributes || {})
-            }
-        };
+    //     // 合并数据，保留默认值作为后备
+    //     gameData = {
+    //         ...DEFAULT_GAME_DATA,
+    //         ...fantasyData,
+    //         attributes: {
+    //             ...DEFAULT_GAME_DATA.attributes,
+    //             ...(fantasyData.attributes || {})
+    //         }
+    //     };
         
-        console.log('成功加载幻想风格数据:', gameData);
-    } catch (error) {
-        console.error('加载幻想风格数据失败:', error);
-        console.log('使用默认游戏数据:', gameData);
-    }
+    //     console.log('成功加载幻想风格数据:', gameData);
+    // } catch (error) {
+    //     console.error('加载幻想风格数据失败:', error);
+    //     console.log('使用默认游戏数据:', gameData);
+    // }
 
     // 确保数据已经加载后再继续初始化其他内容
     nameData = { ...DEFAULT_NAME_DATA };
@@ -707,7 +719,9 @@ async function initGame() {
     
     // 更新金币显示
     updateCoinsDisplay();
+
 }
+
 
 // 修改事件监听器，使用 async/await
 document.addEventListener('DOMContentLoaded', () => {
@@ -843,12 +857,13 @@ function generateRandomName() {
 
 // 生成随机猫咪
 function generateRandomCat(targetGender = null, isInitialCat = false) {
+    // 0.43 换为全新的数据结构和计算方法
     const minRarity = parseInt(document.getElementById('initialRarityMin').value) || 1;
     const maxRarity = parseInt(document.getElementById('initialRarityMax').value) || 100;
     const MAX_ATTEMPTS = 100;
     let attempts = 0;
     
-    while (attempts < MAX_ATTEMPTS) {
+    // while (attempts < MAX_ATTEMPTS) {
         const cat = {
             id: Math.random().toString(36).substr(2, 9),
             name: generateRandomName(),
@@ -863,90 +878,114 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
         };
 
         // 生成属性
-        Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-            if (attrData.isMultiSelect) {
-                // 处理多选属性
-                const maxSelect = attrData.maxSelect || 3;
-                const selectedCount = Math.floor(Math.random() * maxSelect) + 1; // 至少选择1个
-                const selectedValues = [];
-                const selectedRarities = [];
+        // 0.43 换为全新的数据结构
+        // Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
+        //     if (attrData.isMultiSelect) {
+        //         // 处理多选属性
+        //         const maxSelect = attrData.maxSelect || 3;
+        //         const selectedCount = Math.floor(Math.random() * maxSelect) + 1; // 至少选择1个
+        //         const selectedValues = [];
+        //         const selectedRarities = [];
                 
-                // 根据权重随机选择多个选项
-                for (let i = 0; i < selectedCount; i++) {
-                    const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
-                    let random = Math.random() * totalWeight;
-                    let selectedIndex = attrData.weights.findIndex(weight => {
-                        random -= weight;
-                        return random <= 0;
-                    });
+        //         // 根据权重随机选择多个选项
+        //         for (let i = 0; i < selectedCount; i++) {
+        //             const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
+        //             let random = Math.random() * totalWeight;
+        //             let selectedIndex = attrData.weights.findIndex(weight => {
+        //                 random -= weight;
+        //                 return random <= 0;
+        //             });
                     
-                    if (selectedIndex === -1) selectedIndex = 0;
+        //             if (selectedIndex === -1) selectedIndex = 0;
                     
-                    // 避免重复选择
-                    if (!selectedValues.includes(attrData.expressed[selectedIndex])) {
-                        selectedValues.push(attrData.expressed[selectedIndex]);
-                        selectedRarities.push(attrData.rarity[selectedIndex]);
-                    }
-                }
+        //             // 避免重复选择
+        //             if (!selectedValues.includes(attrData.expressed[selectedIndex])) {
+        //                 selectedValues.push(attrData.expressed[selectedIndex]);
+        //                 selectedRarities.push(attrData.rarity[selectedIndex]);
+        //             }
+        //         }
 
-                // 应用互斥规则
-                const finalValues = checkTraitExclusions(attrName, selectedValues, attrData);
-                const finalRarities = finalValues.map(value => 
-                    attrData.rarity[attrData.expressed.indexOf(value)]);
+        //         // 应用互斥规则
+        //         const finalValues = checkTraitExclusions(attrName, selectedValues, attrData);
+        //         const finalRarities = finalValues.map(value => 
+        //             attrData.rarity[attrData.expressed.indexOf(value)]);
                 
-                cat[attrName] = {
-                    values: finalValues,
-                    rarities: finalRarities,
-                    isMultiSelect: true
-                };
-            } else {
-                // 处理单选属性
-            let selectedIndex;
-            if (attrName === '性别' && targetGender) {
-                selectedIndex = attrData.expressed.indexOf(targetGender);//也许真的有 百变怪
-            } else {
-                const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
-                let random = Math.random() * totalWeight;
-                selectedIndex = attrData.weights.findIndex(weight => {
-                    random -= weight;
-                    return random <= 0;
-                });
-            }
+        //         cat[attrName] = {
+        //             values: finalValues,
+        //             rarities: finalRarities,
+        //             isMultiSelect: true
+        //         };
+        //     } else {
+        //         // 处理单选属性
+        //     let selectedIndex;
+        //     if (attrName === '性别' && targetGender) {
+        //         selectedIndex = attrData.expressed.indexOf(targetGender);//也许真的有 百变怪
+        //     } else {
+        //         const totalWeight = attrData.weights.reduce((sum, w) => sum + w, 0);
+        //         let random = Math.random() * totalWeight;
+        //         selectedIndex = attrData.weights.findIndex(weight => {
+        //             random -= weight;
+        //             return random <= 0;
+        //         });
+        //     }
             
-            if (selectedIndex === -1) selectedIndex = 0;
+        //     if (selectedIndex === -1) selectedIndex = 0;
             
-            cat[attrName] = {
-                value: attrData.expressed[selectedIndex],
-                rarity: attrData.rarity[selectedIndex]
-            };
-            }
+        //     cat[attrName] = {
+        //         value: attrData.expressed[selectedIndex],
+        //         rarity: attrData.rarity[selectedIndex]
+        //     };
+        //     }
+        // });
+
+        // 现在数据结构有6个基因位置
+        // 初始化基因数组
+        cat["Gene"] = [];
+        
+        // 循环遍历GENE_DATA数组
+        GENE_DATA.forEach(geneArray => {
+            // 使用RandomIndex获取随机索引
+            const randomIdx = RandomIndex(geneArray.length);
+            // 获取随机基因值并添加到cat的Gene数组中
+            cat["Gene"].push(geneArray[randomIdx]);
         });
 
+        // 性别随机
+        cat.性别 = {
+            value: Math.random() < 0.5 ? '公' : '母',
+            rarity: 1
+        };
+
         // 计算总稀有度（包括多选属性）
-        cat.totalRarity = Object.entries(cat)
-            .filter(([key, value]) => value && typeof value === 'object')
-            .reduce((sum, [key, value]) => {
-                if (value.isMultiSelect) {
-                    return sum + value.rarities.reduce((s, r) => s + r, 0);
-                } else if ('rarity' in value) {
-                    return sum + value.rarity;
-                }
-                return sum;
-            }, 0);
+        //4.3 不计算稀有度
+        // cat.totalRarity = Object.entries(cat)
+        //     .filter(([key, value]) => value && typeof value === 'object')
+        //     .reduce((sum, [key, value]) => {
+        //         if (value.isMultiSelect) {
+        //             return sum + value.rarities.reduce((s, r) => s + r, 0);
+        //         } else if ('rarity' in value) {
+        //             return sum + value.rarity;
+        //         }
+        //         return sum;
+        //     }, 0);
 
         lastCat = cat;
         
         // 检查是否满足稀有度范围要求
-        if (cat.totalRarity >= minRarity && cat.totalRarity <= maxRarity) {
-            return cat;
-        }
+        // if (cat.totalRarity >= minRarity && cat.totalRarity <= maxRarity) {
+        //     return cat;
+        // }
 
-        attempts++;
-    }
+        //attempts++;
+    //}
 
     // 如果多次尝试都无法生成符合条件的猫咪
-    alert(`在${MAX_ATTEMPTS}次尝试后仍无法生成满足稀有度范围(${minRarity}-${maxRarity})的猫咪。\n将使用最后一次生成的结果(稀有度: ${lastCat.totalRarity})。`);
+    //alert(`在${MAX_ATTEMPTS}次尝试后仍无法生成满足稀有度范围(${minRarity}-${maxRarity})的猫咪。\n将使用最后一次生成的结果(稀有度: ${lastCat.totalRarity})。`);
     return lastCat;
+}
+
+function RandomIndex(indexMax) {
+    return Math.floor(Math.random() * indexMax);
 }
 
 // 根据基因强度选择属性
@@ -1040,6 +1079,8 @@ function breedCats(cat1, cat2) {
                 // 获取父母的属性值
                 const parent1Value = cat1[attrName];
                 const parent2Value = cat2[attrName];
+
+                let newattrbiude = breedCatsAttribute(parent1Value, parent2Value, attrName);
 
                 // 首先检查是否发生异变
                 if (Math.random() * 100 < aberrationRate) {
@@ -1218,6 +1259,25 @@ function breedCats(cat1, cat2) {
         return null;
     }
 }
+
+// 在这里根据属性选择不同的属性生成算法
+function breedCatsAttribute(catattribute1, catattribute2, attributename) {
+    if (attributename === '性别') {
+        return breedCatsAttributeTwoChoice(catattribute1, catattribute2, attributename);
+    } else {
+        return breedCatsAttributeTwoChoice(catattribute1, catattribute2, attributename);
+    }
+}
+
+// 完全二选一算法
+function breedCatsAttributeTwoChoice(catattribute1, catattribute2, attributename) {
+    if (Math.random() < 0.5) {
+        return catattribute1[attributename];
+    } else {
+        return catattribute2[attributename];
+    }
+}
+
 
 // 显示当前猫咪
 function displayCurrentCat(cat) {
