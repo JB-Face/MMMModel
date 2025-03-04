@@ -115,22 +115,44 @@ const GENE_DATA = [
 
 // 标准猫咪
 const STANDCAT_DATA = {
-        id: 0, // id 唯一标识符
-        name: "标准猫咪", // 名字，用于区分
-        parents: [], // 父母的id
-        children: [], // 子代的id
-        mutations: Array(GENE_DATA.length).fill(false), // 突变
-        aberrations: Array(GENE_DATA.length).fill(false), // 变异
-        inheritanceInfo: {}, // 遗传信息
-        breedingCooldown: 0, // 培育冷却时间
-        maxBreedingCooldown: 24, // 最大培育冷却时间
-        Gene: [], // 基因
-        Color: "白色", // 毛色
-        Dilute: 3, // 淡化（3到1级别）
-        Rarity: 5, // 稀有度
-        totalRarity: 5
-    }
-    // 添加金币相关变量
+    id: 0, // id 唯一标识符
+    name: "标准猫咪", // 名字，用于区分
+    parents: [], // 父母的id
+    children: [], // 子代的id
+    mutations: Array(GENE_DATA.length).fill(false), // 突变
+    aberrations: Array(GENE_DATA.length).fill(false), // 变异
+    inheritanceInfo: {}, // 遗传信息
+    breedingCooldown: 0, // 培育冷却时间
+    maxBreedingCooldown: 24, // 最大培育冷却时间
+    Gene: [], // 基因
+    Color: "白色", // 毛色
+    Dilute: 3, // 淡化（3到1级别）
+    Rarity: 5, // 稀有度
+    totalRarity: 5
+}
+
+//生成基因几率
+const GENE_PROBABILITY = [
+    [0.1, 0.5], // 梵色
+    [0.33, 0.33, 0.33], // 品种
+    [0.25, 0.25, 0.25, 0.25], // 颜色
+    [0.5, 0.5], //减淡
+    [0.5, 0.5], // 山猫
+    [0.5, 0.5] // 翎毛
+]
+
+// 繁育基因几率
+const BREED_GENE_PROBABILITY = [
+    [0.1, 0.9], // 梵色
+    [0.33, 0.33, 0.33], // 品种
+    [0.25, 0.25, 0.25, 0.25], // 颜色
+    [0.5, 0.5], //减淡
+    [0.5, 0.5], // 山猫
+    [0.5, 0.5] // 翎毛
+]
+
+
+// 添加金币相关变量
 let playerCoins = 1000; // 初始金币
 
 // 更新金币显示
@@ -958,10 +980,10 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
         cat["Gene"] = [];
         
         // 循环遍历GENE_DATA数组
-        GENE_DATA.forEach(geneArray => {
+        GENE_DATA.forEach((geneArray, index) => {
             // 使用RandomIndex获取随机索引
-            const randomIdx_f = RandomIndex(geneArray.length);
-            const randomIdx_m = RandomIndex(geneArray.length);
+            const randomIdx_f = RandomIndexWithProbability(GENE_PROBABILITY[index]);
+            const randomIdx_m = RandomIndexWithProbability(GENE_PROBABILITY[index]);
             // 获取随机基因值并添加到cat的Gene数组中
 
             target = [geneArray[randomIdx_f],geneArray[randomIdx_m]]            
@@ -1019,6 +1041,18 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
 
 function RandomIndex(indexMax) {
     return Math.floor(Math.random() * indexMax);
+}
+
+function RandomIndexWithProbability(probabilityArray) {
+    const random = Math.random();
+    let cumulativeProbability = 0;
+    for (let i = 0; i < probabilityArray.length; i++) {
+        cumulativeProbability += probabilityArray[i];
+        if (random <= cumulativeProbability) {
+            return i;
+        }
+    }
+    return false;
 }
 
 // 根据基因强度选择属性
@@ -1302,12 +1336,66 @@ function breedCats(cat1, cat2) {
             
             // 对每个基因位点进行遗传
             geneArray.forEach((_, posIndex) => {
+                //计算父提供的基因
+                // 计算两个基因是否相同，相同的话只需要提供其中一个就可以了
+                if(parent1Value[geneIndex][0] == parent1Value[geneIndex][1]){
+                    parent1Gene = parent1Value[geneIndex][0];
+                }else{
+                    //获取两个属性的 在BREED_GENE_PROBABILITY中的几率
+
+                    //获取基因在Data中的index
+                    const parent1GeneIndex1 = geneArray.indexOf(parent1Value[geneIndex][0]);
+                    const parent1GeneIndex2 = geneArray.indexOf(parent1Value[geneIndex][1]);
+
+                    const parent1GeneProbability1 = BREED_GENE_PROBABILITY[geneIndex][parent1GeneIndex1];
+                    const parent1GeneProbability2 = BREED_GENE_PROBABILITY[geneIndex][parent1GeneIndex2];
+                    
+                    // 计算总几率
+                    const totalProbability = parent1GeneProbability1 + parent1GeneProbability2;
+                    // 获取随机值
+                    const randomValue = Math.random() * totalProbability;
+                    // 如果随机值小于第一个基因的几率,选择第一个基因
+                    if(randomValue < parent1GeneProbability1) {
+                        parent1Gene = parent1Value[geneIndex][0];
+                    } else {
+                        parent1Gene = parent1Value[geneIndex][1]; 
+                    }
+                    
+                }
+
+                // 计算母提供的基因
+                // 计算两个基因是否相同，相同的话只需要提供其中一个就可以了
+                if(parent2Value[geneIndex][0] == parent2Value[geneIndex][1]){
+                    parent2Gene = parent2Value[geneIndex][0];
+                }else{
+                    //获取两个属性的 在BREED_GENE_PROBABILITY中的几率
+
+                    //获取基因在Data中的index
+                    const parent2GeneIndex1 = geneArray.indexOf(parent2Value[geneIndex][0]);
+                    const parent2GeneIndex2 = geneArray.indexOf(parent2Value[geneIndex][1]);
+
+                    const parent2GeneProbability1 = BREED_GENE_PROBABILITY[geneIndex][parent2GeneIndex1];
+                    const parent2GeneProbability2 = BREED_GENE_PROBABILITY[geneIndex][parent2GeneIndex2];
+                    
+                    // 计算总几率
+                    const totalProbability = parent2GeneProbability1 + parent2GeneProbability2;
+                    // 获取随机值
+                    const randomValue = Math.random() * totalProbability;
+                    // 如果随机值小于第一个基因的几率,选择第一个基因
+                    if(randomValue < parent2GeneProbability1) {
+                        parent2Gene = parent2Value[geneIndex][0];
+                    } else {
+                        parent2Gene = parent2Value[geneIndex][1]; 
+                    }
+                    
+                }
+
                 // 从父母各自对应的基因位置随机选择一个
-                const parent1Gene = parent1Value[geneIndex] ? parent1Value[geneIndex][posIndex] : 0;
-                const parent2Gene = parent2Value[geneIndex] ? parent2Value[geneIndex][posIndex] : 0;
+                //const parent1Gene = parent1Value[geneIndex] ? parent1Value[geneIndex][posIndex] : 0;
+                //const parent2Gene = parent2Value[geneIndex] ? parent2Value[geneIndex][posIndex] : 0;
                 
                 // 50%概率继承父母任一方的基因
-                newCat.Gene[geneIndex][posIndex] = Math.random() < 0.5 ? parent1Gene : parent2Gene;
+                newCat.Gene[geneIndex] = [parent1Gene, parent2Gene];
                 
             // 计算突变
             const mutationRate = parseInt(document.getElementById('mutationRate').value) || gameData.defaultMutationRate;
