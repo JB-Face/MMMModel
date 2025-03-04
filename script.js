@@ -987,7 +987,7 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
             // 获取随机基因值并添加到cat的Gene数组中
 
             target = [geneArray[randomIdx_f],geneArray[randomIdx_m]]            
-            cat["Gene"].push(target);
+            cat["Gene"][index] = target;
         });
 
         // 性别随机
@@ -1052,7 +1052,7 @@ function RandomIndexWithProbability(probabilityArray) {
             return i;
         }
     }
-    return false;
+    return probabilityArray.length -1;
 }
 
 // 根据基因强度选择属性
@@ -1642,7 +1642,7 @@ function displayCatAttributes(cat) {
         cat.Gene.forEach((gene, index) => {
 
             const separator = "";
-            targetStr = (index+1) + " : " + gene[0] + separator + gene[1];
+            targetStr = (index+1) + " :" + gene[0] + separator + gene[1];
             // 检查异变/变异
             const mutation = cat.mutations[index];
 
