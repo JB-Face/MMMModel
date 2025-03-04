@@ -77,8 +77,8 @@ const DEFAULT_GAME_DATA = {
     defaultAberrationRate: 5,
     aberrationBonus: 2,
     initialMaxBreedingCooldown: 24,
-    cdReductionPerBreeding: 8, // 修改这里，从1改为8
-    maxCDReductionPerBreeding: 6, // 添加这一行，设置默认值为6
+    cdReductionPerBreeding: 24, // 修改为24，确保每次繁殖消耗整个CD
+    maxCDReductionPerBreeding: 0, // 设置为0，确保最大CD不会减少
     coinMultiplier: 1,
     simulationHistory: []
 };
@@ -86,15 +86,13 @@ const DEFAULT_GAME_DATA = {
 // 默认名字数据
 const DEFAULT_NAME_DATA = {
     names: [
-        "亚当", "莉莉丝", "萨麦尔", "沙利叶", "拉米尔", "加百列", "伊瑟拉菲尔",
-        "阿拉腊特", "巴德尔", "撒哈尔", "伊洛尔", "巴尔迪尔", "泽鲁尔", "阿玛瑟尔",
-        "阿尔米萨尔", "塔布里斯", "利慕伊勒", "萨基尔", "图理尔", "雷利姆", "阿尔玛斯",
-        "拉斐尔", "米迦勒", "乌利尔", "圣德芬", "阿斯塔禄", "阿撒兹勒", "亚巴顿",
-        "拉米尔", "塔尔塔洛斯", "阿斯蒙蒂斯", "贝利尔", "阿斯塔蒂", "阿斯塔罗特"
+        "咪咪", "花花", "小黑", "小白", "胖虎", "球球", "奥利奥", "kitty", "喵喵", "豆豆",
+        "皮皮", "毛毛", "虎子", "点点", "雪球", "灰灰", "米米", "可可", "多多", "贝贝",
+        "糖糖", "妮妮", "汤圆", "饭团", "牛奶", "巧克力", "咖啡", "奶茶", "布丁", "棉花"
     ],
     titles: [
-        "使徒", "天使", "守护者", "先知", "执行者", "裁决者", "观察者",
-        "破坏者", "创造者", "守望者", "引导者", "审判者", "启示者"
+        "小可爱", "小王子", "小公主", "小淘气", "小机灵", "小馋猫", "小懒虫", "小胆子",
+        "小野猫", "小乖乖", "小调皮", "小粘人", "小独立", "小社交", "小高冷"
     ]
 };
 
@@ -121,8 +119,8 @@ const STANDCAT_DATA = {
         name: "标准猫咪", // 名字，用于区分
         parents: [], // 父母的id
         children: [], // 子代的id
-        mutations: new Set(), // 突变
-        aberrations: new Set(), // 变异
+        mutations: Array(GENE_DATA.length).fill(false), // 突变
+        aberrations: Array(GENE_DATA.length).fill(false), // 变异
         inheritanceInfo: {}, // 遗传信息
         breedingCooldown: 0, // 培育冷却时间
         maxBreedingCooldown: 24, // 最大培育冷却时间
@@ -540,7 +538,7 @@ function renderControls() {
                        id="cdReductionPerBreeding" 
                        min="1" 
                        max="24"
-                       value="${gameData.cdReductionPerBreeding || 8}"  // 修改这里，从1改为8
+                       value="${gameData.cdReductionPerBreeding || 24}"  // 修改这里，默认值改为24
                        onchange="updateCDReduction(this.value)">
             `;
             breedingPanel.insertBefore(cdReductionControl, breedingPanel.firstChild);
@@ -587,7 +585,7 @@ function renderControls() {
                        id="maxCDReductionPerBreeding" 
                        min="0" 
                        max="24"
-                       value="${gameData.maxCDReductionPerBreeding || 6}" 
+                       value="${gameData.maxCDReductionPerBreeding || 0}" // 修改这里，默认值改为0
                        onchange="updateMaxCDReduction(this.value)">
                 <div class="description">设置为0则不减少最大CD值</div>
             `;
@@ -662,7 +660,7 @@ function updateCDReduction(value) {
         saveToLocalStorage();
     } else {
         alert('每次交配减少CD值必须在1到24之间');
-        document.getElementById('cdReductionPerBreeding').value = gameData.cdReductionPerBreeding || 8;  // 修改这里，从1改为8
+        document.getElementById('cdReductionPerBreeding').value = gameData.cdReductionPerBreeding || 24;  // 修改这里，默认值改为24
     }
 }
 
@@ -686,7 +684,7 @@ function updateMaxCDReduction(value) {
         saveToLocalStorage();
     } else {
         alert('每次交配减少最大CD值必须在0到24之间');
-        document.getElementById('maxCDReductionPerBreeding').value = gameData.maxCDReductionPerBreeding || 6;
+        document.getElementById('maxCDReductionPerBreeding').value = gameData.maxCDReductionPerBreeding || 0;  // 修改这里，默认值改为0
     }
 }
 
@@ -1080,20 +1078,22 @@ function breedCats(cat1, cat2) {
         newCat.name = generateRandomName();
         
         // 更新父母的CD和最大CD
-        const cdReduction = gameData.cdReductionPerBreeding || 8;  // 修改这里，从1改为8
-        const maxCDReduction = gameData.maxCDReductionPerBreeding || 6;
+        const cdReduction = gameData.cdReductionPerBreeding || 24;  // 修改这里，默认值改为24
+        const maxCDReduction = gameData.maxCDReductionPerBreeding || 0; // 默认值改为0，确保最大CD不会减少
         cat1.breedingCooldown = Math.max(0, cat1.breedingCooldown - cdReduction);
         cat2.breedingCooldown = Math.max(0, cat2.breedingCooldown - cdReduction);
         
         // 减少父母的最大CD，但不低于8
-        if (maxCDReduction > 0) {
-            cat1.maxBreedingCooldown = Math.max(8, cat1.maxBreedingCooldown - maxCDReduction);
-            cat2.maxBreedingCooldown = Math.max(8, cat2.maxBreedingCooldown - maxCDReduction);
-        }
+        // if (maxCDReduction > 0) {
+        //     cat1.maxBreedingCooldown = Math.max(8, cat1.maxBreedingCooldown - maxCDReduction);
+        //     cat2.maxBreedingCooldown = Math.max(8, cat2.maxBreedingCooldown - maxCDReduction);
+        // }
         
         // 更新父母的children数组
         cat1.children.push(newCat.id);
         cat2.children.push(newCat.id);
+
+        newCat.parents = [cat1, cat2];
         
         // 获取变异率和异变率
         const mutationRate = parseInt(document.getElementById('mutationRate').value) || gameData.defaultMutationRate;
@@ -1288,6 +1288,17 @@ function breedCats(cat1, cat2) {
             if (!newCat.Gene[geneIndex]) {
                 newCat.Gene[geneIndex] = [];
             }
+
+
+            //还原异变基因
+
+            newCat.aberrations.forEach((aberration, index) => {
+                if(aberration){
+                    const [geneIndex, posIndex] = aberration.split('-');
+                    newCat.Gene[geneIndex][posIndex] = 0;
+                };
+            });
+
             
             // 对每个基因位点进行遗传
             geneArray.forEach((_, posIndex) => {
@@ -1297,6 +1308,33 @@ function breedCats(cat1, cat2) {
                 
                 // 50%概率继承父母任一方的基因
                 newCat.Gene[geneIndex][posIndex] = Math.random() < 0.5 ? parent1Gene : parent2Gene;
+                
+            // 计算突变
+            const mutationRate = parseInt(document.getElementById('mutationRate').value) || gameData.defaultMutationRate;
+            if (Math.random() * 100 < mutationRate) {
+                // 随机选择一个不同的基因
+                const availableGenes = geneArray.filter(gene => gene !== newCat.Gene[geneIndex][posIndex]);
+                if (availableGenes.length > 0) {
+                    newCat.mutations[geneIndex] = posIndex;
+                    const randomIndex = Math.floor(Math.random() * availableGenes.length);
+                    newCat.Gene[geneIndex][posIndex] = availableGenes[randomIndex];
+                    
+                }
+            }
+
+            // 计算异变
+            const aberrationRate = parseInt(document.getElementById('aberrationRate').value) || gameData.defaultAberrationRate;
+            if (Math.random() * 100 < aberrationRate) {
+                // 随机选择一个不同的基因
+                const availableGenes = geneArray.filter(gene => gene !== newCat.Gene[geneIndex][posIndex]);
+                if (availableGenes.length > 0) {
+                    newCat.mutations[geneIndex] = posIndex;
+                    const randomIndex = Math.floor(Math.random() * availableGenes.length);
+                    newCat.Gene[geneIndex][posIndex] = geneArray[randomIndex];
+                }
+            }
+
+
             });
         });
 
@@ -1412,7 +1450,7 @@ function displayCatAttributes(cat) {
             // 跳过非属性字段或无效数据
             if (!value || typeof value !== 'object' || key === 'mutations' || key === 'aberrations' || 
                 key === 'inheritanceInfo' || key === 'parents' || key === 'children' || 
-                key === 'postcards' || key === 'id') {
+                key === 'postcards' || key === 'id' || key === 'Gene') {
                 return;
             }
             
@@ -1473,11 +1511,7 @@ function displayCatAttributes(cat) {
             } else {
                 // 原有的单选属性显示逻辑
                 // 确保value和rarity存在
-                attrValue = value.value || '未知';
-                if(key == "Gene"){
-                    attrValue = value.join(' -');
-                }
-
+                let attrValue = value.value || '未知';
                 const rarity = value.rarity || 1;
                 const rarityClass = `rarity-${Math.min(20, Math.max(1, Math.round(rarity)))}`;
                     
@@ -1513,10 +1547,54 @@ function displayCatAttributes(cat) {
             }
         });
     
-    // 添加猫咪ID显示
 
+
+    // 处理基因
+    if(cat.Gene){
+        cat.Gene.forEach((gene, index) => {
+
+            const separator = "";
+            targetStr = (index+1) + " : " + gene[0] + separator + gene[1];
+            // 检查异变/变异
+            const mutation = cat.mutations[index];
+
+            
+            if(mutation){
+                targetStr ="*" + targetStr + "(突:" + GENE_DATA[index][mutation] + ")";
+            }
+
+            const aberration = cat.aberrations[index];
+
+            if(aberration){
+                targetStr = "+" + targetStr + "(异:" + GENE_DATA[index][aberration] + ")";
+            }
+
+
+            // 获取父母对应的基因内容
+            const parent1Gene = cat.parents[0]?.Gene[index];
+            const parent2Gene = cat.parents[1]?.Gene[index];
+
+            if(parent1Gene){
+                targetStr = targetStr + ">父" + parent1Gene[0] + separator + parent1Gene[1];
+            }
+
+            if(parent2Gene){
+                targetStr = targetStr + "母" + parent2Gene[0] + separator + parent2Gene[1];
+            }
+
+
+
+            attributesHtml += `
+            <div class="cat-attribute }">
+                <div>
+                    <span>${targetStr}</span>
+                </div>
+            </div>
+        `;
+        });
+    }
+    // 添加猫咪ID显示
     // 计算颜色
-    // 是否是梵色
     cat.Color = calculateColor(cat);
 
     if (cat) {
@@ -1569,7 +1647,7 @@ function displayCatAttributes(cat) {
 //根据基因计算颜色
 function calculateColor(cat) {
     Color = ''
-    if(cat.Gene[0][0]=='w' && cat.Gene[0][1]=='w'){
+    if(cat.Gene[0][0]=='W' || cat.Gene[0][1]=='W'){
         Color = Color + "梵色"
     }
     else{
@@ -1970,7 +2048,7 @@ function updateParentSelectors() {
     parent1Select.innerHTML = '<option value="">选择父本</option>';
     parent2Select.innerHTML = '<option value="">选择母本</option>';
     
-    const requiredCD = gameData.cdReductionPerBreeding || 8;
+    const requiredCD = gameData.cdReductionPerBreeding || 24;  // 修改这里，默认值改为24
     
     currentGenerationCats.forEach(cat => {
         if (cat.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
@@ -2215,7 +2293,7 @@ function proceedToNextGeneration() {
             if (cat && !cat.isTraveling) { // 只有不在出游的猫咪才恢复CD
                 cat.breedingCooldown = Math.min(
                     cat.maxBreedingCooldown,
-                    cat.breedingCooldown + 24
+                    cat.breedingCooldown + 24  // 确保每天恢复24点CD
                 );
             }
         });
