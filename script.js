@@ -1009,7 +1009,8 @@ function generateRandomCat(targetGender = null, isInitialCat = false) {
         cat.Dilute = Math.floor(Math.random() * 4);
         // 计算颜色
         cat.Color = calculateColor(cat);
-
+        // 计算总稀有度
+        //cat.totalRarity = DEFAULT_;
 
         // 计算总稀有度（包括多选属性）
         //4.3 不计算稀有度
@@ -1442,9 +1443,12 @@ function breedCats(cat1, cat2) {
 
         
         // 计算总稀有度
-        newCat.totalRarity = Object.values(newCat)
-            .filter(value => value && typeof value === 'object' && 'rarity' in value)
-            .reduce((sum, attr) => sum + attr.rarity, 0);
+        // newCat.totalRarity = Object.values(newCat)
+        //     .filter(value => value && typeof value === 'object' && 'rarity' in value)
+        //     .reduce((sum, attr) => sum + attr.rarity, 0);
+
+        //计算颜色
+        newCat.Color = calculateColor(newCat);
 
         return newCat;
     } catch (error) {
@@ -2305,8 +2309,10 @@ function breedPair() {
     if (newCat) {
         currentGenerationCats.set(newCat.id, newCat);
         breedingPool.set(newCat.id, newCat);
-        updateBreedingPoolDisplay();
+        
         updateParentSelectors();
+
+        updateBreedingPoolDisplay();
     } else {
         alert('配对失败，请检查猫咪的性别和CD');
     }
