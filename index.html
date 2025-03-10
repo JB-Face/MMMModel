@@ -22,6 +22,7 @@
             <p>游戏开始时，系统会为您生成两只初始猫咪。</p>
             <p>初始金币：1000</p>
             <button class="start-game-button" onclick="startGame()">开始游戏</button>
+            <button class="start-game-button" onclick="DataEditor()">数值控制</button>
         </div>
 
         <!-- 游戏主要内容 -->
@@ -135,6 +136,7 @@
                     <h2>培育池</h2>
                     <div id="breedingPool" class="cats-display"></div>
                     <button id="addRandomCat" class="secondary-button">添加随机猫咪</button>
+                    <button id="getgenevalue" class="secondary-button">输出基因数据</button>
                 </div>
 
                 <!-- 添加下一天按钮 -->
@@ -185,6 +187,10 @@
             document.querySelector('.game-content').classList.add('active');
             // 这里可以添加游戏初始化的代码
             // 初始化金币和生成初始猫咪等
+        }
+
+        function DataEditor() {
+            window.open('edit_probability.html', '概率编辑器', 'width=800,height=600');
         }
     </script>
 </body>

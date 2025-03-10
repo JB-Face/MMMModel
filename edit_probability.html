@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑基因概率</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .probability-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .gene-row {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .row-total {
+            color: #666;
+            margin-left: 10px;
+            min-width: 60px;
+        }
+        
+        .row-total.warning {
+            color: #f44336;
+        }
+        
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .total {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>编辑基因概率</h1>
+
+    <div class="probability-section">
+        <h2>生成基因型概率</h2>
+        <div id="geneProbabilityContainer"></div>
+        <div class="total">总和: <span id="geneProbabilityTotal">0</span></div>
+    </div>
+
+    <div class="probability-section">
+        <h2>繁育基因概率</h2>
+        <div id="breedGeneProbabilityContainer"></div>
+        <div class="total">总和: <span id="breedGeneProbabilityTotal">0</span></div>
+    </div>
+
+    <button onclick="saveProbabilities()">保存到Cookie</button>
+    <button onclick="loadFromCookie()">从Cookie加载</button>
+    <button onclick="resetToDefault()" style="background-color: #f44336;">恢复默认值</button>
+    <button onclick="exportToString()">导出为字符串</button>
+    <button onclick="importFromString()">从字符串导入</button>
+
+    <script>
+        const GENE_DATA = [
+            ["W", "w"], // 梵色
+            ["i", "l", "S"], // 品种
+            ["B", "b", "O", "o"], // 颜色
+            ["D", "d"], //减淡
+            ["A", "a"], // 山猫
+            ["F", "f"] // 翎毛
+        ]
+
+        // 默认值
+        const DEFAULT_GENE_PROBABILITY = [
+            [0.1, 0.5], // 梵色
+            [0.33, 0.33, 0.33], // 品种
+            [0.25, 0.25, 0.25, 0.25], // 颜色
+            [0.5, 0.5], //减淡
+            [0.5, 0.5], // 山猫
+            [0.5, 0.5] // 翎毛
+        ];
+
+        const DEFAULT_BREED_GENE_PROBABILITY = [
+            [0.1, 0.9], // 梵色
+            [0.33, 0.33, 0.33], // 品种
+            [0.25, 0.25, 0.25, 0.25], // 颜色
+            [0.5, 0.5], //减淡
+            [0.5, 0.5], // 山猫
+            [0.5, 0.5] // 翎毛
+        ];
+
+        // 从Cookie获取或使用默认值
+        let GENE_PROBABILITY;
+        let BREED_GENE_PROBABILITY;
+
+        try {
+            const cookieData = getCookie('MMM_GENE_CONFIG');
+            if (cookieData) {
+
+                if (cookieData.geneProbability && cookieData.breedProbability) {
+                    GENE_PROBABILITY = cookieData.geneProbability;
+                    BREED_GENE_PROBABILITY = cookieData.breedProbability;
+                } else {
+                    GENE_PROBABILITY = DEFAULT_GENE_PROBABILITY;
+                    BREED_GENE_PROBABILITY = DEFAULT_BREED_GENE_PROBABILITY;
+                }
+            } else {
+                GENE_PROBABILITY = DEFAULT_GENE_PROBABILITY;
+                BREED_GENE_PROBABILITY = DEFAULT_BREED_GENE_PROBABILITY;
+            }
+        } catch (err) {
+            console.error('从Cookie加载概率失败:', err);
+            GENE_PROBABILITY = DEFAULT_GENE_PROBABILITY;
+            BREED_GENE_PROBABILITY = DEFAULT_BREED_GENE_PROBABILITY;
+        }
+
+        // 渲染概率编辑界面
+        function renderProbabilityEditors() {
+            const geneContainer = document.getElementById('geneProbabilityContainer');
+            const breedContainer = document.getElementById('breedGeneProbabilityContainer');
+
+            // 渲染 GENE_PROBABILITY
+            if (GENE_PROBABILITY) {
+                GENE_PROBABILITY.forEach((geneprobs, geneIndex) => {
+                    const row = document.createElement('div');
+                    row.className = 'gene-row';
+                    row.innerHTML = `
+                    <label>${geneIndex}:</label>`;
+
+                    geneprobs.forEach((prob, index) => {
+                        row.innerHTML += `
+                        <label>${GENE_DATA[geneIndex][index]}:</label>
+                        <input type="number" value="${prob}" 
+                           onchange="updateRowTotal(this)" 
+                           data-gene="${prob}"
+                           data-row="${geneIndex}"
+                           data-type="gene">
+                        `;
+                    });
+                    row.innerHTML += `<span class="row-total" id="gene-row-total-${geneIndex}">总和: 0</span>`;
+                    geneContainer.appendChild(row);
+                });
+            }
+
+            // 渲染 BREED_GENE_PROBABILITY
+            if (BREED_GENE_PROBABILITY) {
+                BREED_GENE_PROBABILITY.forEach((geneprobs, geneIndex) => {
+                    const row = document.createElement('div');
+                    row.className = 'gene-row';
+                    row.innerHTML = `
+                    <label>${geneIndex}:</label>`;
+
+                    geneprobs.forEach((prob, index) => {
+                        row.innerHTML += `
+                        <label>${GENE_DATA[geneIndex][index]}:</label>
+                        <input type="number" value="${prob}" 
+                           onchange="updateRowTotal(this)" 
+                           data-gene="${prob}"
+                           data-row="${geneIndex}"
+                           data-type="breed">
+                        `;
+                    });
+                    row.innerHTML += `<span class="row-total" id="breed-row-total-${geneIndex}">总和: 0</span>`;
+                    breedContainer.appendChild(row);
+                });
+            }
+
+            // 初始化所有行的总和
+            updateAllRowTotals();
+        }
+
+        // 更新单行总和
+        function updateRowTotal(input) {
+            const row = input.closest('.gene-row');
+            const inputs = row.querySelectorAll('input');
+            const rowType = input.dataset.type;
+            const rowIndex = input.dataset.row;
+            let total = 0;
+
+            inputs.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+
+            const totalElement = document.getElementById(`${rowType}-row-total-${rowIndex}`);
+            totalElement.textContent = `总和: ${total.toFixed(2)}`;
+            totalElement.className = `row-total ${Math.abs(total - 1) > 0.01 ? 'warning' : ''}`;
+
+            // 更新总体总和
+            updateTotal(`${rowType}Probability`);
+        }
+
+        // 更新所有行的总和
+        function updateAllRowTotals() {
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                updateRowTotal(input);
+            });
+        }
+
+        // 更新总和
+        function updateTotal(type) {
+
+            // ai 命名的问题有问题，此处进行一定的修正
+            if (type == 'breedProbability') {
+                type = 'breedGeneProbability';
+            }
+
+            const container = document.getElementById(`${type}Container`);
+            const inputs = container.getElementsByTagName('input');
+            let total = 0;
+
+            Array.from(inputs).forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+
+            document.getElementById(`${type}Total`).textContent = total.toFixed(2);
+        }
+
+        function getMainDomain() {
+            try {
+                const hostname = window.location.hostname;
+                // 如果是 IP 地址,直接返回
+                if (/^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) {
+                    return hostname;
+                }
+                // 如果是 localhost,直接返回
+                if (hostname === 'localhost') {
+                    return hostname;
+                }
+                // 提取最后两段作为主域名
+                const parts = hostname.split('.');
+                if (parts.length > 2) {
+                    return parts.slice(-2).join('.');
+                }
+                return hostname;
+            } catch (err) {
+                console.error('获取主域名失败:', err);
+                return window.location.hostname; // 失败时返回完整域名
+            }
+        }
+
+
+
+        // 保存到Cookie
+        function saveProbabilities() {
+            const geneProbs = [];
+            const breedProbs = [];
+            const geneNames = [];
+
+            // 收集基因名称
+            GENE_DATA.forEach((genes, index) => {
+                geneNames.push(genes.join(','));
+            });
+
+            // 收集 GENE_PROBABILITY 值
+            document.getElementById('geneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                const values = [];
+                row.querySelectorAll('input').forEach(input => {
+                    values.push(parseFloat(input.value) || 0);
+                });
+                geneProbs[geneIndex] = values;
+            });
+
+            // 收集 BREED_GENE_PROBABILITY 值
+            document.getElementById('breedGeneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                const values = [];
+                row.querySelectorAll('input').forEach(input => {
+                    values.push(parseFloat(input.value) || 0);
+                });
+                breedProbs[geneIndex] = values;
+            });
+
+            // 构建数据对象
+            const data = {
+                type: "MMM_GENE_CONFIG",
+                version: "1.0",
+                timestamp: Date.now(),
+                geneNames: geneNames,
+                geneProbability: geneProbs,
+                breedProbability: breedProbs
+            };
+
+            // 保存到Cookie
+            const mainDomain = getMainDomain();
+            document.cookie = `MMM_GENE_CONFIG=${JSON.stringify(data)}; path=/; domain=${mainDomain}`;
+            alert('概率已保存到Cookie！');
+        }
+
+        // 从Cookie加载
+        function loadFromCookie() {
+            const cookieData = getCookie('MMM_GENE_CONFIG');
+            let geneProbs;
+            let breedProbs;
+            if (cookieData) {
+                geneProbs = cookieData.geneProbability;
+                breedProbs = cookieData.breedProbability;
+            } else {
+                alert('没有找到概率数据');
+                return;
+            }
+
+            // 更新 GENE_PROBABILITY 输入框
+            Object.entries(geneProbs).forEach(([gene, prob]) => {
+                const input = document.querySelector(`#geneProbabilityContainer input[data-gene="${gene}"]`);
+                if (input) input.value = prob;
+            });
+
+            // 更新 BREED_GENE_PROBABILITY 输入框
+            Object.entries(breedProbs).forEach(([gene, prob]) => {
+                const input = document.querySelector(`#breedGeneProbabilityContainer input[data-gene="${gene}"]`);
+                if (input) input.value = prob;
+            });
+
+            updateTotal('geneProbability');
+            updateTotal('breedGeneProbability');
+
+            alert('已从Cookie加载概率！');
+        }
+
+        // 获取Cookie的辅助函数
+        function getCookie(name) {
+            try {
+                const value = `; ${document.cookie}`;
+                parts = value.split('; MMM_GENE_CONFIG=')[1]
+
+                jsonparts = JSON.parse(decodeURIComponent(parts));
+                if (jsonparts && jsonparts.type == "MMM_GENE_CONFIG") {
+
+                    if (name == 'MMM_GENE_CONFIG') {
+                        return jsonparts;
+                    }
+
+                    if (name in jsonparts) {
+
+                        return jsonparts[name];
+                    }
+                }
+
+                // const parts = value.split(`; ${name}=`);
+                // if (parts.length) {
+                //     const cookieValue = parts.pop().split(';').shift();
+                //     return JSON.parse(decodeURIComponent(cookieValue));
+                // }
+                return null;
+            } catch (err) {
+                console.error('读取cookie失败:', err);
+                return null;
+            }
+        }
+
+        // 恢复默认值函数
+        function resetToDefault() {
+            if (confirm('确定要恢复默认值吗？这将清除所有已保存的设置。')) {
+                // 更新 GENE_PROBABILITY 输入框
+                document.getElementById('geneProbabilityContainer').querySelectorAll('input').forEach((input, index) => {
+                    const geneIndex = Math.floor(index / GENE_DATA[Math.floor(index / GENE_DATA.length)].length);
+                    const probIndex = index % GENE_DATA[geneIndex].length;
+                    input.value = GENE_PROBABILITY[geneIndex][probIndex];
+                });
+
+                // 更新 BREED_GENE_PROBABILITY 输入框
+                document.getElementById('breedGeneProbabilityContainer').querySelectorAll('input').forEach((input, index) => {
+                    const geneIndex = Math.floor(index / GENE_DATA[Math.floor(index / GENE_DATA.length)].length);
+                    const probIndex = index % GENE_DATA[geneIndex].length;
+                    input.value = BREED_GENE_PROBABILITY[geneIndex][probIndex];
+                });
+
+                updateTotal('geneProbability');
+                updateTotal('breedGeneProbability');
+
+                // 清除Cookie
+                document.cookie = "GENE_PROBABILITY=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = "BREED_GENE_PROBABILITY=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+                alert('已恢复默认值！');
+            }
+        }
+
+        // 计算校验和
+        function calculateChecksum(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16);
+        }
+
+        // 导出为字符串
+        function exportToString() {
+            const geneProbs = [];
+            const breedProbs = [];
+            const geneNames = [];
+
+            // 收集基因名称
+            GENE_DATA.forEach((genes, index) => {
+                geneNames.push(genes.join(','));
+            });
+
+            // 收集 GENE_PROBABILITY 值
+            document.getElementById('geneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                const values = [];
+                row.querySelectorAll('input').forEach(input => {
+                    values.push(parseFloat(input.value) || 0);
+                });
+                geneProbs[geneIndex] = values;
+            });
+
+            // 收集 BREED_GENE_PROBABILITY 值
+            document.getElementById('breedGeneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                const values = [];
+                row.querySelectorAll('input').forEach(input => {
+                    values.push(parseFloat(input.value) || 0);
+                });
+                breedProbs[geneIndex] = values;
+            });
+
+            // 构建数据对象
+            const data = {
+                type: "MMM_GENE_CONFIG",
+                version: "1.0",
+                timestamp: Date.now(),
+                geneNames: geneNames,
+                geneProbability: geneProbs,
+                breedProbability: breedProbs,
+                checksum: null // 将在下面计算
+            };
+
+            // 计算校验和
+            const tempStr = JSON.stringify(data);
+            data.checksum = calculateChecksum(tempStr);
+
+            // 转换为JSON字符串
+            const jsonStr = JSON.stringify(data);
+
+            // 复制到剪贴板
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                alert('概率已复制到剪贴板！');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制：\n' + jsonStr);
+            });
+        }
+
+        // 从字符串导入
+        function importFromString() {
+            const str = prompt('请输入概率字符串：');
+            if (!str) return;
+
+            try {
+                let data;
+                try {
+                    data = JSON.parse(str);
+                } catch (e) {
+                    // 如果不是JSON格式，尝试导入旧格式
+                    importFromOldFormat(str);
+                    return;
+                }
+
+                // 验证数据类型
+                if (!data.type || data.type !== "MMM_GENE_CONFIG") {
+                    throw new Error('不是有效的基因配置数据');
+                }
+
+                // 验证校验和
+                const originalChecksum = data.checksum;
+                data.checksum = null;
+                const calculatedChecksum = calculateChecksum(JSON.stringify(data));
+                if (originalChecksum !== calculatedChecksum) {
+                    throw new Error('校验和错误，数据可能已损坏');
+                }
+
+                // 验证版本和数据结构
+                if (!data.version || !data.geneProbability || !data.breedProbability) {
+                    throw new Error('数据格式错误');
+                }
+
+                // 验证基因数量
+                if (data.geneProbability.length !== GENE_DATA.length ||
+                    data.breedProbability.length !== GENE_DATA.length) {
+                    throw new Error('基因数量不匹配');
+                }
+
+                // 更新 GENE_PROBABILITY 输入框
+                document.getElementById('geneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                    const inputs = row.querySelectorAll('input');
+                    const values = data.geneProbability[geneIndex];
+                    inputs.forEach((input, index) => {
+                        input.value = values[index];
+                    });
+                });
+
+                // 更新 BREED_GENE_PROBABILITY 输入框
+                document.getElementById('breedGeneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                    const inputs = row.querySelectorAll('input');
+                    const values = data.breedProbability[geneIndex];
+                    inputs.forEach((input, index) => {
+                        input.value = values[index];
+                    });
+                });
+
+                updateAllRowTotals();
+                alert('导入成功！');
+            } catch (err) {
+                console.error('导入错误:', err);
+                alert('导入失败：' + (err.message || '格式错误'));
+            }
+        }
+
+        // 导入旧格式数据（向后兼容）
+        function importFromOldFormat(str) {
+            try {
+                const [genePart, breedPart] = str.split('|');
+                if (!genePart.startsWith('G:') || !breedPart.startsWith('B:')) {
+                    throw new Error('旧格式数据错误');
+                }
+
+                const geneStr = genePart.substring(2);
+                const breedStr = breedPart.substring(2);
+
+                const geneProbs = geneStr.split(';').map(s => s.split(',').map(Number));
+                const breedProbs = breedStr.split(';').map(s => s.split(',').map(Number));
+
+                // 验证数据
+                if (geneProbs.length !== GENE_DATA.length || breedProbs.length !== GENE_DATA.length) {
+                    throw new Error('基因数量不匹配');
+                }
+
+                // 更新输入框
+                document.getElementById('geneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                    const inputs = row.querySelectorAll('input');
+                    const values = geneProbs[geneIndex];
+                    inputs.forEach((input, index) => {
+                        input.value = values[index];
+                    });
+                });
+
+                document.getElementById('breedGeneProbabilityContainer').querySelectorAll('.gene-row').forEach((row, geneIndex) => {
+                    const inputs = row.querySelectorAll('input');
+                    const values = breedProbs[geneIndex];
+                    inputs.forEach((input, index) => {
+                        input.value = values[index];
+                    });
+                });
+
+                updateAllRowTotals();
+                alert('从旧格式导入成功！');
+            } catch (err) {
+                console.error('导入旧格式错误:', err);
+                alert('导入失败：' + (err.message || '格式错误'));
+            }
+        }
+
+        // 页面加载时渲染编辑器
+        window.onload = renderProbabilityEditors;
+    </script>
+</body>
+
+</html>

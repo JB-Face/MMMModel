@@ -132,7 +132,7 @@ const STANDCAT_DATA = {
 }
 
 //生成基因几率
-const GENE_PROBABILITY = [
+let GENE_PROBABILITY = [
     [0.1, 0.5], // 梵色
     [0.33, 0.33, 0.33], // 品种
     [0.25, 0.25, 0.25, 0.25], // 颜色
@@ -142,7 +142,7 @@ const GENE_PROBABILITY = [
 ]
 
 // 繁育基因几率
-const BREED_GENE_PROBABILITY = [
+let BREED_GENE_PROBABILITY = [
     [0.1, 0.9], // 梵色
     [0.33, 0.33, 0.33], // 品种
     [0.25, 0.25, 0.25, 0.25], // 颜色
@@ -743,7 +743,7 @@ async function initGame() {
     // 确保数据已经加载后再继续初始化其他内容
     nameData = { ...DEFAULT_NAME_DATA };
     playerCoins = 1000;
-
+    loadFromCookie();
     // 渲染界面
     renderControls();
     
@@ -784,7 +784,8 @@ function bindEventListeners() {
         breedPair: document.getElementById('breedPair'),
         startSimulation: document.getElementById('startSimulation'),
         refreshShop: document.getElementById('refreshShop'),
-        nextGeneration: document.getElementById('nextGeneration')
+        nextGeneration: document.getElementById('nextGeneration'),
+        getgenevalue: document.getElementById('getgenevalue')
     };
 
     // 绑定事件
@@ -811,6 +812,9 @@ function bindEventListeners() {
         }
         if (elements.importAttributes) {
             elements.importAttributes.addEventListener('click', importAttributes);
+        }
+        if (elements.getgenevalue) {
+            elements.getgenevalue.addEventListener('click', getgenevalue);
         }
     if (elements.addRandomCat) {
         elements.addRandomCat.addEventListener('click', () => {
@@ -2203,7 +2207,10 @@ function exportAttributes() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-
+function getgenevalue() {
+    console.log(GENE_PROBABILITY);
+    console.log(BREED_GENE_PROBABILITY);
+}
 // 导入属性设置
 function importAttributes() {
     const input = document.createElement('input');
@@ -2517,7 +2524,7 @@ function resetSimulation() {
 
     // 更新金币显示
     updateCoinsDisplay();
-
+    
     // 重新渲染控制面板
     renderControls();
 
@@ -2705,4 +2712,53 @@ function selectMultiSelectAttributeBasedOnGeneStrength(parent1Values, parent2Val
     selectedTraits = checkTraitExclusions(attrName, selectedTraits, attrData);
     
     return selectedTraits;
+}
+
+function openProbabilityEditor() {
+    const editorWindow = window.open('edit_probability.html', '概率编辑器', 'width=800,height=600');
+}
+
+// cook相关
+function loadFromCookie() {
+    const cookieData = getCookie('MMM_GENE_CONFIG');
+    if (cookieData) {
+        GENE_PROBABILITY = cookieData.geneProbability;
+        BREED_GENE_PROBABILITY = cookieData.breedProbability;
+    } else {
+        alert('没有找到概率数据');
+        return;
+    }
+
+    alert('已从Cookie加载概率！');
+}
+
+// 获取Cookie的辅助函数
+function getCookie(name) {
+    try {
+        const value = `; ${document.cookie}`;
+        parts = value.split('; MMM_GENE_CONFIG=')[1]
+
+        jsonparts = JSON.parse(decodeURIComponent(parts));
+        if (jsonparts && jsonparts.type == "MMM_GENE_CONFIG") {
+
+            if (name == 'MMM_GENE_CONFIG') {
+                return jsonparts;
+            }
+
+            if (name in jsonparts) {
+
+                return jsonparts[name];
+            }
+        }
+
+        // const parts = value.split(`; ${name}=`);
+        // if (parts.length) {
+        //     const cookieValue = parts.pop().split(';').shift();
+        //     return JSON.parse(decodeURIComponent(cookieValue));
+        // }
+        return null;
+    } catch (err) {
+        console.error('读取cookie失败:', err);
+        return null;
+    }
 }
