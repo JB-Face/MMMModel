@@ -1,3 +1,7 @@
+// 全局变量声明 - 添加到文件顶部
+// 显示所有颜色的全局变量
+let showAllColors = false;
+
 // 默认游戏数据
 const POSTCARD_DATA = {
     provinces: [
@@ -15,6 +19,13 @@ const POSTCARD_DATA = {
 };
 
 const DEFAULT_GAME_DATA = {
+    coins: 100,
+    cats: {},
+    idCounter: 0,
+    breedingPool: [],
+    breedingHistory: [],
+    breedingResults: [],
+    shopCats: [],
     attributes: {
         毛色: {
             expressed: ["白色", "黑色", "橘色", "灰色", "棕色", "三花", "玳瑁"],
@@ -80,7 +91,14 @@ const DEFAULT_GAME_DATA = {
     cdReductionPerBreeding: 24, // 修改为24，确保每次繁殖消耗整个CD
     maxCDReductionPerBreeding: 0, // 设置为0，确保最大CD不会减少
     coinMultiplier: 1,
-    simulationHistory: []
+    simulationHistory: [],
+    day: 1,
+    currentCatId: null,
+    activeMutations: [],
+    encyclopedia: {
+        discovered: [], // 已发现的颜色和基因组合
+        lastUpdate: Date.now() // 最后更新时间
+    }
 };
 
 // 默认名字数据
@@ -432,7 +450,8 @@ function renderControls() {
         // const weightControls = document.getElementById('weightControls');
         // const rarityControls = document.getElementById('rarityControls');
         // const geneStrengthControls = document.getElementById('geneStrengthControls');
-        gameData = { ...DEFAULT_GAME_DATA };
+        // 移除这行以避免重置游戏数据
+        // gameData = { ...DEFAULT_GAME_DATA };
         const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
         
         // if (!weightControls || !rarityControls || !geneStrengthControls) {
@@ -534,6 +553,18 @@ function renderControls() {
         //     // `;
         //     // geneStrengthControls.appendChild(geneStrengthPanel);
         // });
+        
+        // 检查是否已经存在图鉴按钮,不存在则添加
+        // const encyclopediaButton = breedingPanel.querySelector('#openEncyclopedia');
+        // if (!encyclopediaButton && breedingPanel) {
+        //     const encyclopediaControl = document.createElement('div');
+        //     encyclopediaControl.className = 'parameter-group';
+        //     encyclopediaControl.innerHTML = `
+        //         <button id="openEncyclopedia" class="primary-button" onclick="openEncyclopedia()">打开猫咪图鉴</button>
+        //         <button onclick="console.log('测试按钮点击'); openEncyclopedia();" class="primary-button">测试图鉴(直接调用)</button>
+        //     `;
+        //     breedingPanel.insertBefore(encyclopediaControl, breedingPanel.firstChild);
+        // }
 
         // 添加初始最大CD设置控件
         if (breedingPanel) {
@@ -712,51 +743,33 @@ function updateMaxCDReduction(value) {
 
 // 修改初始化函数
 async function initGame() {
-
-        //0.43 先不使用json数据
-    //     // 先使用默认数据初始化
-    //     gameData = { ...DEFAULT_GAME_DATA };
+    try {
+        // 先使用默认数据初始化
+        gameData = { ...DEFAULT_GAME_DATA };
         
-    //     // 尝试加载幻想风格数据
-    //     const response = await fetch('./presets/fantasy.json');
-    //     if (!response.ok) {
-    //         throw new Error(`HTTP error! status: ${response.status}`);
-    //     }
-    //     const fantasyData = await response.json();
+        // 确保数据已经加载后再继续初始化其他内容
+        nameData = { ...DEFAULT_NAME_DATA };
+        playerCoins = 1000;
         
-    //     // 合并数据，保留默认值作为后备
-    //     gameData = {
-    //         ...DEFAULT_GAME_DATA,
-    //         ...fantasyData,
-    //         attributes: {
-    //             ...DEFAULT_GAME_DATA.attributes,
-    //             ...(fantasyData.attributes || {})
-    //         }
-    //     };
+        // 尝试从cookie加载数据
+        loadFromCookie();
         
-    //     console.log('成功加载幻想风格数据:', gameData);
-    // } catch (error) {
-    //     console.error('加载幻想风格数据失败:', error);
-    //     console.log('使用默认游戏数据:', gameData);
-    // }
-
-    // 确保数据已经加载后再继续初始化其他内容
-    nameData = { ...DEFAULT_NAME_DATA };
-    playerCoins = 1000;
-    loadFromCookie();
-    // 渲染界面
-    renderControls();
-    
-    // 初始化手动+商店模式
-    initializeManualBreeding();
-    generateShopCats();
-    
-    // 绑定事件监听器
-    bindEventListeners();
-    
-    // 更新金币显示
-    updateCoinsDisplay();
-
+        // 渲染界面
+        renderControls();
+        
+        // 初始化手动+商店模式
+        initializeManualBreeding();
+        generateShopCats();
+        
+        // 绑定事件监听器
+        bindEventListeners();
+        
+        // 更新金币显示
+        updateCoinsDisplay();
+    } catch (error) {
+        console.error('游戏初始化失败:', error);
+        throw error;
+    }
 }
 
 
@@ -785,7 +798,8 @@ function bindEventListeners() {
         startSimulation: document.getElementById('startSimulation'),
         refreshShop: document.getElementById('refreshShop'),
         nextGeneration: document.getElementById('nextGeneration'),
-        getgenevalue: document.getElementById('getgenevalue')
+        getgenevalue: document.getElementById('getgenevalue'),
+        openEncyclopedia: document.getElementById('openEncyclopedia')
     };
 
     // 绑定事件
@@ -884,10 +898,42 @@ function bindEventListeners() {
             }
         });
     });
+
+    // 添加图鉴按钮事件
+    if (elements.openEncyclopedia) {
+        elements.openEncyclopedia.addEventListener('click', function() {
+            openEncyclopedia();
+        });
+    } else {
+        console.log('找不到图鉴按钮');
+    }
 }
 
 // 当页面加载完成时初始化游戏
 document.addEventListener('DOMContentLoaded', initGame);
+
+// 添加window.onload事件确保一切都加载完成
+window.onload = function() {
+    // 确保showAllColors已初始化
+    if (typeof showAllColors === 'undefined') {
+        showAllColors = false;
+    }
+    
+    console.log('窗口完全加载,确保所有元素都已准备好');
+    
+    // 再次检查图鉴按钮并绑定事件
+    const openEncyclopediaBtn = document.getElementById('openEncyclopedia');
+    if (openEncyclopediaBtn) {
+        console.log('找到图鉴按钮,再次绑定');
+        openEncyclopediaBtn.onclick = function() {
+            console.log('图鉴按钮点击(window.onload)');
+            openEncyclopedia();
+            return false; // 阻止默认行为
+        };
+    } else {
+        console.log('window.onload后仍找不到图鉴按钮');
+    }
+};
 
 // 生成随机名字
 function generateRandomName() {
@@ -1237,12 +1283,12 @@ function breedCats(cat1, cat2) {
         //                             selectedRarities.push(attrData.rarity[idx]);
         //                         }
         //                     }
-                            
+                                    
         //                     // 应用互斥规则
         //                     const finalValues = checkTraitExclusions(attrName, selectedValues, attrData);
         //                     const finalRarities = finalValues.map(value => 
         //                         attrData.rarity[attrData.expressed.indexOf(value)]);
-                            
+                                    
         //                     newCat[attrName] = {
         //                         values: finalValues,
         //                         rarities: finalRarities,
@@ -1256,10 +1302,10 @@ function breedCats(cat1, cat2) {
         //                         attrData,
         //                         attrName  // 添加属性名参数
         //                     );
-                            
+                                    
         //                     const selectedRarities = selectedValues.map(value => 
         //                         attrData.rarity[attrData.expressed.indexOf(value)]);
-                            
+                                    
         //                     newCat[attrName] = {
         //                         values: selectedValues,
         //                         rarities: selectedRarities,
@@ -1287,7 +1333,7 @@ function breedCats(cat1, cat2) {
         //                 }
         //             }
         //             }
-                    
+                            
         //             // 记录继承信息
         //             newCat.inheritanceInfo[attrName] = {
         //             parent1: parent1Value ? {
@@ -1454,6 +1500,9 @@ function breedCats(cat1, cat2) {
         //计算颜色
         newCat.Color = calculateColor(newCat);
 
+        // 在返回新猫之前记录发现
+        recordColorDiscovery(newCat);
+        
         return newCat;
     } catch (error) {
         console.error('繁殖过程出错:', error);
@@ -1776,7 +1825,6 @@ function calculateColor(cat) {
 
 
 
-
     if(cat.Gene[4][0]=='a' && cat.Gene[4][1]=='a'){
         Color = Color + "山猫"
     }
@@ -1981,34 +2029,47 @@ function displayShopCats() {
 
 // 将商店猫咪添加到培育池
 function addShopCatToPool(index) {
-    const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
-    
-    if (currentGenerationCats.size >= maxCats) {
-        alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
-        return;
+    try {
+        const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+        
+        if (currentGenerationCats.size >= maxCats) {
+            alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
+            return;
+        }
+        
+        const cat = shopCats[index];
+        if (!cat) return;
+        
+        // 检查金币是否足够
+        const price = Math.floor(cat.totalRarity * 10);
+        if (playerCoins < price) {
+            alert(`金币不足！需要 ${price} 金币。`);
+            return;
+        }
+        
+        // 扣除金币
+        playerCoins -= price;
+        updateCoinsDisplay();
+        
+        breedingPool.set(cat.id, cat);
+        currentGenerationCats.set(cat.id, cat);
+        shopCats.splice(index, 1); // 从商店中移除
+        
+        updateBreedingPoolDisplay();
+        updateParentSelectors();
+        displayShopCats();
+        
+        // 记录颜色发现
+        recordColorDiscovery(cat);
+        
+        // 添加记录颜色发现
+        //recordColorDiscovery(selectedCat);
+        
+        // 更新界面
+        // ... existing code ...
+    } catch (error) {
+        console.error('添加商店猫咪到培育池失败:', error);
     }
-    
-    const cat = shopCats[index];
-    if (!cat) return;
-    
-    // 检查金币是否足够
-    const price = Math.floor(cat.totalRarity * 10);
-    if (playerCoins < price) {
-        alert(`金币不足！需要 ${price} 金币。`);
-        return;
-    }
-    
-    // 扣除金币
-    playerCoins -= price;
-    updateCoinsDisplay();
-    
-    breedingPool.set(cat.id, cat);
-    currentGenerationCats.set(cat.id, cat);
-    shopCats.splice(index, 1); // 从商店中移除
-    
-    updateBreedingPoolDisplay();
-    updateParentSelectors();
-    displayShopCats();
 }
 
 // 自动选择商店猫咪
@@ -2094,6 +2155,7 @@ function initializeManualBreeding() {
     currentDay = 0;
     breedingPool.clear();
     currentGenerationCats.clear();
+    gameData.encyclopedia.discovered = [];
     
     // 生成初始猫咪（一公一母），传入true表示是初始猫咪
     const initialMale = generateRandomCat('公', true);
@@ -2108,7 +2170,8 @@ function initializeManualBreeding() {
     breedingPool.set(initialFemale.id, initialFemale);
     currentGenerationCats.set(initialMale.id, initialMale);
     currentGenerationCats.set(initialFemale.id, initialFemale);
-    
+    recordColorDiscovery(initialMale);
+    recordColorDiscovery(initialFemale);
     updateBreedingPoolDisplay();
     updateParentSelectors();
 }
@@ -2737,7 +2800,7 @@ function getCookie(name) {
     try {
         const value = `; ${document.cookie}`;
         parts = value.split('; MMM_GENE_CONFIG=')[1]
-
+        if(!parts) return null;
         jsonparts = JSON.parse(decodeURIComponent(parts));
         if (jsonparts && jsonparts.type == "MMM_GENE_CONFIG") {
 
@@ -2761,4 +2824,395 @@ function getCookie(name) {
         console.error('读取cookie失败:', err);
         return null;
     }
+}
+
+// 添加图鉴功能函数
+function openEncyclopedia() {
+    console.log('打开图鉴函数被调用');
+    
+    // 检查是否已经存在图鉴面板
+    let panel = document.getElementById('encyclopediaPanel');
+    console.log('图鉴面板是否存在:', panel ? '是' : '否');
+    
+    // 如果面板还不存在,创建它
+    if (!panel) {
+        console.log('创建新的图鉴面板');
+        // 创建图鉴面板
+        panel = document.createElement('div');
+        panel.id = 'encyclopediaPanel';
+        panel.className = 'panel';
+        
+        // 添加内容
+        panel.innerHTML = `
+            <div class="panel-header">
+                <h2>猫咪图鉴</h2>
+                <button class="close-btn" onclick="closeEncyclopedia()">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="encyclopedia-progress">
+                    <h3>收集进度</h3>
+                    <div class="progress-bar">
+                        <div id="progressBar" class="progress-fill"></div>
+                    </div>
+                    <p id="progressText">已收集: 0/0 (0%)</p>
+                </div>
+                <div class="encyclopedia-controls">
+                    <h3>筛选</h3>
+                    <select id="geneFilter" onchange="filterEncyclopedia()">
+                        <option value="all">全部基因</option>
+                    </select>
+                    <div class="encyclopedia-buttons">
+                        <button id="showAllColorsBtn" onclick="toggleShowAllColors()">显示所有颜色</button>
+                        <button id="showOnlyDiscoveredBtn" onclick="toggleShowDiscoveredOnly()" style="display:none;">只显示已发现</button>
+                    </div>
+                </div>
+                <div id="encyclopediaContent" class="encyclopedia-content">
+                    <!-- 这里将动态填充内容 -->
+                </div>
+            </div>
+        `;
+        
+        // 添加到文档中
+        document.body.appendChild(panel);
+        console.log('新面板已创建并添加到文档');
+    }
+    
+    try {
+        // 刷新图鉴内容
+        console.log('刷新图鉴内容');
+        refreshEncyclopedia();
+        
+        // 直接显示面板
+        console.log('直接显示面板');
+        panel.style.display = 'block';
+        console.log('面板显示已设置为block');
+    } catch (error) {
+        console.error('打开图鉴出错:', error);
+    }
+}
+
+// 关闭图鉴面板
+function closeEncyclopedia() {
+    console.log('关闭图鉴函数被调用');
+    
+    const panel = document.getElementById('encyclopediaPanel');
+    if (panel) {
+        console.log('找到图鉴面板,关闭它');
+        panel.style.display = 'none';
+        console.log('面板已隐藏');
+    } else {
+        console.log('找不到图鉴面板');
+    }
+}
+
+// 生成所有可能的颜色组合
+function generateAllPossibleColors() {
+    // 按照 calculateColor 函数的逻辑生成颜色组合
+    const colorCombinations = [];
+    
+    // 生成梵色
+    // colorCombinations.push({
+    //     genotype: "梵色",
+    //     color: "梵色",
+    //     gene: "特殊",
+    //     value: "W"
+    // });
+    
+    // 非梵色组合
+    const patterns = ["梵色","双色", "手套", "重点色"];
+    const baseColors = ["海豹", "巧克力", "火焰"];
+    const extras = ["", "山猫", "翎毛", "山猫翎毛"];
+    const dilutes = ["", "(淡化1)", "(淡化2)", "(淡化3)"];
+    
+    // 组合所有可能性
+    for (const pattern of patterns) {
+        for (const baseColor of baseColors) {
+            for (const extra of extras) {
+                // 先不使用淡化
+                // for (const dilute of dilutes) {
+                    // 构建基本颜色名称
+                    let colorName = pattern + baseColor;
+                    
+                    // 添加额外特征
+                    if (extra) {
+                        colorName += extra;
+                    }
+                    
+                    // 添加淡化级别
+                    // if (dilute) {
+                    //     colorName += dilute;
+                    // }
+                    
+                    // 添加到组合列表
+                    colorCombinations.push({
+                        genotype: colorName,
+                        color: colorName,
+                        gene: pattern + "系列",
+                        value: generateGeneValue(pattern, baseColor, extra,false)
+                    });
+                //}
+            }
+        }
+    }
+    
+    return colorCombinations;
+}
+
+// 生成基因组合值
+function generateGeneValue(pattern, baseColor, extra,dilute) {
+    let value = "";
+    
+    // 添加花纹基因
+    if (pattern === "双色") value += "i+";
+    else if (pattern === "手套") value += "l+";
+    else value += "S+";
+    
+    // 添加颜色基因
+    if (baseColor === "海豹") value += "B";
+    else if (baseColor === "巧克力") value += "b";
+    else value += "O";
+    
+    // 添加淡化基因
+    if (dilute) {
+        value += "+d";
+    }
+    
+    // 添加额外特征
+    if (extra.includes("山猫")) {
+        value += "+a";
+    }
+    if (extra.includes("翎毛")) {
+        value += "+f";
+    }
+    
+    return value;
+}
+
+// 记录新发现的颜色
+function recordColorDiscovery(cat) {
+    if (!cat || !cat.Gene) return;
+    
+    try {
+        let color = calculateColor(cat);
+        color = color.split("(淡化")[0];
+        if (!color) return;
+        
+        // 检查是否已发现
+        if (!gameData.encyclopedia.discovered.includes(color)) {
+            gameData.encyclopedia.discovered.push(color);
+            gameData.encyclopedia.lastUpdate = Date.now();
+            saveToLocalStorage();
+            
+            console.log(`发现新的颜色组合: ${color}`);
+        }
+    } catch (err) {
+        console.error('记录颜色发现错误:', err);
+    }
+}
+
+// 刷新图鉴内容
+function refreshEncyclopedia() {
+    const contentEl = document.getElementById('encyclopediaContent');
+    if (!contentEl) return;
+    
+    // 获取所有可能的颜色
+    const allTypes = generateAllPossibleColors();
+    
+    // 计算进度
+    const discovered = gameData.encyclopedia.discovered || [];
+    const progress = {
+        total: allTypes.length,
+        discovered: discovered.length,
+        percentage: (discovered.length / allTypes.length * 100).toFixed(1)
+    };
+    
+    // 更新进度条
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.style.width = `${progress.percentage}%`;
+    }
+    
+    const progressText = document.getElementById('progressText');
+    if (progressText) {
+        progressText.textContent = `已收集: ${progress.discovered}/${progress.total} (${progress.percentage}%)`;
+    }
+    
+    // 清空内容
+    contentEl.innerHTML = '';
+    
+    // 获取当前筛选
+    const geneFilter = document.getElementById('geneFilter');
+    const filterValue = geneFilter ? geneFilter.value : 'all';
+    
+    // 填充基因筛选选项
+    if (geneFilter && geneFilter.options.length <= 1) {
+        const geneTypes = [...new Set(allTypes.map(item => item.gene))];
+        geneTypes.forEach(gene => {
+            const option = document.createElement('option');
+            option.value = gene;
+            option.textContent = gene;
+            geneFilter.appendChild(option);
+        });
+    }
+    
+    // 筛选颜色
+    const filteredTypes = filterValue === 'all' 
+        ? allTypes 
+        : allTypes.filter(item => item.gene === filterValue);
+    
+    // 创建颜色卡片
+    filteredTypes.forEach(item => {
+        const isDiscovered = discovered.includes(item.genotype);
+        
+        // 防御性检查showAllColors变量, 如果未定义则默认为false
+        const showAll = typeof showAllColors !== 'undefined' ? showAllColors : false;
+        
+        // 如果只显示已发现的颜色,而这个颜色未发现,则跳过
+        if (!showAll && !isDiscovered) {
+            return;
+        }
+        
+        const card = document.createElement('div');
+        card.className = `color-card ${isDiscovered ? 'discovered' : 'undiscovered'}`;
+        
+        // 根据是否显示所有颜色决定内容
+        if (showAll || isDiscovered) {
+            card.innerHTML = `
+                <div class="color-preview" style="background-color: ${getColorCode(item.color)}"></div>
+                <h4>${item.color}</h4>
+                <p>${item.genotype}</p>
+                <p>基因: ${item.gene}</p>
+                <p>值: ${item.value}</p>
+                <p class="discovery-status">${isDiscovered ? '已发现' : '未发现'}</p>
+            `;
+        } else {
+            card.innerHTML = `
+                <div class="color-preview" style="background-color: ${getColorCode(item.color)}"></div>
+                <h4>???</h4>
+                <p>未发现</p>
+            `;
+        }
+        
+        contentEl.appendChild(card);
+    });
+}
+
+// 根据颜色名称获取颜色代码
+function getColorCode(colorName) {
+    // 基础颜色映射
+    const baseColorMap = {
+        '梵色': '#FFFFFF',
+        '双色海豹': '#8B4C39',
+        '手套海豹': '#6E3E2E',
+        '重点色海豹': '#513126',
+        '双色巧克力': '#A5785A',
+        '手套巧克力': '#8D6446',
+        '重点色巧克力': '#7A5032',
+        '双色火焰': '#FF9552',
+        '手套火焰': '#FF7F2A',
+        '重点色火焰': '#FF6600'
+    };
+    
+    // 如果是基础颜色,直接返回
+    if (baseColorMap[colorName]) {
+        return baseColorMap[colorName];
+    }
+    
+    // 处理山猫特征
+    if (colorName.includes('山猫')) {
+        // 山猫特征会让颜色更深沉
+        const baseColor = colorName.replace('山猫', '').replace(/\(淡化\d\)/, '');
+        const baseCode = baseColorMap[baseColor] || '#CCCCCC';
+        return darkenColor(baseCode, 0.2);
+    }
+    
+    // 处理翎毛特征
+    if (colorName.includes('翎毛')) {
+        // 翎毛特征会让颜色更明亮
+        const baseColor = colorName.replace('翎毛', '').replace(/\(淡化\d\)/, '');
+        const baseCode = baseColorMap[baseColor] || '#CCCCCC';
+        return lightenColor(baseCode, 0.2);
+    }
+    
+    // 处理淡化效果
+    if (colorName.includes('(淡化')) {
+        // 提取基础颜色和淡化级别
+        const baseColor = colorName.replace(/\(淡化\d\)/, '');
+        const dilutionLevel = parseInt(colorName.match(/\(淡化(\d)\)/)[1]);
+        const baseCode = baseColorMap[baseColor] || '#CCCCCC';
+        
+        // 根据淡化级别增加亮度
+        return lightenColor(baseCode, dilutionLevel * 0.15);
+    }
+    
+    // 默认颜色
+    return '#CCCCCC';
+}
+
+// 辅助函数:增加颜色亮度
+function lightenColor(hexColor, factor) {
+    // 移除#号
+    hexColor = hexColor.replace('#', '');
+    
+    // 将十六进制转换为RGB
+    let r = parseInt(hexColor.substr(0, 2), 16);
+    let g = parseInt(hexColor.substr(2, 2), 16);
+    let b = parseInt(hexColor.substr(4, 2), 16);
+    
+    // 增加亮度
+    r = Math.min(255, Math.floor(r + (255 - r) * factor));
+    g = Math.min(255, Math.floor(g + (255 - g) * factor));
+    b = Math.min(255, Math.floor(b + (255 - b) * factor));
+    
+    // 转回十六进制
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// 辅助函数:降低颜色亮度
+function darkenColor(hexColor, factor) {
+    // 移除#号
+    hexColor = hexColor.replace('#', '');
+    
+    // 将十六进制转换为RGB
+    let r = parseInt(hexColor.substr(0, 2), 16);
+    let g = parseInt(hexColor.substr(2, 2), 16);
+    let b = parseInt(hexColor.substr(4, 2), 16);
+    
+    // 降低亮度
+    r = Math.max(0, Math.floor(r * (1 - factor)));
+    g = Math.max(0, Math.floor(g * (1 - factor)));
+    b = Math.max(0, Math.floor(b * (1 - factor)));
+    
+    // 转回十六进制
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// 筛选图鉴内容
+function filterEncyclopedia() {
+    refreshEncyclopedia();
+}
+
+// 监听猫咪创建事件,而不是修改原函数
+document.addEventListener('catCreated', function(e) {
+    recordColorDiscovery(e.detail.cat);
+});
+
+// // 然后在原函数末尾触发事件
+// const event = new CustomEvent('catCreated', { detail: { cat: newCat } });
+// document.dispatchEvent(event);
+
+// 切换显示所有颜色
+function toggleShowAllColors() {
+    showAllColors = true;
+    document.getElementById('showAllColorsBtn').style.display = 'none';
+    document.getElementById('showOnlyDiscoveredBtn').style.display = 'inline-block';
+    refreshEncyclopedia();
+}
+
+// 切换只显示已发现的颜色
+function toggleShowDiscoveredOnly() {
+    showAllColors = false;
+    document.getElementById('showAllColorsBtn').style.display = 'inline-block';
+    document.getElementById('showOnlyDiscoveredBtn').style.display = 'none';
+    refreshEncyclopedia();
 }
