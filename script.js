@@ -838,6 +838,8 @@ function bindEventListeners() {
                 return;
             }
             const newCat = generateRandomCat();
+            // 添加到图鉴
+            recordColorDiscovery(newCat);
             breedingPool.set(newCat.id, newCat);
             currentGenerationCats.set(newCat.id, newCat);
             updateBreedingPoolDisplay();
