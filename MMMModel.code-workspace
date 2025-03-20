@@ -1,0 +1,13 @@
+{
+    "folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../MMMModelServer"
+		}
+	],
+    "settings": {
+        "liveServer.settings.multiRootWorkspaceName": "MMMModel"
+    }
+}

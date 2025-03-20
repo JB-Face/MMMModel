@@ -4,201 +4,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手动培育+商店模式 - 猫咪培育模拟器</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>游戏服务器API控制面板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        
+        .login-section,
+        .register-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .register-section {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .button-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+            display: block;
+        }
+        
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+            display: block;
+        }
+        
+        .toggle-form {
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .toggle-form a {
+            color: #337ab7;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .toggle-form a:hover {
+            text-decoration: underline;
+        }
+        
+        .url-config {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #b0e0e6;
+        }
+        
+        .url-config .form-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .url-config button {
+            flex-shrink: 0;
+        }
+        
+        .current-url {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #0066cc;
+        }
+    </style>
 </head>
 
 <body>
     <div class="container">
-        <header class="main-header">
-            <h1>猫咪培育模拟器0.44 - 手动培育+商店模式</h1>
-            <a href="index.html" class="back-link">返回首页</a>
+        <header>
+            <h1>游戏服务器API控制面板</h1>
+            <p>管理您的游戏数据和用户账户</p>
         </header>
 
-        <!-- 开始游戏区域 -->
-        <div class="start-game-section">
-            <h2>准备开始手动培育+商店之旅</h2>
-            <p>在这个模式中，您可以完全控制猫咪的配对过程，自由选择配对对象，同时可以在商店购买特殊的猫咪。</p>
-            <p>游戏开始时，系统会为您生成两只初始猫咪。</p>
-            <p>初始金币：1000</p>
-            <button class="start-game-button" onclick="startGame()">开始游戏</button>
-            <button class="start-game-button" onclick="DataEditor()">数值控制</button>
+        <!-- API服务器配置 -->
+        <div class="url-config">
+            <h2>API服务器配置</h2>
+            <div class="form-group">
+                <input type="text" id="api-base-url" value="http://localhost:3000/api" placeholder="输入API基础URL">
+                <button onclick="updateApiUrl()">更新URL</button>
+            </div>
+            <div class="current-url">
+                当前API地址: <span id="current-api-url">http://localhost:3000/api</span>
+            </div>
         </div>
 
-        <!-- 游戏主要内容 -->
-        <div class="game-content">
-            <div class="control-section active">
-                <!-- <div class="control-panel-wrapper"> -->
-                <!-- 左侧属性设置面板 -->
-                <!-- <div class="control-panel attribute-panel">
-                        <h2>属性设置</h2>
-                        <div class="panel-content">
-                            <div class="parameter-group">
-                                <label for="presetSelect">预设配置</label>
-                                <select id="presetSelect">
-                                    <option value="">选择预设...</option>
-                                    <option value="玄幻">玄幻风格</option>
-                                    <option value="现实">现实风格</option>
-                                    <option value="科幻">科幻风格</option>
-                                </select>
-
-                                <div class="attribute-actions">
-                                    <button id="addNewAttribute" class="secondary-button">添加属性</button>
-                                    <button id="exportAttributes" class="secondary-button">导出设置</button>
-                                    <button id="importAttributes" class="secondary-button">导入设置</button>
-                                </div>
-
-                            </div>
-
-                            <div class="collapsible-section">
-                                <div class="section-header" onclick="togglePanel('attributeList')">
-                                    <h3>属性列表</h3>
-                                    <span class="toggle-icon">▼</span>
-                                </div>
-                                <div id="attributeList" class="section-content">
-                                    <div id="attributeControls"></div>
-
-                                </div>
-                            </div>
-
-                            <div class="collapsible-section">
-                                <div class="section-header" onclick="togglePanel('weightControls')">
-                                    <h3>权重设置</h3>
-                                    <span class="toggle-icon">▼</span>
-                                </div>
-                                <div id="weightControls" class="section-content"></div>
-                            </div>
-
-                            <div class="collapsible-section">
-                                <div class="section-header" onclick="togglePanel('rarityControls')">
-                                    <h3>稀有度设置</h3>
-                                    <span class="toggle-icon">▼</span>
-                                </div>
-                                <div id="rarityControls" class="section-content"></div>
-                            </div>
-
-                            <div class="collapsible-section">
-                                <div class="section-header" onclick="togglePanel('geneStrengthControls')">
-                                    <h3>基因强度设置</h3>
-                                    <span class="toggle-icon">▼</span>
-                                </div>
-                                <div id="geneStrengthControls" class="section-content"></div>
-                            </div>
-                        </div>
-                    </div> -->
-
-                <!-- 右侧培育设置面板 -->
-                <div class="control-panel breeding-panel">
-                    <h2>培育设置</h2>
-                    <div class="panel-content">
-                        <div class="breeding-controls">
-                            <!-- 添加图鉴按钮 -->
-
-
-                            <div class="parameter-group">
-                                <label for="mutationRate">变异概率 (%)</label>
-                                <input type="number" id="mutationRate" min="0" max="100" value="10" step="1">
-                            </div>
-
-                            <div class="parameter-group">
-                                <label for="initialRarityMin">初始猫咪稀有度下限</label>
-                                <input type="number" id="initialRarityMin" min="1" value="20">
-                            </div>
-
-                            <div class="parameter-group">
-                                <label for="initialRarityMax">初始猫咪稀有度上限</label>
-                                <input type="number" id="initialRarityMax" min="1" value="100">
-                            </div>
-
-                            <div class="parameter-group">
-                                <label for="maxCats">最大猫咪数量</label>
-                                <input type="number" id="maxCats" min="2" value="10">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- </div> -->
+        <!-- 登录表单 -->
+        <div id="loginForm" class="login-section">
+            <h2>用户登录</h2>
+            <div class="form-group">
+                <label for="username">用户名:</label>
+                <input type="text" id="username" placeholder="请输入用户名">
             </div>
-
-            <!-- 添加开始模拟按钮 -->
-            <button id="startSimulation" class="start-simulation-button">开始模拟</button>
-
-            <!-- 商店区域 -->
-            <div class="shop-section">
-                <h2>商店</h2>
-                <div class="parameter-group">
-                    <button id="openEncyclopedia" class="primary-button">打开猫咪图鉴</button>
-
-                </div>
-                <div class="shop-controls">
-                    <button id="refreshShop" class="secondary-button">刷新商店</button>
-                    <span id="shopCoins" class="coin-display">金币: 1000</span>
-                </div>
-                <div id="shopCats" class="shop-items"></div>
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" placeholder="请输入密码">
             </div>
+            <div id="loginStatus" class="status"></div>
+            <button onclick="login()">登录</button>
+            <button onclick="showRegisterForm()">注册新账户</button>
 
-            <!-- 手动培育区域 -->
-            <div class="manual-breeding-section">
-                <div class="breeding-pool">
-                    <h2>培育池</h2>
-                    <div id="breedingPool" class="cats-display"></div>
-                    <button id="addRandomCat" class="secondary-button">添加随机猫咪</button>
-                    <button id="getgenevalue" class="secondary-button">输出基因数据</button>
-                </div>
+        </div>
 
-                <!-- 添加下一天按钮 -->
-                <div class="generation-control">
-                    <button id="nextGeneration" class="primary-button">进入下一天</button>
-                </div>
-
-                <div class="breeding-pair">
-                    <h2>配对选择</h2>
-                    <div class="pair-selection">
-                        <select id="parent1" class="parent-select" aria-label="选择父本">
-                            <option value="">选择父本...</option>
-                        </select>
-                        <span class="breeding-symbol">×</span>
-                        <select id="parent2" class="parent-select" aria-label="选择母本">
-                            <option value="">选择母本...</option>
-                        </select>
-                        <button id="breedPair" class="primary-button">配对</button>
-                    </div>
-                </div>
-
-                <div class="offspring-section">
-                    <h2>后代展示</h2>
-                    <div id="offspringDisplay" class="cats-display"></div>
-                </div>
+        <!-- 注册表单 -->
+        <div id="registerForm" class="register-section">
+            <h2>注册新账户</h2>
+            <div class="form-group">
+                <label for="registerUsername">用户名:</label>
+                <input type="text" id="registerUsername" placeholder="请输入用户名">
             </div>
-
-            <!-- 结果展示区域 -->
-            <div class="results-section">
-                <div class="breeding-history">
-                    <div class="history-header">
-                        <h2>培育历史</h2>
-                        <div class="history-actions">
-                            <button id="exportResults" class="secondary-button">导出结果</button>
-                            <button id="clearResults" class="secondary-button">清空结果</button>
-                        </div>
-                    </div>
-                    <div id="breedingResults" class="history-content"></div>
-                </div>
+            <div class="form-group">
+                <label for="registerPassword">密码:</label>
+                <input type="password" id="registerPassword" placeholder="请输入密码">
             </div>
+            <div class="form-group">
+                <label for="confirmPassword">确认密码:</label>
+                <input type="password" id="confirmPassword" placeholder="请再次输入密码">
+            </div>
+            <div class="form-group">
+                <label for="email">电子邮箱:</label>
+                <input type="email" id="email" placeholder="请输入电子邮箱">
+            </div>
+            <div id="registerStatus" class="status"></div>
+            <button onclick="registerUser()">注册</button>
+            <button onclick="showLoginForm()">返回登录</button>
+
+        </div>
+
+        <div class="button-group">
+            <button onclick="openApiTest()">打开API测试工具</button>
+            <button onclick="openDataEditor()">打开数据编辑器</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
     <script>
-        function startGame() {
-            document.querySelector('.start-game-section').classList.add('hidden');
-            document.querySelector('.game-content').classList.add('active');
-            // 这里可以添加游戏初始化的代码
-            // 初始化金币和生成初始猫咪等
+        // 基础URL - 改为从localStorage获取或使用默认值
+        let API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+
+        // 初始化显示当前URL
+        document.getElementById('current-api-url').textContent = API_URL;
+        document.getElementById('api-base-url').value = API_URL;
+
+        // 更新API URL
+        function updateApiUrl() {
+            const newUrl = document.getElementById('api-base-url').value.trim();
+            if (newUrl) {
+                API_URL = newUrl;
+                localStorage.setItem('api_base_url', API_URL);
+                document.getElementById('current-api-url').textContent = API_URL;
+                alert(`API地址已更新为: ${API_URL}`);
+            } else {
+                alert('请输入有效的URL');
+            }
         }
 
-        function DataEditor() {
-            window.open('edit_probability.html', '概率编辑器', 'width=800,height=600');
+        // 支持按回车键更新URL
+        document.getElementById('api-base-url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updateApiUrl();
+            }
+        });
+
+        // 显示注册表单
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
         }
+
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        }
+
+        // 注册用户
+        async function registerUser() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('email').value;
+            const statusElement = document.getElementById('registerStatus');
+
+            // 简单验证
+            if (!username || !password || !confirmPassword || !email) {
+                statusElement.textContent = '请填写所有字段';
+                statusElement.className = 'status error';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                statusElement.textContent = '两次输入的密码不一致';
+                statusElement.className = 'status error';
+                return;
+            }
+
+            try {
+                // 实际的注册API调用
+                statusElement.textContent = '正在注册...';
+                statusElement.className = 'status';
+
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusElement.textContent = '注册成功! 请登录您的账户';
+                    statusElement.className = 'status success';
+
+                    // 延迟后切换到登录表单
+                    setTimeout(() => {
+                        showLoginForm();
+                        // 预填充用户名
+                        document.getElementById('username').value = username;
+                    }, 2000);
+                } else {
+                    statusElement.textContent = `注册失败: ${data.message || '服务器错误'}`;
+                    statusElement.className = 'status error';
+                }
+            } catch (error) {
+                statusElement.textContent = `注册失败: ${error.message}`;
+                statusElement.className = 'status error';
+            }
+        }
+
+        // 登录函数
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const statusElement = document.getElementById('loginStatus');
+
+            if (!username || !password) {
+                statusElement.textContent = '请输入用户名和密码';
+                statusElement.className = 'status error';
+                return;
+            }
+
+            try {
+                // 实际的登录API调用
+                statusElement.textContent = '正在登录...';
+                statusElement.className = 'status';
+
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusElement.textContent = '登录成功!';
+                    statusElement.className = 'status success';
+
+                    // 存储登录状态和令牌
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', username);
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+
+                    // 延迟后可以执行其他操作
+                    setTimeout(() => {
+                        // 登录后的操作
+                    }, 1000);
+                } else {
+                    statusElement.textContent = `登录失败: ${data.message || '用户名或密码错误'}`;
+                    statusElement.className = 'status error';
+                }
+            } catch (error) {
+                statusElement.textContent = `登录失败: ${error.message}`;
+                statusElement.className = 'status error';
+            }
+        }
+
+        // 打开API测试工具
+        function openApiTest() {
+            window.open('api_test.html', 'API测试', 'width=800,height=600');
+        }
+
+        // 打开数据编辑器
+        function openDataEditor() {
+            window.open('edit_probability.html', '数据编辑器', 'width=800,height=600');
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const username = localStorage.getItem('username');
+
+            if (isLoggedIn && username) {
+                const statusElement = document.getElementById('loginStatus');
+                statusElement.textContent = `已登录为: ${username}`;
+                statusElement.className = 'status success';
+            }
+        }
+
+        // 页面加载时检查登录状态
+        window.onload = checkLoginStatus;
     </script>
 </body>
 
