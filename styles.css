@@ -551,13 +551,14 @@ body {
     box-shadow: none;
 }
 
-.game-content {
+
+/* .game-content {
     display: none;
 }
 
 .game-content.active {
     display: block;
-}
+} */
 
 .control-section {
     display: none;

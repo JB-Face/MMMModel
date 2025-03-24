@@ -353,9 +353,9 @@
                         localStorage.setItem('token', data.token);
                     }
 
-                    // 延迟后可以执行其他操作
+                    // 登录成功后跳转到Game.html页面
                     setTimeout(() => {
-                        // 登录后的操作
+                        window.location.href = 'Game.html';
                     }, 1000);
                 } else {
                     statusElement.textContent = `登录失败: ${data.message || '用户名或密码错误'}`;
@@ -381,7 +381,15 @@
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             const username = localStorage.getItem('username');
+            const token = localStorage.getItem('token');
 
+            // 如果已登录且有token，直接跳转到Game.html
+            if (isLoggedIn && username && token) {
+                window.location.href = 'Game.html';
+                return; // 防止执行后续代码
+            }
+
+            // 如果没有跳转，但用户名存在，显示已登录状态
             if (isLoggedIn && username) {
                 const statusElement = document.getElementById('loginStatus');
                 statusElement.textContent = `已登录为: ${username}`;

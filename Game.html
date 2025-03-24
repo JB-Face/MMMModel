@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手动培育+商店模式 - 猫咪培育模拟器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>猫咪培育模拟器0.44 - 手动培育+商店模式</h1>
+            <a href="javascript:void(0)" onclick="logout()" class="back-link">退出登录</a>
+        </header>
+
+        <!-- 游戏主要内容 -->
+        <div class="game-content">
+            <div class="control-section active">
+
+            </div>
+
+            <!-- 商店区域 -->
+            <div class="shop-section">
+                <h2>商店</h2>
+                <div class="parameter-group">
+                    <button id="openEncyclopedia" class="primary-button">打开猫咪图鉴</button>
+
+                </div>
+                <div class="shop-controls">
+                    <button id="refreshShop" class="secondary-button">刷新商店</button>
+                    <span id="shopCoins" class="coin-display">金币: 1000</span>
+                </div>
+                <div id="shopCats" class="shop-items"></div>
+            </div>
+
+            <!-- 手动培育区域 -->
+            <div class="manual-breeding-section">
+                <div class="breeding-pool">
+                    <h2>培育池</h2>
+                    <div id="breedingPool" class="cats-display"></div>
+                    <button id="addRandomCat" class="secondary-button">添加随机猫咪</button>
+                    <button id="getgenevalue" class="secondary-button">输出基因数据</button>
+                </div>
+
+                <!-- 添加下一天按钮 -->
+                <div class="generation-control">
+                    <button id="nextGeneration" class="primary-button">进入下一天</button>
+                </div>
+
+                <div class="breeding-pair">
+                    <h2>配对选择</h2>
+                    <div class="pair-selection">
+                        <select id="parent1" class="parent-select" aria-label="选择父本">
+                            <option value="">选择父本...</option>
+                        </select>
+                        <span class="breeding-symbol">×</span>
+                        <select id="parent2" class="parent-select" aria-label="选择母本">
+                            <option value="">选择母本...</option>
+                        </select>
+                        <button id="breedPair" class="primary-button">配对</button>
+                    </div>
+                </div>
+
+                <div class="offspring-section">
+                    <h2>后代展示</h2>
+                    <div id="offspringDisplay" class="cats-display"></div>
+                </div>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="results-section">
+                <div class="breeding-history">
+                    <div class="history-header">
+                        <h2>培育历史</h2>
+                        <div class="history-actions">
+                            <button id="exportResults" class="secondary-button">导出结果</button>
+                            <button id="clearResults" class="secondary-button">清空结果</button>
+                        </div>
+                    </div>
+                    <div id="breedingResults" class="history-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function startGame() {
+            document.querySelector('.game-content').classList.add('active');
+            // 这里可以添加游戏初始化的代码
+            // 初始化金币和生成初始猫咪等
+        }
+
+        function DataEditor() {
+            window.open('edit_probability.html', '概率编辑器', 'width=800,height=600');
+        }
+
+        function APITest() {
+            window.open('api_test.html', 'API测试', 'width=800,height=600');
+        }
+
+        // 退出登录功能
+        function logout() {
+            // 清除登录状态和令牌
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('token');
+            // 保留API URL等其他设置
+
+            // 提示用户
+            alert('您已成功退出登录');
+
+            // 跳转回登录页面
+            window.location.href = 'index.html';
+        }
+
+        // 页面加载时调用startGame
+        window.onload = function() {
+            // 检查是否已登录
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // 如果未登录，跳转回登录页
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 已登录，启动游戏
+            startGame();
+        };
+    </script>
+</body>
+
+</html>
