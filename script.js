@@ -876,7 +876,7 @@ async function initGame() {
         // generateShopCats();
         
         // // 绑定事件监听器
-        // bindEventListeners();
+        bindEventListeners();
         
         // 更新金币显示
         updateCoinsDisplay();
@@ -2351,12 +2351,13 @@ function updateParentSelectors() {
     const requiredCD = gameData.cdReductionPerBreeding || 24;  // 修改这里，默认值改为24
     
     currentGenerationCats.forEach(cat => {
-        if (cat.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
+        const catData = cat.value || cat;
+        if (catData.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
             const option = document.createElement('option');
-            option.value = cat.id;
-            option.textContent = `${cat.name} (${cat.Color}, CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown})`;
+            option.value = catData.id;
+            option.textContent = `${catData.name} (${catData.Color}, CD: ${catData.breedingCooldown}/${catData.maxBreedingCooldown})`;
             
-            if (cat.性别.value === '公') {
+            if (catData.性别.value === '公') {
                 parent1Select.appendChild(option);
             } else {
                 parent2Select.appendChild(option);
@@ -2489,8 +2490,8 @@ async function loadPreset(presetName) {
 }
 
 // 手动配对
-function breedPair() {
-    const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+async function breedPair() {
+    const maxCats =  10;
     
     if (currentGenerationCats.size >= maxCats) {
         alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
@@ -2513,17 +2514,23 @@ function breedPair() {
         return;
     }
     
-    const newCat = breedCats(parent1, parent2);
-    
-    if (newCat) {
-        currentGenerationCats.set(newCat.id, newCat);
-        breedingPool.set(newCat.id, newCat);
+    try {
+        // 请求繁殖猫咪
+        const newCat = await ApiManager.post('ops/user/breedCat', {
+            fatherCat: parent1Id, 
+            motherCat: parent2Id
+        });
         
-        updateParentSelectors();
-
-        updateBreedingPoolDisplay();
-    } else {
-        alert('配对失败，请检查猫咪的性别和CD');
+        if (newCat.success) {
+            await  RefreshCats();
+            updateParentSelectors();
+            updateBreedingPoolDisplay();
+        } else {
+            alert('配对失败，请检查猫咪的性别和CD');
+        }
+    } catch (error) {
+        console.error('繁殖猫咪失败:', error);
+        alert('配对失败: ' + (error.message || '请检查猫咪的性别和CD'));
     }
 }
 

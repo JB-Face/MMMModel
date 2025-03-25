@@ -196,10 +196,6 @@
                 <label for="confirmPassword">确认密码:</label>
                 <input type="password" id="confirmPassword" placeholder="请再次输入密码">
             </div>
-            <div class="form-group">
-                <label for="email">电子邮箱:</label>
-                <input type="email" id="email" placeholder="请输入电子邮箱">
-            </div>
             <div id="registerStatus" class="status"></div>
             <button onclick="registerUser()">注册</button>
             <button onclick="showLoginForm()">返回登录</button>
@@ -257,11 +253,10 @@
             const username = document.getElementById('registerUsername').value;
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            const email = document.getElementById('email').value;
             const statusElement = document.getElementById('registerStatus');
 
             // 简单验证
-            if (!username || !password || !confirmPassword || !email) {
+            if (!username || !password || !confirmPassword) {
                 statusElement.textContent = '请填写所有字段';
                 statusElement.className = 'status error';
                 return;
@@ -286,7 +281,6 @@
                     body: JSON.stringify({
                         username,
                         password,
-                        email
                     })
                 });
 
