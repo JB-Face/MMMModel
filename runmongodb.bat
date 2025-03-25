@@ -1,0 +1,1 @@
+C:\Progra~1\MongoDB\Server\8.0\bin\mongod.exe

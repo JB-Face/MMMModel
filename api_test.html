@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏数据API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        input,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .url-config {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #b0e0e6;
+        }
+        
+        .url-config .form-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .url-config button {
+            flex-shrink: 0;
+        }
+        
+        .current-url {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #0066cc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>游戏数据API测试</h1>
+
+    <!-- 添加URL配置区域 -->
+    <div class="url-config">
+        <h2>API服务器配置</h2>
+        <div class="form-group">
+            <input type="text" id="api-base-url" value="http://localhost:3000/api" placeholder="输入API基础URL">
+            <button onclick="updateApiUrl()">更新URL</button>
+        </div>
+        <div class="current-url">
+            当前API地址: <span id="current-api-url">http://localhost:3000/api</span>
+        </div>
+    </div>
+
+    <div class="container">
+
+
+
+
+
+        <div class="card">
+            <h2>随机生成猫咪</h2>
+            <button onclick="addRandomCat()">生成猫咪</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="add-random-cat-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 修改猫咪名字 -->
+        <div class="card">
+            <h2>修改猫咪名字</h2>
+            <div class="form-group">
+                <label for="rename-cat-key">猫咪Key:</label>
+                <input type="text" id="rename-cat-key" placeholder="输入猫咪的唯一标识符">
+            </div>
+            <div class="form-group">
+                <label for="rename-cat-name">新名字:</label>
+                <input type="text" id="rename-cat-name" placeholder="输入新的猫咪名字">
+            </div>
+            <button onclick="renameCat()">修改名字</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="rename-cat-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 删除猫咪 -->
+        <div class="card">
+            <h2>删除猫咪</h2>
+            <div class="form-group">
+                <label for="delete-cat-key">猫咪Key:</label>
+                <input type="text" id="delete-cat-key" placeholder="输入要删除猫咪的唯一标识符">
+            </div>
+            <button onclick="deleteCat()">删除猫咪</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="delete-cat-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 获取用户猫咪列表 -->
+        <div class="card">
+            <h2>获取用户猫咪列表</h2>
+            <div class="form-group">
+                <label for="get-cats-simple">简略信息:</label>
+                <input type="checkbox" id="get-cats-simple">
+            </div>
+            <button onclick="getUserCats()">获取猫咪列表</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="get-cats-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 注册 -->
+        <div class="card">
+            <h2>注册用户</h2>
+            <div class="form-group">
+                <label for="register-username">用户名:</label>
+                <input type="text" id="register-username" value="testuser">
+            </div>
+            <div class="form-group">
+                <label for="register-password">密码:</label>
+                <input type="password" id="register-password" value="password123">
+            </div>
+            <div class="form-group">
+                <label for="register-email">邮箱:</label>
+                <input type="email" id="register-email" value="test@example.com">
+            </div>
+            <button onclick="register()">注册</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="register-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 登录 -->
+        <div class="card">
+            <h2>用户登录</h2>
+            <div class="form-group">
+                <label for="login-username">用户名:</label>
+                <input type="text" id="login-username" value="testuser">
+            </div>
+            <div class="form-group">
+                <label for="login-password">密码:</label>
+                <input type="password" id="login-password" value="password123">
+            </div>
+            <button onclick="login()">登录</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="login-result">等待操作...</pre>
+            </div>
+        </div>
+
+
+        <!-- 获取用户信息 -->
+        <div class="card">
+            <h2>获取用户信息</h2>
+            <button onclick="getUserInfo()">获取用户信息</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="user-info-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 保存数据 -->
+        <div class="card">
+            <h2>保存数据</h2>
+            <div class="form-group">
+                <label for="data-key">键:</label>
+                <input type="text" id="data-key" value="player1">
+            </div>
+            <div class="form-group">
+                <label for="data-value">值 (JSON):</label>
+                <textarea id="data-value" rows="5">{"name":"测试玩家","level":10,"score":1000,"items":["剑","盾","药水"]}</textarea>
+            </div>
+            <button onclick="saveData()">保存数据</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="save-data-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 获取数据 -->
+        <div class="card">
+            <h2>获取数据</h2>
+            <div class="form-group">
+                <label for="get-data-key">键:</label>
+                <input type="text" id="get-data-key" value="player1">
+            </div>
+            <button onclick="getData()">获取数据</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="get-data-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 获取所有数据 -->
+        <div class="card">
+            <h2>获取所有数据</h2>
+            <button onclick="getAllData()">获取所有数据</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="get-all-data-result">等待操作...</pre>
+            </div>
+        </div>
+
+        <!-- 删除数据 -->
+        <div class="card">
+            <h2>删除数据</h2>
+            <div class="form-group">
+                <label for="delete-data-key">键:</label>
+                <input type="text" id="delete-data-key" value="player1">
+            </div>
+            <button onclick="deleteData()">删除数据</button>
+            <div class="form-group">
+                <label>结果:</label>
+                <pre id="delete-data-result">等待操作...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 基础URL - 改为从localStorage获取或使用默认值
+        let API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+
+        // 初始化显示当前URL
+        document.getElementById('current-api-url').textContent = API_URL;
+        document.getElementById('api-base-url').value = API_URL;
+
+        // 更新API URL
+        function updateApiUrl() {
+            const newUrl = document.getElementById('api-base-url').value.trim();
+            if (newUrl) {
+                API_URL = newUrl;
+                localStorage.setItem('api_base_url', API_URL);
+                document.getElementById('current-api-url').textContent = API_URL;
+                alert(`API地址已更新为: ${API_URL}`);
+            } else {
+                alert('请输入有效的URL');
+            }
+        }
+
+        // 支持按回车键更新URL
+        document.getElementById('api-base-url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updateApiUrl();
+            }
+        });
+
+        // 注册
+        async function register() {
+            const resultElement = document.getElementById('register-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                const email = document.getElementById('register-email').value;
+
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 登录
+        async function login() {
+            const resultElement = document.getElementById('login-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取用户信息
+        async function getUserInfo() {
+            const resultElement = document.getElementById('user-info-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 保存数据
+        async function saveData() {
+            const resultElement = document.getElementById('save-data-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const key = document.getElementById('data-key').value;
+                const valueStr = document.getElementById('data-value').value;
+                let value;
+
+                try {
+                    value = JSON.parse(valueStr);
+                } catch (e) {
+                    resultElement.textContent = `错误: JSON格式不正确 - ${e.message}`;
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        key,
+                        value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取数据
+        async function getData() {
+            const resultElement = document.getElementById('get-data-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const key = document.getElementById('get-data-key').value;
+
+                const response = await fetch(`${API_URL}/data/${key}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取所有数据
+        async function getAllData() {
+            const resultElement = document.getElementById('get-all-data-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/data`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+
+        async function addRandomCat() {
+            const resultElement = document.getElementById('add-random-cat-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/test/CreateRandomCat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                // 先获取响应文本，然后尝试解析为JSON
+                const responseText = await response.text();
+                let data;
+
+                try {
+                    // 尝试解析文本为JSON
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error('JSON解析失败:', error);
+                    console.log('原始响应:', responseText);
+
+                    // 创建一个简单对象作为fallback
+                    data = {
+                        success: response.ok,
+                        message: '响应解析失败，请查看控制台',
+                        rawText: responseText
+                    };
+                }
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取用户猫咪列表
+        async function getUserCats() {
+            const resultElement = document.getElementById('get-cats-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                // 检查是否需要简略信息
+                const isSimple = document.getElementById('get-cats-simple').checked;
+                const url = isSimple ?
+                    `${API_URL}/ops/user/cats?simple=true` :
+                    `${API_URL}/ops/user/cats`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                // 获取响应并解析
+                const responseText = await response.text();
+                let data;
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error('JSON解析失败:', error);
+                    console.log('原始响应:', responseText);
+
+                    data = {
+                        success: response.ok,
+                        message: '响应解析失败，请查看控制台',
+                        rawText: responseText
+                    };
+                }
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+
+        // 删除数据
+        async function deleteData() {
+            const resultElement = document.getElementById('delete-data-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const key = document.getElementById('delete-data-key').value;
+
+                const response = await fetch(`${API_URL}/data/${key}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 修改猫咪名字
+        async function renameCat() {
+            const resultElement = document.getElementById('rename-cat-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const key = document.getElementById('rename-cat-key').value;
+                const newName = document.getElementById('rename-cat-name').value;
+
+                if (!key) {
+                    resultElement.textContent = '错误: 请输入猫咪的Key';
+                    return;
+                }
+
+                if (!newName) {
+                    resultElement.textContent = '错误: 请输入新的猫咪名字';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/cat/${key}/rename`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        newName
+                    })
+                });
+
+                // 获取响应并解析
+                const responseText = await response.text();
+                let data;
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error('JSON解析失败:', error);
+                    console.log('原始响应:', responseText);
+
+                    data = {
+                        success: response.ok,
+                        message: '响应解析失败，请查看控制台',
+                        rawText: responseText
+                    };
+                }
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 删除猫咪
+        async function deleteCat() {
+            const resultElement = document.getElementById('delete-cat-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const key = document.getElementById('delete-cat-key').value;
+
+                if (!key) {
+                    resultElement.textContent = '错误: 请输入猫咪的Key';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/cat/${key}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                // 获取响应并解析
+                const responseText = await response.text();
+                let data;
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error('JSON解析失败:', error);
+                    console.log('原始响应:', responseText);
+
+                    data = {
+                        success: response.ok,
+                        message: '响应解析失败，请查看控制台',
+                        rawText: responseText
+                    };
+                }
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

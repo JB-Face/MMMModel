@@ -1,3 +1,207 @@
+//// APIManager.js 文件
+/**
+ * API URL管理函数
+ * 提供获取、设置和使用API URL的功能
+ */
+const ApiManager = {
+    // 获取存储的API URL或使用默认值
+    getApiUrl: function() {
+        return localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+    },
+
+    // 在页面上显示当前API URL
+    displayApiUrl: function(elementId = 'api-info') {
+        const apiUrl = this.getApiUrl();
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = `API: ${apiUrl}`;
+        }
+    },
+
+    // 发送GET请求到API
+    get: async function(endpoint, requireAuth = true) {
+        try {
+            const url = `${this.getApiUrl()}/${endpoint}`;
+            const headers = {};
+
+            // 如果需要认证，添加token
+            if (requireAuth) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，请先登录');
+                }
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: headers
+            });
+
+            // 处理response
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '请求失败');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API请求错误:', error);
+            throw error;
+        }
+    },
+
+    // 发送POST请求到API
+    post: async function(endpoint, data, requireAuth = true) {
+        try {
+            const url = `${this.getApiUrl()}/${endpoint}`;
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // 如果需要认证，添加token
+            if (requireAuth) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，请先登录');
+                }
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(data)
+            });
+
+            // 处理response
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '请求失败');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API请求错误:', error);
+            throw error;
+        }
+    },
+
+    // 发送DELETE请求到API
+    delete: async function(endpoint, requireAuth = true) {
+        try {
+            const url = `${this.getApiUrl()}/${endpoint}`;
+            const headers = {};
+
+            // 如果需要认证，添加token
+            if (requireAuth) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，请先登录');
+                }
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            // 处理response
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '请求失败');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API请求错误:', error);
+            throw error;
+        }
+    },
+
+    // 发送PATCH请求到API
+    patch: async function(endpoint, data, requireAuth = true) {
+        try {
+            const url = `${this.getApiUrl()}/${endpoint}`;
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // 如果需要认证，添加token
+            if (requireAuth) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，请先登录');
+                }
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: headers,
+                body: JSON.stringify(data)
+            });
+
+            // 处理response
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '请求失败');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API请求错误:', error);
+            throw error;
+        }
+    },
+
+    getUserCats: async function() {
+        const userCats = await this.get('ops/user/cats');
+        // 移除全局变量污染
+        return userCats.cats || [];
+    }
+};
+
+// 使用示例：
+/*
+// 1. 初始化并显示API URL
+ApiManager.displayApiUrl();
+  
+// 2. 获取用户猫咪列表
+try {
+  const catsData = await ApiManager.get('ops/user/cats');
+  console.log('用户猫咪:', catsData);
+} catch (error) {
+  alert('获取猫咪失败: ' + error.message);
+}
+  
+// 3. 创建随机猫咪
+try {
+  const catData = await ApiManager.post('ops/test/CreateRandomCat', {});
+  console.log('新猫咪:', catData);
+} catch (error) {
+  alert('创建猫咪失败: ' + error.message);
+}
+  
+// 4. 修改猫咪名字
+try {
+  const result = await ApiManager.patch('ops/user/cat/cat_key123/rename', {newName: '小花猫'});
+  console.log('修改结果:', result);
+} catch (error) {
+  alert('修改猫咪名字失败: ' + error.message);
+}
+  
+// 5. 删除猫咪
+try {
+  const result = await ApiManager.delete('ops/user/cat/cat_key123');
+  console.log('删除结果:', result);
+} catch (error) {
+  alert('删除猫咪失败: ' + error.message);
+}
+*/
+
+
 // 全局变量声明 - 添加到文件顶部
 // 显示所有颜色的全局变量
 let showAllColors = false;
@@ -299,7 +503,6 @@ function saveAttributeEdit(oldAttrName) {
 
     closeAttributeDialog();
     renderAttributeList();
-    renderControls();
     saveToLocalStorage();
 }
 
@@ -314,7 +517,6 @@ function deleteAttribute(attrName) {
         const { [attrName]: removed, ...rest } = gameData.attributes;
         gameData.attributes = rest;
         renderAttributeList();
-        renderControls();
         saveToLocalStorage();
     }
 }
@@ -447,22 +649,7 @@ function togglePanel(panelId) {
 // 渲染控制面板
 function renderControls() {
     try {
-        // const weightControls = document.getElementById('weightControls');
-        // const rarityControls = document.getElementById('rarityControls');
-        // const geneStrengthControls = document.getElementById('geneStrengthControls');
-        // 移除这行以避免重置游戏数据
-        // gameData = { ...DEFAULT_GAME_DATA };
         const breedingPanel = document.querySelector('.breeding-panel .breeding-controls');
-        
-        // if (!weightControls || !rarityControls || !geneStrengthControls) {
-        //     console.error('找不到必要的控制面板元素');
-        //     return;
-        // }
-        
-        // 清空现有内容
-        // weightControls.innerHTML = '';
-        // rarityControls.innerHTML = '';
-        // geneStrengthControls.innerHTML = '';
 
         // 清理培育设置面板中的动态添加控件
         if (breedingPanel) {
@@ -487,85 +674,7 @@ function renderControls() {
         if (!gameData || !gameData.attributes) {
             throw new Error('游戏数据未正确加载');
         }
-        
-        // 为每个属性创建控制面板
-        // Object.entries(gameData.attributes).forEach(([attrName, attrData]) => {
-        //     if (!attrData || !Array.isArray(attrData.expressed) || 
-        //         !Array.isArray(attrData.weights) || 
-        //         !Array.isArray(attrData.rarity) || 
-        //         !Array.isArray(attrData.geneStrength)) {
-        //         console.error(`属性 ${attrName} 数据结构不完整`);
-        //         return;
-        //     }
-            
-        //     // 创建权重控制面板
-        //     // const weightPanel = document.createElement('div');
-        //     // weightPanel.className = 'attribute-item';
-        //     // weightPanel.innerHTML = `
-        //     //     <label>${attrName} 权重设置:</label>
-        //     //     ${attrData.expressed.map((opt, idx) => `
-        //     //         <div>
-        //     //             <label>${opt}:</label>
-        //     //             <input type="number" 
-        //     //                    value="${attrData.weights[idx] || 0}" 
-        //     //                    min="0" 
-        //     //                    max="100"
-        //     //                    onchange="updateWeight('${attrName}', ${idx}, this.value)">
-        //     //         </div>
-        //     //     `).join('')}
-        //     // `;
-        //     // weightControls.appendChild(weightPanel);
-            
-        //     // 创建稀有度控制面板
-        //     // const rarityPanel = document.createElement('div');
-        //     // rarityPanel.className = 'attribute-item';
-        //     // rarityPanel.innerHTML = `
-        //     //     <label>${attrName} 稀有度设置:</label>
-        //     //     ${attrData.expressed.map((opt, idx) => `
-        //     //         <div>
-        //     //             <label>${opt}:</label>
-        //     //             <input type="number" 
-        //     //                    value="${attrData.rarity[idx] || 1}" 
-        //     //                    min="1"
-        //     //                    onchange="updateRarity('${attrName}', ${idx}, this.value)">
-        //     //         </div>
-        //     //     `).join('')}
-        //     // `;
-        //     // rarityControls.appendChild(rarityPanel);
-            
-        //     // 创建基因强度控制面板
-        //     // const geneStrengthPanel = document.createElement('div');
-        //     // geneStrengthPanel.className = 'attribute-item';
-        //     // geneStrengthPanel.innerHTML = `
-        //     //     <label>${attrName} 基因强度设置 (总和: <span class="gene-strength-total">100</span>):</label>
-        //     //     ${attrData.expressed.map((opt, idx) => `
-        //     //         <div>
-        //     //             <label>${opt}:</label>
-        //     //             <input type="number" 
-        //     //                    value="${attrData.geneStrength[idx].toFixed(1)}" 
-        //     //                    min="0"
-        //     //                    max="100"
-        //     //                    step="0.1"
-        //     //                    onchange="updateGeneStrength('${attrName}', ${idx}, this.value)">
-        //     //             <span class="strength-percentage">${attrData.geneStrength[idx].toFixed(1)}%</span>
-        //     //         </div>
-        //     //     `).join('')}
-        //     // `;
-        //     // geneStrengthControls.appendChild(geneStrengthPanel);
-        // });
-        
-        // 检查是否已经存在图鉴按钮,不存在则添加
-        // const encyclopediaButton = breedingPanel.querySelector('#openEncyclopedia');
-        // if (!encyclopediaButton && breedingPanel) {
-        //     const encyclopediaControl = document.createElement('div');
-        //     encyclopediaControl.className = 'parameter-group';
-        //     encyclopediaControl.innerHTML = `
-        //         <button id="openEncyclopedia" class="primary-button" onclick="openEncyclopedia()">打开猫咪图鉴</button>
-        //         <button onclick="console.log('测试按钮点击'); openEncyclopedia();" class="primary-button">测试图鉴(直接调用)</button>
-        //     `;
-        //     breedingPanel.insertBefore(encyclopediaControl, breedingPanel.firstChild);
-        // }
-
+     
         // 添加初始最大CD设置控件
         if (breedingPanel) {
             const cdControl = document.createElement('div');
@@ -670,7 +779,6 @@ function updateGeneStrength(attrName, index, value) {
     if (!gameData.attributes[attrName]) return;
     gameData.attributes[attrName].geneStrength[index] = parseFloat(value);
     normalizeGeneStrength(attrName);
-    renderControls();
 }
 
 // 标准化基因强度，使总和为100
@@ -750,18 +858,24 @@ async function initGame() {
         // 确保数据已经加载后再继续初始化其他内容
         nameData = { ...DEFAULT_NAME_DATA };
         playerCoins = 1000;
+
+        // 获取用户信息
+        const user = await ApiManager.get('auth/me');
+        console.log(user);
+
         
-        // 尝试从cookie加载数据
-        loadFromCookie();
+        // // 初始化手动+商店模式
+        //initializeManualBreeding();
+
+
+        await RefreshCats();
+
+        updateBreedingPoolDisplay();
+        updateParentSelectors();
+
+        // generateShopCats();
         
-        // 渲染界面
-        renderControls();
-        
-        // 初始化手动+商店模式
-        initializeManualBreeding();
-        generateShopCats();
-        
-        // 绑定事件监听器
+        // // 绑定事件监听器
         bindEventListeners();
         
         // 更新金币显示
@@ -2183,22 +2297,47 @@ function updateBreedingPoolDisplay() {
     const poolDiv = document.getElementById('breedingPool');
     poolDiv.innerHTML = '';
     
-    currentGenerationCats.forEach(cat => {
-        const catCard = document.createElement('div');
-        catCard.className = 'cat-card';
-        catCard.innerHTML = `
-            <div class="cat-header">
-                <h3>颜色: ${cat.Color}</h3>
-                <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>
-                <span class="cat-gender gender-稀有度">${cat.totalRarity}</span>
-            </div>
-            <div class="cat-name">${cat.name || '未知'}</div>
-            ${displayCatAttributes(cat)}
-            <p>培育CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown}点</p>
-            <button onclick="removeCatFromPool('${cat.id}')" class="delete-button">回收</button>
-        `;
-        poolDiv.appendChild(catCard);
-    });
+    // 检查currentGenerationCats是否为Map对象
+    if (currentGenerationCats instanceof Map) {
+        if (currentGenerationCats.size === 0) {
+            poolDiv.innerHTML = '<p>当前没有猫咪，请点击"添加随机猫咪"按钮添加</p>';
+            return;
+        }
+        
+        // 遍历Map中的猫咪数据
+        currentGenerationCats.forEach((cat, key) => {
+            // 处理不同的数据结构
+            const catData = cat.value || cat;
+            
+            const catCard = document.createElement('div');
+            catCard.className = 'cat-card';
+            
+            // 安全获取属性，防止undefined错误
+            const color = catData.Color || '未知';
+            const gender = catData.性别 ? catData.性别.value : '未知';
+            const rarity = catData.totalRarity || 0;
+            const name = catData.name || '未命名猫咪';
+            const breedingCD = catData.breedingCooldown || 0;
+            const maxCD = catData.maxBreedingCooldown || 24;
+            
+            catCard.innerHTML = `
+                <div class="cat-header">
+                    <h3>颜色: ${color}</h3>
+                    <span class="cat-gender gender-${gender}">${gender}</span>
+                    <span class="cat-gender gender-稀有度">${rarity}</span>
+                </div>
+                <div class="cat-name">${name}</div>
+                ${displayCatAttributes(catData)}
+                <p>培育CD: ${breedingCD}/${maxCD}点</p>
+                <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
+            `;
+            poolDiv.appendChild(catCard);
+        });
+    } else {
+        // 如果不是Map对象，显示错误信息
+        poolDiv.innerHTML = '<p>猫咪数据格式错误，请刷新页面重试</p>';
+        console.error('currentGenerationCats不是Map对象:', currentGenerationCats);
+    }
 }
 
 // 更新父母选择器
@@ -2212,12 +2351,13 @@ function updateParentSelectors() {
     const requiredCD = gameData.cdReductionPerBreeding || 24;  // 修改这里，默认值改为24
     
     currentGenerationCats.forEach(cat => {
-        if (cat.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
+        const catData = cat.value || cat;
+        if (catData.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
             const option = document.createElement('option');
-            option.value = cat.id;
-            option.textContent = `${cat.name} (${cat.Color}, CD: ${cat.breedingCooldown}/${cat.maxBreedingCooldown})`;
+            option.value = catData.id;
+            option.textContent = `${catData.name} (${catData.Color}, CD: ${catData.breedingCooldown}/${catData.maxBreedingCooldown})`;
             
-            if (cat.性别.value === '公') {
+            if (catData.性别.value === '公') {
                 parent1Select.appendChild(option);
             } else {
                 parent2Select.appendChild(option);
@@ -2308,7 +2448,6 @@ function importAttributes() {
                 
                 // 重新渲染界面
                 renderAttributeList();
-                renderControls();
                 saveToLocalStorage();
                 
                 alert('属性设置导入成功！');
@@ -2341,7 +2480,6 @@ async function loadPreset(presetName) {
         
         // 重新渲染界面
         renderAttributeList();
-        renderControls();
         saveToLocalStorage();
         
         alert(`成功加载 ${presetName} 预设！`);
@@ -2352,8 +2490,8 @@ async function loadPreset(presetName) {
 }
 
 // 手动配对
-function breedPair() {
-    const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+async function breedPair() {
+    const maxCats =  10;
     
     if (currentGenerationCats.size >= maxCats) {
         alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
@@ -2376,17 +2514,23 @@ function breedPair() {
         return;
     }
     
-    const newCat = breedCats(parent1, parent2);
-    
-    if (newCat) {
-        currentGenerationCats.set(newCat.id, newCat);
-        breedingPool.set(newCat.id, newCat);
+    try {
+        // 请求繁殖猫咪
+        const newCat = await ApiManager.post('ops/user/breedCat', {
+            fatherCat: parent1Id, 
+            motherCat: parent2Id
+        });
         
-        updateParentSelectors();
-
-        updateBreedingPoolDisplay();
-    } else {
-        alert('配对失败，请检查猫咪的性别和CD');
+        if (newCat.success) {
+            await  RefreshCats();
+            updateParentSelectors();
+            updateBreedingPoolDisplay();
+        } else {
+            alert('配对失败，请检查猫咪的性别和CD');
+        }
+    } catch (error) {
+        console.error('繁殖猫咪失败:', error);
+        alert('配对失败: ' + (error.message || '请检查猫咪的性别和CD'));
     }
 }
 
@@ -2590,8 +2734,6 @@ function resetSimulation() {
     // 更新金币显示
     updateCoinsDisplay();
     
-    // 重新渲染控制面板
-    renderControls();
 
     // 根据模式初始化
     //if (isManualMode) {
@@ -3217,4 +3359,40 @@ function toggleShowDiscoveredOnly() {
     document.getElementById('showAllColorsBtn').style.display = 'inline-block';
     document.getElementById('showOnlyDiscoveredBtn').style.display = 'none';
     refreshEncyclopedia();
+}
+
+// 获取用户现有猫咪
+async function RefreshCats() {
+    try {
+        // 清空现有数据
+        if (!(currentGenerationCats instanceof Map)) {
+            // 如果不是Map对象，初始化为一个新的Map
+            currentGenerationCats = new Map();
+        } else {
+            // 如果已经是Map，只需清空数据
+            currentGenerationCats.clear();
+        }
+
+        // 获取用户的猫咪
+        const userCats = await ApiManager.getUserCats();
+        
+        // 检查是否有猫咪数据
+        if (Array.isArray(userCats) && userCats.length > 0) {
+            // 将获取的猫咪数据转换成Map
+            userCats.forEach(cat => {
+                const key = cat.key || cat._id || cat.id;
+                if (key) {
+                    // 保存到Map中
+                    currentGenerationCats.set(key, cat);
+                }
+            });
+            
+            console.log(`成功获取${currentGenerationCats.size}只猫咪`);
+        } else {
+            console.log('没有找到猫咪数据或数据格式不正确');
+        }
+    } catch (error) {
+        console.error('刷新猫咪列表失败:', error);
+        throw error;
+    }
 }
