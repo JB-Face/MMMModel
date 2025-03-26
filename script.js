@@ -3363,7 +3363,7 @@ function toggleShowDiscoveredOnly() {
 
 async function RefreshUser() {
     
-    const user = await ApiManager.getUser();
+    const user = await ApiManager.get('auth/me');;
     if (user) {
         playerCoins = user.gold;
     }
