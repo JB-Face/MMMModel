@@ -868,7 +868,7 @@ async function initGame() {
         //initializeManualBreeding();
 
 
-        await RefreshCats();
+        await RefreshUser();
 
         updateBreedingPoolDisplay();
         updateParentSelectors();
@@ -2522,9 +2522,8 @@ async function breedPair() {
         });
         
         if (newCat.success) {
-            await  RefreshCats();
-            updateParentSelectors();
-            updateBreedingPoolDisplay();
+            await  RefreshUser();
+
         } else {
             alert('配对失败，请检查猫咪的性别和CD');
         }
@@ -3361,6 +3360,20 @@ function toggleShowDiscoveredOnly() {
     refreshEncyclopedia();
 }
 
+
+async function RefreshUser() {
+    
+    const user = await ApiManager.getUser();
+    if (user) {
+        playerCoins = user.gold;
+    }
+    
+    
+    RefreshCats()
+    
+    
+}
+
 // 获取用户现有猫咪
 async function RefreshCats() {
     try {
@@ -3388,6 +3401,8 @@ async function RefreshCats() {
             });
             
             console.log(`成功获取${currentGenerationCats.size}只猫咪`);
+            updateParentSelectors();
+            updateBreedingPoolDisplay();
         } else {
             console.log('没有找到猫咪数据或数据格式不正确');
         }
