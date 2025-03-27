@@ -873,7 +873,7 @@ async function initGame() {
         updateBreedingPoolDisplay();
         updateParentSelectors();
 
-        // generateShopCats();
+        generateShopCats();
         
         // // 绑定事件监听器
         bindEventListeners();
@@ -2106,13 +2106,13 @@ let shopCats = [];
 
 // 生成商店猫咪
 function generateShopCats() {
-    shopCats = [];
-    for (let i = 0; i < 4; i++) {
-        const cat = generateRandomCat();
-        cat.isShopCat = true;
-        cat.price = Math.floor(cat.totalRarity * 10); // 设置价格
-        shopCats.push(cat);
-    }
+    // shopCats = [];
+    // for (let i = 0; i < 4; i++) {
+    //     const cat = generateRandomCat();
+    //     cat.isShopCat = true;
+    //     cat.price = Math.floor(cat.totalRarity * 10); // 设置价格
+    //     shopCats.push(cat);
+    // }
     displayShopCats();
 }
 
@@ -2129,13 +2129,13 @@ function displayShopCats() {
         
         catCard.innerHTML = `
             <div class="cat-header">
-                <h3>颜色: ${cat.Color}</h3>
-                <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>
-                <span class="cat-gender gender-稀有度">${cat.totalRarity}</span>
+                <h3>颜色: ${cat.geneData.Color}</h3>
+                <span class="cat-gender gender-${cat.geneData.性别.value}">${cat.geneData.性别.value}</span>
+                <span class="cat-gender gender-稀有度">${cat.geneData.totalRarity}</span>
             </div>
-            <div class="cat-name">${cat.name || '未知'}</div>
-            ${displayCatAttributes(cat)}
-            <p>价格: ${Math.floor(cat.totalRarity * 10)} 金币</p>
+            <div class="cat-name">${cat.geneData.name || '未知'}</div>
+            ${displayCatAttributes(cat.geneData)}
+            <p>价格: ${Math.floor(cat.geneData.totalRarity * 10)} 金币</p>
             <button onclick="addShopCatToPool(${index})" class="primary-button">购买</button>
         `;
         
@@ -2348,7 +2348,7 @@ function updateParentSelectors() {
     parent1Select.innerHTML = '<option value="">选择父本</option>';
     parent2Select.innerHTML = '<option value="">选择母本</option>';
     
-    const requiredCD = gameData.cdReductionPerBreeding || 24;  // 修改这里，默认值改为24
+    const requiredCD = 0;  // 修改这里，默认值改为24
     
     currentGenerationCats.forEach(cat => {
         const catData = cat.value || cat;
@@ -2367,25 +2367,49 @@ function updateParentSelectors() {
 }
 
 // 从培育池移除猫咪
-function removeCatFromPool(catId) {
+async function removeCatFromPool(catId) {
     const cat = currentGenerationCats.get(catId);
     if (!cat) return;
     
     if (confirm('确定要回收这只猫咪吗？')) {
-        const recycleCoins = Math.round(cat.totalRarity * 5);
-        playerCoins += recycleCoins;
+
+
+
+        try {
+            // 请求繁殖猫咪
+            const newCat = await ApiManager.post('ops/user/recycleCat', {
+                Cat: catId, 
+            });
+            
+            if (newCat.success) {
+                await  RefreshUser();
+                updateBreedingPoolDisplay();
+                updateParentSelectors();
+                updateCoinsDisplay();
+
+                alert(`回收成功`);
+    
+            } else {
+                alert('配对失败，请检查猫咪的性别和CD');
+            }
+        } catch (error) {
+            console.error('繁殖猫咪失败:', error);
+            alert('配对失败: ' + (error.message || '请检查猫咪的性别和CD'));
+        }
+
+
+
+        // const recycleCoins = Math.round(cat.totalRarity * 5);
+        // playerCoins += recycleCoins;
         
-        // 从培育池中移除猫咪
-        currentGenerationCats.delete(catId);
-        breedingPool.delete(catId);
+        // // 从培育池中移除猫咪
+        // currentGenerationCats.delete(catId);
+        // breedingPool.delete(catId);
         
         // 更新显示
-        updateBreedingPoolDisplay();
-        updateParentSelectors();
-        updateCoinsDisplay();
+
         
-        // 显示回收获得的金币
-        alert(`回收成功！获得 ${recycleCoins} 金币`);
+
     }
 }
 
@@ -3367,7 +3391,11 @@ async function RefreshUser() {
     if (user) {
         playerCoins = user.gold;
     }
-    
+    // 刷新商店
+    const shopcatdata = await ApiManager.get('shop/cats');
+    if(shopcatdata){
+        shopCats = shopcatdata;
+    }
     
     RefreshCats()
     
