@@ -297,6 +297,50 @@
                 <pre id="refresh-shop-result">等待操作...</pre>
             </div>
         </div>
+
+        <!-- 图鉴功能测试 -->
+        <div class="card">
+            <h2>图鉴功能测试</h2>
+
+            <!-- 获取图鉴数据 -->
+            <div class="form-group">
+                <h3>获取图鉴数据</h3>
+                <button onclick="getEncyclopedia()">获取图鉴</button>
+                <pre id="encyclopedia-result">等待操作...</pre>
+            </div>
+
+            <!-- 添加颜色发现 -->
+            <div class="form-group">
+                <h3>添加颜色发现</h3>
+                <select id="color-presets" onchange="updateColorInput()" aria-label="预设颜色选择">
+                    <option value="">选择预设颜色</option>
+                    <option value="梵色海豹">梵色海豹</option>
+                    <option value="梵色巧克力">梵色巧克力</option>
+                    <option value="梵色火焰">梵色火焰</option>
+                    <option value="双色海豹">双色海豹</option>
+                    <option value="双色巧克力">双色巧克力</option>
+                    <option value="重点色海豹">重点色海豹</option>
+                </select>
+                <input type="text" id="color-name" placeholder="输入颜色名称">
+                <button onclick="addColorDiscovery()">添加颜色</button>
+                <pre id="add-color-result">等待操作...</pre>
+            </div>
+
+            <!-- 批量添加颜色 -->
+            <div class="form-group">
+                <h3>批量添加颜色</h3>
+                <textarea id="batch-colors" rows="4" placeholder="输入多个颜色名称，用逗号分隔，如: 梵色海豹,双色巧克力"></textarea>
+                <button onclick="addBatchColors()">批量添加</button>
+                <pre id="batch-colors-result">等待操作...</pre>
+            </div>
+
+            <!-- 重置图鉴 -->
+            <div class="form-group">
+                <h3>重置图鉴</h3>
+                <button onclick="resetEncyclopedia()">重置图鉴</button>
+                <pre id="reset-encyclopedia-result">等待操作...</pre>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -930,6 +974,195 @@
 
                     // 显示刷新成功消息
                     alert(`商店刷新成功！\n剩余金币: ${data.newGold}`);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取图鉴数据
+        async function getEncyclopedia() {
+            const resultElement = document.getElementById('encyclopedia-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/encyclopedia`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const discoveredCount = data.encyclopedia.discovered.length;
+                    let formattedResult = JSON.stringify(data, null, 2);
+
+                    // 添加摘要信息
+                    formattedResult = `已发现颜色: ${discoveredCount} 种\n\n${formattedResult}`;
+
+                    resultElement.textContent = formattedResult;
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 处理预设颜色选择
+        function updateColorInput() {
+            const colorPresets = document.getElementById('color-presets');
+            const colorInput = document.getElementById('color-name');
+
+            if (colorPresets.value) {
+                colorInput.value = colorPresets.value;
+            }
+        }
+
+        // 添加颜色发现
+        async function addColorDiscovery() {
+            const resultElement = document.getElementById('add-color-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const colorName = document.getElementById('color-name').value;
+
+                if (!colorName) {
+                    resultElement.textContent = '错误: 请输入颜色名称';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/encyclopedia/discover`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        colorName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 重新获取图鉴数据
+                    getEncyclopedia();
+
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 批量添加颜色
+        async function addBatchColors() {
+            const resultElement = document.getElementById('batch-colors-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const colorsText = document.getElementById('batch-colors').value;
+
+                if (!colorsText) {
+                    resultElement.textContent = '错误: 请输入颜色名称';
+                    return;
+                }
+
+                // 将文本拆分为数组
+                const colors = colorsText.split(',').map(c => c.trim()).filter(c => c);
+
+                if (colors.length === 0) {
+                    resultElement.textContent = '错误: 未找到有效的颜色名称';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/encyclopedia/discover/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        colors
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 重新获取图鉴数据
+                    getEncyclopedia();
+
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 重置图鉴
+        async function resetEncyclopedia() {
+            const resultElement = document.getElementById('reset-encyclopedia-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                // 确认是否真的要重置
+                if (!confirm('确定要重置图鉴吗？这将清空所有已发现的颜色记录！')) {
+                    resultElement.textContent = '操作已取消';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/encyclopedia/reset`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 重新获取图鉴数据
+                    getEncyclopedia();
+
+                    resultElement.textContent = JSON.stringify(data, null, 2);
                 } else {
                     resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
                 }

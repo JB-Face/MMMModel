@@ -3463,7 +3463,15 @@ async function RefreshUser() {
     }
     
    // await RefreshCats();
-    
+    // 刷新图鉴
+    try {    
+    gameData.encyclopedia.discovered = user.encyclopedia.discovered;
+    refreshEncyclopedia();
+    } catch (error) {
+    console.error('刷新图鉴失败:', error);
+    alert('刷新图鉴失败:' + error);
+    }
+
     
 }
 
@@ -3499,6 +3507,9 @@ async function RefreshCats() {
         } else {
             console.log('没有找到猫咪数据或数据格式不正确');
         }
+
+
+
     } catch (error) {
         console.error('刷新猫咪列表失败:', error);
         alert('刷新猫咪列表失败:' + error);
