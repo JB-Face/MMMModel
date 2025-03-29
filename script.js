@@ -2135,7 +2135,7 @@ function displayShopCats() {
             </div>
             <div class="cat-name">${cat.geneData.name || '未知'}</div>
             ${displayCatAttributes(cat.geneData)}
-            <p>价格: ${Math.floor(cat.geneData.totalRarity * 10)} 金币</p>
+            <p>价格: ${Math.floor(cat.price)} 金币</p>
             <button onclick="addShopCatToPool(${index})" class="primary-button">购买</button>
         `;
         
@@ -2144,9 +2144,9 @@ function displayShopCats() {
 }
 
 // 将商店猫咪添加到培育池
-function addShopCatToPool(index) {
+async function addShopCatToPool(index) {
     try {
-        const maxCats = parseInt(document.getElementById('maxCats').value) || 10;
+        const maxCats = 10;
         
         if (currentGenerationCats.size >= maxCats) {
             alert(`已达到最大猫咪数量限制 (${maxCats})，请先删除一些猫咪。`);
@@ -2157,26 +2157,42 @@ function addShopCatToPool(index) {
         if (!cat) return;
         
         // 检查金币是否足够
-        const price = Math.floor(cat.totalRarity * 10);
+        const price = cat.price;
         if (playerCoins < price) {
             alert(`金币不足！需要 ${price} 金币。`);
             return;
         }
-        
+
+
+
+        // 请求购买猫咪
+
+        const response = await ApiManager.post(`shop/cats/${cat.key}/buy`);
+
+        if(response.success) {
+            alert('购买成功');
+        } else {
+            alert('购买失败');
+        }
+
         // 扣除金币
-        playerCoins -= price;
-        updateCoinsDisplay();
+        // playerCoins -= price;
+        // updateCoinsDisplay();
         
-        breedingPool.set(cat.id, cat);
-        currentGenerationCats.set(cat.id, cat);
-        shopCats.splice(index, 1); // 从商店中移除
+        // breedingPool.set(cat.id, cat);
+        // currentGenerationCats.set(cat.id, cat);
+        // shopCats.splice(index, 1); // 从商店中移除
         
+        await RefreshUser();
         updateBreedingPoolDisplay();
         updateParentSelectors();
+
+        generateShopCats();
+
         displayShopCats();
         
         // 记录颜色发现
-        recordColorDiscovery(cat);
+        //recordColorDiscovery(cat);
         
         // 添加记录颜色发现
         //recordColorDiscovery(selectedCat);
@@ -2373,8 +2389,6 @@ async function removeCatFromPool(catId) {
     
     if (confirm('确定要回收这只猫咪吗？')) {
 
-
-
         try {
             // 请求繁殖猫咪
             const newCat = await ApiManager.post('ops/user/recycleCat', {
@@ -2558,8 +2572,21 @@ async function breedPair() {
 }
 
 // 添加刷新商店函数
-function refreshShop() {
-    generateShopCats();
+async function refreshShop() {
+
+    if(playerCoins < 50) {
+        alert('金币不足，无法刷新商店');
+        return;
+    }
+
+    await ApiManager.post('shop/refresh');
+    // 刷新用户信息和金币
+    await RefreshUser();
+    updateCoinsDisplay();
+
+    displayShopCats();
+
+    //generateShopCats();
 }
 
 // 添加进入下一天的功能
@@ -3387,17 +3414,55 @@ function toggleShowDiscoveredOnly() {
 
 async function RefreshUser() {
     
-    const user = await ApiManager.get('auth/me');;
+    const user = await ApiManager.get('auth/me');
     if (user) {
         playerCoins = user.gold;
     }
+//刷新猫咪
+    try {
+        // 清空现有数据
+        if (!(currentGenerationCats instanceof Map)) {
+            // 如果不是Map对象，初始化为一个新的Map
+            currentGenerationCats = new Map();
+        } else {
+            // 如果已经是Map，只需清空数据
+            currentGenerationCats.clear();
+        }
+
+        // 获取用户的猫咪
+        const userCatData = await ApiManager.get('ops/user/cats');
+        const userCats = userCatData.cats;
+        
+        // 检查是否有猫咪数据
+        if (Array.isArray(userCats) && userCats.length > 0) {
+            // 将获取的猫咪数据转换成Map
+            userCats.forEach(cat => {
+                const key = cat.key || cat._id || cat.id;
+                if (key) {
+                    // 保存到Map中
+                    currentGenerationCats.set(key, cat.value);
+                }
+            });
+            
+            console.log(`成功获取${currentGenerationCats.size}只猫咪`);
+            updateParentSelectors();
+            updateBreedingPoolDisplay();
+        } else {
+            console.log('没有找到猫咪数据或数据格式不正确');
+        }
+    } catch (error) {
+        console.error('刷新猫咪列表失败:', error);
+        alert('刷新猫咪列表失败:' + error);
+    }
+
+
     // 刷新商店
     const shopcatdata = await ApiManager.get('shop/cats');
     if(shopcatdata){
         shopCats = shopcatdata;
     }
     
-    RefreshCats()
+   // await RefreshCats();
     
     
 }
@@ -3436,6 +3501,7 @@ async function RefreshCats() {
         }
     } catch (error) {
         console.error('刷新猫咪列表失败:', error);
+        alert('刷新猫咪列表失败:' + error);
         throw error;
     }
 }

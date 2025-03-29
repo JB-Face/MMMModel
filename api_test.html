@@ -278,6 +278,7 @@
                 <h3>获取商店猫咪列表</h3>
                 <button onclick="getShopCats()">获取商店猫咪</button>
                 <pre id="shop-cats-result">等待操作...</pre>
+                <div id="shop-cats-display" style="margin-top: 15px;"></div>
             </div>
 
             <!-- 购买猫咪 -->
@@ -799,7 +800,9 @@
         // 获取商店猫咪列表
         async function getShopCats() {
             const resultElement = document.getElementById('shop-cats-result');
+            const displayElement = document.getElementById('shop-cats-display');
             resultElement.textContent = '处理中...';
+            displayElement.innerHTML = '';
 
             try {
                 const token = localStorage.getItem('token');
@@ -820,6 +823,27 @@
 
                 if (response.ok) {
                     resultElement.textContent = JSON.stringify(data, null, 2);
+
+                    // 创建可视化的商店猫咪展示
+                    if (Array.isArray(data) && data.length > 0) {
+                        let html = '<div style="display: flex; flex-wrap: wrap; gap: 15px;">';
+                        data.forEach(cat => {
+                            html += `
+                                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; width: 200px;">
+                                    <h4>${cat.name}</h4>
+                                    <p>价格: ${cat.price} 金币</p>
+                                    <p>ID: ${cat.key}</p>
+                                    <button onclick="buyCat('${cat.key}')" style="background-color: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+                                        购买此猫咪
+                                    </button>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        displayElement.innerHTML = html;
+                    } else {
+                        displayElement.innerHTML = '<p>商店中没有可用的猫咪</p>';
+                    }
                 } else {
                     resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
                 }
@@ -829,7 +853,7 @@
         }
 
         // 购买猫咪
-        async function buyCat() {
+        async function buyCat(catKey) {
             const resultElement = document.getElementById('buy-cat-result');
             resultElement.textContent = '处理中...';
 
@@ -841,7 +865,10 @@
                     return;
                 }
 
-                const catKey = document.getElementById('buy-cat-key').value;
+                // 如果没有提供catKey参数，则从输入框获取
+                if (!catKey) {
+                    catKey = document.getElementById('buy-cat-key').value;
+                }
 
                 if (!catKey) {
                     resultElement.textContent = '错误: 请输入要购买的猫咪Key';
@@ -859,6 +886,12 @@
 
                 if (response.ok) {
                     resultElement.textContent = JSON.stringify(data, null, 2);
+
+                    // 购买成功后刷新商店猫咪列表
+                    getShopCats();
+
+                    // 显示购买成功消息
+                    alert(`购买成功！\n获得猫咪: ${data.cat.name}\n剩余金币: ${data.newGold}`);
                 } else {
                     resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
                 }
@@ -891,6 +924,12 @@
 
                 if (response.ok) {
                     resultElement.textContent = JSON.stringify(data, null, 2);
+
+                    // 刷新成功后更新商店猫咪列表
+                    getShopCats();
+
+                    // 显示刷新成功消息
+                    alert(`商店刷新成功！\n剩余金币: ${data.newGold}`);
                 } else {
                     resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
                 }
