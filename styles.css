@@ -454,7 +454,7 @@ body {
 }
 
 .cat-card .delete-button {
-    width: 100%;
+    width: 25%;
     padding: 8px 12px;
     margin-top: 10px;
     font-size: 0.95em;
@@ -1400,4 +1400,34 @@ body {
 .undiscovered .discovery-status {
     background-color: #f44336;
     color: white;
+}
+
+.cat-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.cat-info-row .cat-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    flex-grow: 1;
+}
+
+.cat-info-row .delete-button {
+    margin-left: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: #ff5555;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cat-info-row .delete-button:hover {
+    background-color: #ff3333;
 }

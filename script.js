@@ -205,7 +205,7 @@ try {
 // 全局变量声明 - 添加到文件顶部
 // 显示所有颜色的全局变量
 let showAllColors = false;
-
+let showGene = false;
 // 默认游戏数据
 const POSTCARD_DATA = {
     provinces: [
@@ -908,6 +908,8 @@ function bindEventListeners() {
             importAttributes: document.getElementById('importAttributes'),
             presetSelect: document.getElementById('presetSelect'),
         addRandomCat: document.getElementById('addRandomCat'),
+        showGene: document.getElementById('showGene'),
+        hideGene: document.getElementById('hideGene'),
         breedPair: document.getElementById('breedPair'),
         startSimulation: document.getElementById('startSimulation'),
         refreshShop: document.getElementById('refreshShop'),
@@ -943,6 +945,18 @@ function bindEventListeners() {
         }
         if (elements.getgenevalue) {
             elements.getgenevalue.addEventListener('click', getgenevalue);
+        }
+        if (elements.showGene) {
+            elements.showGene.addEventListener('click', () => {
+                showGene = true;
+                updateBreedingPoolDisplay();
+            });
+        }
+        if (elements.hideGene) {
+            elements.hideGene.addEventListener('click', () => {
+                showGene = false;
+                updateBreedingPoolDisplay();
+            });
         }
     if (elements.addRandomCat) {
         elements.addRandomCat.addEventListener('click', () => {
@@ -1701,6 +1715,11 @@ function exportResults() {
 
 // 修改displayCatAttributes函数，添加默认阈值
 function displayCatAttributes(cat) {
+
+    if(!showGene){
+        return '';
+    }
+
     const thresholdElement = document.getElementById('rarityThreshold');
     const threshold = thresholdElement ? parseInt(thresholdElement.value) || 50 : 50;
     const isHighRarity = cat.totalRarity > threshold;
@@ -1715,6 +1734,7 @@ function displayCatAttributes(cat) {
                 return;
             }
             
+
             // const isMutated = cat.mutations && cat.mutations.has(key);
             // const isAberrated = cat.aberrations && cat.aberrations.has(key);
             // const inheritanceInfo = cat.inheritanceInfo && cat.inheritanceInfo[key];
@@ -1811,7 +1831,7 @@ function displayCatAttributes(cat) {
 
 
     // 处理基因
-    if(cat.Gene){
+    if(cat.Gene ){
         cat.Gene.forEach((gene, index) => {
 
             const separator = "";
@@ -1899,7 +1919,7 @@ function displayCatAttributes(cat) {
             <button onclick="sendCatTraveling('${cat.id}')" class="travel-button">出游</button>
         `;
     }
-    
+
     return `
         ${attributesHtml}
     `;
@@ -2336,17 +2356,31 @@ function updateBreedingPoolDisplay() {
             const breedingCD = catData.breedingCooldown || 0;
             const maxCD = catData.maxBreedingCooldown || 24;
             
+
+
+    
+
             catCard.innerHTML = `
                 <div class="cat-header">
                     <h3>颜色: ${color}</h3>
                     <span class="cat-gender gender-${gender}">${gender}</span>
-                    <span class="cat-gender gender-稀有度">${rarity}</span>
+                    <div class="color-preview" style="background-color: ${getColorCode(color)}"></div>
                 </div>
                 <div class="cat-name">${name}</div>
                 ${displayCatAttributes(catData)}
-                <p>培育CD: ${breedingCD}/${maxCD}点</p>
-                <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
+                    <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
             `;
+
+                //                <p>值: ${item.value}</p>
+
+            // catCard.innerHTML= `
+            //     <div class="color-preview" style="background-color: ${getColorCode(color)}"></div>
+            //     <h4>${color}</h4>
+            //     <h2>${name}</h2>
+            //     ${displayCatAttributes(catData)}
+            //     <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
+            // `
+
             poolDiv.appendChild(catCard);
         });
     } else {
