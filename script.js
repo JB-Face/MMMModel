@@ -2356,7 +2356,8 @@ function updateBreedingPoolDisplay() {
             const breedingCD = catData.breedingCooldown || 0;
             const maxCD = catData.maxBreedingCooldown || 24;
             
-
+            // 翻译状态
+            const state = catData.state ? catData.state.replace('active', '活跃').replace('breeding', '培育').replace('idle', '空闲') : '未知';
 
     
 
@@ -2368,6 +2369,7 @@ function updateBreedingPoolDisplay() {
                 </div>
                 <div class="cat-name">${name}</div>
                 ${displayCatAttributes(catData)}
+                <h2>状态：${state}</h2>
                     <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
             `;
 
@@ -2624,32 +2626,43 @@ async function refreshShop() {
 }
 
 // 添加进入下一天的功能
-function proceedToNextGeneration() {
+async function proceedToNextGeneration() {
     try {
         console.log('开始进入下一天处理...');
         
-        // 检查游戏数据
-        if (typeof gameData === 'undefined') {
-            throw new Error('游戏数据未初始化');
-        }
-        console.log('游戏数据检查通过');
+    //     // 检查游戏数据
+    //     if (typeof gameData === 'undefined') {
+    //         throw new Error('游戏数据未初始化');
+    //     }
+    //     console.log('游戏数据检查通过');
 
-        // 检查必要的变量是否已初始化
-        if (typeof currentGenerationCats === 'undefined') {
-            throw new Error('当前猫咪数据未初始化');
-        }
-        if (typeof currentDay === 'undefined') {
-            currentDay = 0;
-        }
-        console.log('当前天数:', currentDay);
-        console.log('当前猫咪数量:', currentGenerationCats.size);
+    //     // 检查必要的变量是否已初始化
+    //     if (typeof currentGenerationCats === 'undefined') {
+    //         throw new Error('当前猫咪数据未初始化');
+    //     }
+    //     if (typeof currentDay === 'undefined') {
+    //         currentDay = 0;
+    //     }
+    //     console.log('当前天数:', currentDay);
+    //     console.log('当前猫咪数量:', currentGenerationCats.size);
 
-        // 检查是否有猫咪
-        if (!currentGenerationCats || currentGenerationCats.size < 1) {
-            alert('需要至少一只猫咪才能进入下一天！');
-        return;
-    }
+    //     // 检查是否有猫咪
+    //     if (!currentGenerationCats || currentGenerationCats.size < 1) {
+    //         alert('需要至少一只猫咪才能进入下一天！');
+    //     return;
+    // }
     
+        // 发送ops请求
+        const response = await ApiManager.post('ops/user/skipDay');
+        if(response.success) {
+            alert('跳过一天成功');
+            await RefreshUser();
+            updateCoinsDisplay();
+        } else {
+            alert('跳过一天失败');
+        }
+
+
         // 记录当前的繁殖结果
         const results = document.getElementById('breedingResults');
         if (!results) {
@@ -2675,75 +2688,75 @@ function proceedToNextGeneration() {
             throw new Error('显示繁殖结果失败: ' + displayError.message);
         }
 
-        // 增加天数
-        currentDay++;
-        console.log('进入新的一天:', currentDay);
+        // // 增加天数
+        // currentDay++;
+        // console.log('进入新的一天:', currentDay);
 
-        // 在CD恢复之前检查返回的猫咪
-        checkReturnedCats();
+        // // 在CD恢复之前检查返回的猫咪
+        // checkReturnedCats();
         
-        // 修改CD恢复逻辑
-        currentGenerationCats.forEach((cat, id) => {
-            if (cat && !cat.isTraveling) { // 只有不在出游的猫咪才恢复CD
-                cat.breedingCooldown = Math.min(
-                    cat.maxBreedingCooldown,
-                    cat.breedingCooldown + 24  // 确保每天恢复24点CD
-                );
-            }
-        });
+        // // 修改CD恢复逻辑
+        // currentGenerationCats.forEach((cat, id) => {
+        //     if (cat && !cat.isTraveling) { // 只有不在出游的猫咪才恢复CD
+        //         cat.breedingCooldown = Math.min(
+        //             cat.maxBreedingCooldown,
+        //             cat.breedingCooldown + 24  // 确保每天恢复24点CD
+        //         );
+        //     }
+        // });
         
-        // 刷新商店（如果在商店模式下）
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('shop')) {
-            try {
-                console.log('开始刷新商店...');
-                generateShopCats();
-                console.log('商店刷新完成');
-            } catch (shopError) {
-                console.error('刷新商店时出错:', shopError);
-            }
-        }
+        // // 刷新商店（如果在商店模式下）
+        // const currentPath = window.location.pathname;
+        // if (currentPath.includes('shop')) {
+        //     try {
+        //         console.log('开始刷新商店...');
+        //         generateShopCats();
+        //         console.log('商店刷新完成');
+        //     } catch (shopError) {
+        //         console.error('刷新商店时出错:', shopError);
+        //     }
+        // }
 
-        // 计算稀有度
-        currentGenerationCats.forEach(cat => {
-            // 获取基础稀有度
-            let baseRarity = cat.Rarity ;
+        // // 计算稀有度
+        // currentGenerationCats.forEach(cat => {
+        //     // 获取基础稀有度
+        //     let baseRarity = cat.Rarity ;
             
-            // 获取名片提供的稀有度加成
-            let cardBonus = 0;
-            if(cat.postcards && Array.isArray(cat.postcards)) {
-                for (let postcard of cat.postcards) {
-                    cardBonus += postcard.rarity;
-                }
-            }
+        //     // 获取名片提供的稀有度加成
+        //     let cardBonus = 0;
+        //     if(cat.postcards && Array.isArray(cat.postcards)) {
+        //         for (let postcard of cat.postcards) {
+        //             cardBonus += postcard.rarity;
+        //         }
+        //     }
             
-            // 计算实际稀有度
-            cat.totalRarity = baseRarity + cardBonus;
-        });
+        //     // 计算实际稀有度
+        //     cat.totalRarity = baseRarity + cardBonus;
+        // });
         // 更新界面
-        try {
-            console.log('开始更新界面...');
-            updateBreedingPoolDisplay();
-            updateParentSelectors();
-            console.log('界面更新完成');
-        } catch (updateError) {
-            console.error('更新界面时出错:', updateError);
-            throw new Error('更新界面失败: ' + updateError.message);
-        }
+        // try {
+        //     console.log('开始更新界面...');
+        //     updateBreedingPoolDisplay();
+        //     updateParentSelectors();
+        //     console.log('界面更新完成');
+        // } catch (updateError) {
+        //     console.error('更新界面时出错:', updateError);
+        //     throw new Error('更新界面失败: ' + updateError.message);
+        // }
 
         // 修改金币计算逻辑
-        let dailyIncome = 0;
-        currentGenerationCats.forEach(cat => {
-            dailyIncome += Math.floor(cat.totalRarity * 10 * (gameData.coinMultiplier || 1));
-        });
+        // let dailyIncome = 0;
+        // currentGenerationCats.forEach(cat => {
+        //     dailyIncome += Math.floor(cat.totalRarity * 10 * (gameData.coinMultiplier || 1));
+        // });
         
-        playerCoins += dailyIncome;
-        console.log(`获得每日金币: ${dailyIncome} (倍率: ${gameData.coinMultiplier || 1})`);
-        updateCoinsDisplay();
+        // playerCoins += dailyIncome;
+        // console.log(`获得每日金币: ${dailyIncome} (倍率: ${gameData.coinMultiplier || 1})`);
+        // updateCoinsDisplay();
         
-        // 显示金币获得提示
-        alert(`已进入第 ${currentDay} 天！\n今日获得金币: ${dailyIncome} (倍率: ${gameData.coinMultiplier || 1})`);
-        console.log('进入下一天处理完成');
+        // // 显示金币获得提示
+        // alert(`已进入第 ${currentDay} 天！\n今日获得金币: ${dailyIncome} (倍率: ${gameData.coinMultiplier || 1})`);
+        // console.log('进入下一天处理完成');
         
     } catch (error) {
         console.error('进入下一天时出错:', error);
@@ -3472,6 +3485,7 @@ async function RefreshUser() {
             // 将获取的猫咪数据转换成Map
             userCats.forEach(cat => {
                 const key = cat.key || cat._id || cat.id;
+                cat.value.state = cat.state;
                 if (key) {
                     // 保存到Map中
                     currentGenerationCats.set(key, cat.value);
