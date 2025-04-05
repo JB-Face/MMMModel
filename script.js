@@ -2360,12 +2360,12 @@ function updateBreedingPoolDisplay() {
             const state = catData.state ? catData.state.replace('active', '活跃').replace('breeding', '培育').replace('idle', '空闲') : '未知';
 
     
-
+            // 
             catCard.innerHTML = `
                 <div class="cat-header">
                     <h3>颜色: ${color}</h3>
                     <span class="cat-gender gender-${gender}">${gender}</span>
-                    <div class="color-preview" style="background-color: ${getColorCode(color)}"></div>
+                   <div class="color-preview" style="background-image: url('${getColorCode(color)}'); background-size: cover; background-position: center;"></div>
                 </div>
                 <div class="cat-name">${name}</div>
                 ${displayCatAttributes(catData)}
@@ -3319,7 +3319,7 @@ function refreshEncyclopedia() {
         // 根据是否显示所有颜色决定内容
         if (showAll || isDiscovered) {
             card.innerHTML = `
-                <div class="color-preview" style="background-color: ${getColorCode(item.color)}"></div>
+                <div class="color-preview" style="background-image: url('${getColorCode(item.color)}'); background-size: cover; background-position: center;"></div>
                 <h4>${item.color}</h4>
                 <p>${item.genotype}</p>
                 <p>基因: ${item.gene}</p>
@@ -3328,7 +3328,7 @@ function refreshEncyclopedia() {
             `;
         } else {
             card.innerHTML = `
-                <div class="color-preview" style="background-color: ${getColorCode(item.color)}"></div>
+                <div class="color-preview" style="background-image: url('${getColorCode(item.color)}'); background-size: cover; background-position: center;"></div>
                 <h4>???</h4>
                 <p>未发现</p>
             `;
@@ -3338,8 +3338,18 @@ function refreshEncyclopedia() {
     });
 }
 
-// 根据颜色名称获取颜色代码
+// 根据颜色名称获取颜色代码或图像URL
 function getColorCode(colorName) {
+
+    // 名字去除所有带有括号的内容 因为会有 淡化信息
+    colorName = colorName.replace(/\(淡化\d\)/g, '');
+    // 检查是否存在对应的猫咪图像
+    const imagePath = `cropped_cats_webp/${colorName}.webp`;
+    
+    // 返回图像URL而不是颜色代码
+    return imagePath;
+    
+    /* 以下是原来的颜色代码逻辑，现在被替换为图像
     // 基础颜色映射
     const baseColorMap = {
         '梵色': '#FFFFFF',
@@ -3388,6 +3398,7 @@ function getColorCode(colorName) {
     
     // 默认颜色
     return '#CCCCCC';
+    */
 }
 
 // 辅助函数:增加颜色亮度
@@ -3485,7 +3496,7 @@ async function RefreshUser() {
             // 将获取的猫咪数据转换成Map
             userCats.forEach(cat => {
                 const key = cat.key || cat._id || cat.id;
-                cat.value.state = cat.state;
+                cat.state = cat.state;
                 if (key) {
                     // 保存到Map中
                     currentGenerationCats.set(key, cat.value);

@@ -101,11 +101,66 @@
         </div>
     </div>
 
+    <!-- 通用API测试工具 -->
+    <div class="card" style="margin-bottom: 30px; border: 2px solid #4CAF50; background-color: #f9fff9;">
+        <h2>通用API测试工具</h2>
+        <div class="form-group">
+            <label for="api-endpoint">API端点:</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="api-base-display"></span>
+                <input type="text" id="api-endpoint" placeholder="/auth/login" style="flex-grow: 1;">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="api-method">请求方法:</label>
+            <select id="api-method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="use-auth-token">使用认证Token:</label>
+            <input type="checkbox" id="use-auth-token" checked>
+        </div>
+        <div class="form-group">
+            <label for="api-request-body">请求体 (JSON):</label>
+            <textarea id="api-request-body" rows="5" placeholder='{"username": "testuser", "password": "password123"}'></textarea>
+        </div>
+        <div class="form-group">
+            <label>常用请求体模板:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                <button onclick="fillRequestTemplate('login')" class="template-btn">登录</button>
+                <button onclick="fillRequestTemplate('register')" class="template-btn">注册</button>
+                <button onclick="fillRequestTemplate('createCat')" class="template-btn">创建猫咪</button>
+                <button onclick="fillRequestTemplate('bookTicket')" class="template-btn">预订机票</button>
+                <button onclick="fillRequestTemplate('useTicket')" class="template-btn">使用机票</button>
+                <button onclick="fillRequestTemplate('removeTicket')" class="template-btn">移除机票</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>常用端点:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                <button onclick="fillEndpoint('/auth/login')" class="endpoint-btn">登录</button>
+                <button onclick="fillEndpoint('/auth/register')" class="endpoint-btn">注册</button>
+                <button onclick="fillEndpoint('/ops/user/cats')" class="endpoint-btn">获取猫咪</button>
+                <button onclick="fillEndpoint('/ops/test/CreateRandomCat')" class="endpoint-btn">随机创建猫咪</button>
+                <button onclick="fillEndpoint('/test/getShopTickets')" class="endpoint-btn">获取门票</button>
+                <button onclick="fillEndpoint('/travel/destinations')" class="endpoint-btn">目的地列表</button>
+                <button onclick="fillEndpoint('/ops/user/useTicket')" class="endpoint-btn">使用机票</button>
+                <button onclick="fillEndpoint('/ops/user/removeTicket')" class="endpoint-btn">移除机票</button>
+            </div>
+        </div>
+        <button onclick="sendApiRequest()" style="background-color: #4CAF50; margin-top: 10px;">发送请求</button>
+        <div class="form-group" style="margin-top: 15px;">
+            <label>响应结果:</label>
+            <pre id="api-response-result" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; max-height: 300px; overflow: auto;">等待操作...</pre>
+        </div>
+    </div>
+
     <div class="container">
-
-
-
-
 
         <div class="card">
             <h2>随机生成猫咪</h2>
@@ -201,7 +256,6 @@
                 <pre id="login-result">等待操作...</pre>
             </div>
         </div>
-
 
         <!-- 获取用户信息 -->
         <div class="card">
@@ -335,11 +389,121 @@
             </div>
 
             <!-- 重置图鉴 -->
-            <div class="form-group">
-                <h3>重置图鉴</h3>
+            <div class="card">
+                <h2>重置图鉴</h2>
                 <button onclick="resetEncyclopedia()">重置图鉴</button>
-                <pre id="reset-encyclopedia-result">等待操作...</pre>
+                <div class="form-group">
+                    <label>结果:</label>
+                    <pre id="reset-encyclopedia-result">等待操作...</pre>
+                </div>
             </div>
+
+            <!-- 设置猫咪准备出游状态 -->
+            <div class="card">
+                <h2>设置猫咪准备出游状态</h2>
+                <div class="form-group">
+                    <label for="ready-cat-key">猫咪Key:</label>
+                    <input type="text" id="ready-cat-key" placeholder="输入猫咪的唯一标识符">
+                </div>
+                <button onclick="setCatReadyForTravel()">设置猫咪准备出游</button>
+                <div class="form-group">
+                    <label>结果:</label>
+                    <pre id="set-cat-ready-result">等待操作...</pre>
+                </div>
+            </div>
+
+            <!-- 机票相关功能测试 -->
+            <div class="card">
+                <h2>机票功能测试</h2>
+
+                <!-- 查询可用机票 -->
+                <div class="form-group">
+                    <h3>查询可用机票</h3>
+                    <button onclick="getAvailableTickets()">查询可用机票</button>
+                    <pre id="available-tickets-result">等待操作...</pre>
+                </div>
+            </div>
+
+            <!-- 机票商店功能测试 -->
+            <div class="card">
+                <h2>机票商店功能测试</h2>
+
+                <!-- 查看机票商店 -->
+                <div class="form-group">
+                    <h3>查看机票商店</h3>
+                    <button onclick="getTicketShop()">获取机票商店列表</button>
+                    <pre id="ticket-shop-result">等待操作...</pre>
+                    <div id="ticket-shop-display" style="margin-top: 15px;"></div>
+                </div>
+
+                <!-- 购买机票 -->
+                <div class="form-group">
+                    <h3>购买机票</h3>
+                    <label for="buy-ticket-key">机票Key:</label>
+                    <input type="text" id="buy-ticket-key" placeholder="输入要购买的机票Key">
+                    <button onclick="buyTicket()">购买机票</button>
+                    <pre id="buy-ticket-result">等待操作...</pre>
+                </div>
+
+                <!-- 查看我的机票 -->
+                <div class="form-group">
+                    <h3>查看我的机票</h3>
+                    <button onclick="getMyTickets()">查看我的机票</button>
+                    <pre id="my-tickets-shop-result">等待操作...</pre>
+                </div>
+
+                <!-- 刷新机票商店 -->
+                <div class="form-group">
+                    <h3>刷新机票商店</h3>
+                    <button onclick="refreshTicketShop()">刷新机票商店 (花费50金币)</button>
+                    <pre id="refresh-ticket-shop-result">等待操作...</pre>
+                </div>
+            </div>
+
+            <!-- 出游功能测试 -->
+            <div class="card">
+                <h2>出游功能测试</h2>
+
+                <!-- 开始出游 -->
+                <div class="form-group">
+                    <h3>开始出游</h3>
+                    <button onclick="startJourney()">开始出游</button>
+                    <pre id="start-journey-result">等待操作...</pre>
+                </div>
+
+                <!-- 查看当前出游状态 -->
+                <div class="form-group">
+                    <h3>查看出游状态</h3>
+                    <button onclick="getJourneyStatus()">获取出游状态</button>
+                    <pre id="journey-status-result">等待操作...</pre>
+                </div>
+
+                <!-- 使用机票 -->
+                <div class="form-group">
+                    <h3>使用机票</h3>
+                    <label for="use-ticket-key">机票Key:</label>
+                    <input type="text" id="use-ticket-key" placeholder="输入要使用的机票Key">
+                    <button onclick="useTicket()">使用机票</button>
+                    <pre id="use-ticket-result">等待操作...</pre>
+                </div>
+
+                <!-- 从trip移除机票 -->
+                <div class="form-group">
+                    <h3>从行程移除机票</h3>
+                    <label for="remove-ticket-key">机票Key:</label>
+                    <input type="text" id="remove-ticket-key" placeholder="输入要移除的机票Key">
+                    <button onclick="removeTicketFromTrip()">移除机票</button>
+                    <pre id="remove-ticket-result">等待操作...</pre>
+                </div>
+
+                <!-- 结束出游 -->
+                <div class="form-group">
+                    <h3>结束出游</h3>
+                    <button onclick="endJourney()">结束出游</button>
+                    <pre id="end-journey-result">等待操作...</pre>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -350,6 +514,7 @@
         // 初始化显示当前URL
         document.getElementById('current-api-url').textContent = API_URL;
         document.getElementById('api-base-url').value = API_URL;
+        document.getElementById('api-base-display').textContent = API_URL;
 
         // 更新API URL
         function updateApiUrl() {
@@ -358,9 +523,156 @@
                 API_URL = newUrl;
                 localStorage.setItem('api_base_url', API_URL);
                 document.getElementById('current-api-url').textContent = API_URL;
+                document.getElementById('api-base-display').textContent = API_URL;
                 alert(`API地址已更新为: ${API_URL}`);
             } else {
                 alert('请输入有效的URL');
+            }
+        }
+
+        // 填充请求体模板
+        function fillRequestTemplate(type) {
+            const bodyElement = document.getElementById('api-request-body');
+            let template = '';
+
+            switch (type) {
+                case 'login':
+                    template = JSON.stringify({
+                        username: "testuser",
+                        password: "password123"
+                    }, null, 2);
+                    break;
+                case 'register':
+                    template = JSON.stringify({
+                        username: "testuser",
+                        password: "password123",
+                        email: "test@example.com"
+                    }, null, 2);
+                    break;
+                case 'createCat':
+                    template = "{}"; // 创建猫咪不需要请求体
+                    break;
+                case 'bookTicket':
+                    template = JSON.stringify({
+                        destinationId: "0",
+                        catKey: "cat_key_here"
+                    }, null, 2);
+                    break;
+                case 'useTicket':
+                    template = JSON.stringify({
+                        ticket: "ticket_key_here"
+                    }, null, 2);
+                    break;
+                case 'removeTicket':
+                    template = JSON.stringify({
+                        ticket: "ticket_key_here"
+                    }, null, 2);
+                    break;
+                default:
+                    template = "{}";
+            }
+
+            bodyElement.value = template;
+        }
+
+        // 填充端点
+        function fillEndpoint(endpoint) {
+            document.getElementById('api-endpoint').value = endpoint;
+
+            // 根据端点自动选择HTTP方法
+            const methodSelect = document.getElementById('api-method');
+            if (endpoint.includes('/login') || endpoint.includes('/register') || endpoint.includes('/CreateRandomCat')) {
+                methodSelect.value = 'POST';
+            } else if (endpoint.includes('/user/cat/') && !endpoint.includes('/rename')) {
+                methodSelect.value = 'DELETE';
+            } else {
+                methodSelect.value = 'GET';
+            }
+        }
+
+        // 发送API请求
+        async function sendApiRequest() {
+            const resultElement = document.getElementById('api-response-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const endpoint = document.getElementById('api-endpoint').value.trim();
+                const method = document.getElementById('api-method').value;
+                const useToken = document.getElementById('use-auth-token').checked;
+                const requestBody = document.getElementById('api-request-body').value.trim();
+
+                if (!endpoint) {
+                    resultElement.textContent = '错误: 请输入API端点';
+                    return;
+                }
+
+                // 构建完整URL
+                let url = API_URL;
+                if (endpoint.startsWith('/')) {
+                    url += endpoint;
+                } else {
+                    url += '/' + endpoint;
+                }
+
+                // 构建请求头
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (useToken) {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    } else {
+                        resultElement.textContent = '警告: 没有找到token，请先登录获取token';
+                        return;
+                    }
+                }
+
+                // 构建请求选项
+                const options = {
+                    method: method,
+                    headers: headers
+                };
+
+                // 添加请求体（如果是POST/PUT/PATCH）
+                if (method !== 'GET' && method !== 'DELETE' && requestBody) {
+                    try {
+                        const bodyObj = JSON.parse(requestBody);
+                        options.body = JSON.stringify(bodyObj);
+                    } catch (e) {
+                        resultElement.textContent = `错误: 请求体不是有效的JSON: ${e.message}`;
+                        return;
+                    }
+                }
+
+                // 发送请求
+                console.log(`发送${method}请求到: ${url}`);
+                console.log('请求选项:', options);
+
+                const response = await fetch(url, options);
+
+                // 尝试解析响应为JSON
+                let data;
+                const responseText = await response.text();
+
+                try {
+                    data = JSON.parse(responseText);
+                    // 格式化显示
+                    resultElement.textContent = `状态码: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+                } catch (e) {
+                    // 如果不是JSON，则显示为文本
+                    resultElement.textContent = `状态码: ${response.status}\n\n${responseText}`;
+                }
+
+                // 如果是登录/注册响应，自动保存token
+                if ((endpoint.includes('/login') || endpoint.includes('/register')) && data && data.token) {
+                    localStorage.setItem('token', data.token);
+                    resultElement.textContent += '\n\nToken已自动保存!';
+                }
+
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
             }
         }
 
@@ -368,6 +680,13 @@
         document.getElementById('api-base-url').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 updateApiUrl();
+            }
+        });
+
+        // 支持在API端点输入框按回车键发送请求
+        document.getElementById('api-endpoint').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendApiRequest();
             }
         });
 
@@ -585,110 +904,6 @@
             }
         }
 
-
-        async function addRandomCat() {
-            const resultElement = document.getElementById('add-random-cat-result');
-            resultElement.textContent = '处理中...';
-
-            try {
-                const token = localStorage.getItem('token');
-
-                if (!token) {
-                    resultElement.textContent = '错误: 未登录，请先登录';
-                    return;
-                }
-
-                const response = await fetch(`${API_URL}/ops/test/CreateRandomCat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                // 先获取响应文本，然后尝试解析为JSON
-                const responseText = await response.text();
-                let data;
-
-                try {
-                    // 尝试解析文本为JSON
-                    data = JSON.parse(responseText);
-                } catch (error) {
-                    console.error('JSON解析失败:', error);
-                    console.log('原始响应:', responseText);
-
-                    // 创建一个简单对象作为fallback
-                    data = {
-                        success: response.ok,
-                        message: '响应解析失败，请查看控制台',
-                        rawText: responseText
-                    };
-                }
-
-                if (response.ok) {
-                    resultElement.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
-                }
-            } catch (error) {
-                resultElement.textContent = `错误: ${error.message}`;
-            }
-        }
-
-        // 获取用户猫咪列表
-        async function getUserCats() {
-            const resultElement = document.getElementById('get-cats-result');
-            resultElement.textContent = '处理中...';
-
-            try {
-                const token = localStorage.getItem('token');
-
-                if (!token) {
-                    resultElement.textContent = '错误: 未登录，请先登录';
-                    return;
-                }
-
-                // 检查是否需要简略信息
-                const isSimple = document.getElementById('get-cats-simple').checked;
-                const url = isSimple ?
-                    `${API_URL}/ops/user/cats?simple=true` :
-                    `${API_URL}/ops/user/cats`;
-
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                // 获取响应并解析
-                const responseText = await response.text();
-                let data;
-
-                try {
-                    data = JSON.parse(responseText);
-                } catch (error) {
-                    console.error('JSON解析失败:', error);
-                    console.log('原始响应:', responseText);
-
-                    data = {
-                        success: response.ok,
-                        message: '响应解析失败，请查看控制台',
-                        rawText: responseText
-                    };
-                }
-
-                if (response.ok) {
-                    resultElement.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
-                }
-            } catch (error) {
-                resultElement.textContent = `错误: ${error.message}`;
-            }
-        }
-
-
         // 删除数据
         async function deleteData() {
             const resultElement = document.getElementById('delete-data-result');
@@ -712,124 +927,6 @@
                 });
 
                 const data = await response.json();
-
-                if (response.ok) {
-                    resultElement.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
-                }
-            } catch (error) {
-                resultElement.textContent = `错误: ${error.message}`;
-            }
-        }
-
-        // 修改猫咪名字
-        async function renameCat() {
-            const resultElement = document.getElementById('rename-cat-result');
-            resultElement.textContent = '处理中...';
-
-            try {
-                const token = localStorage.getItem('token');
-
-                if (!token) {
-                    resultElement.textContent = '错误: 未登录，请先登录';
-                    return;
-                }
-
-                const key = document.getElementById('rename-cat-key').value;
-                const newName = document.getElementById('rename-cat-name').value;
-
-                if (!key) {
-                    resultElement.textContent = '错误: 请输入猫咪的Key';
-                    return;
-                }
-
-                if (!newName) {
-                    resultElement.textContent = '错误: 请输入新的猫咪名字';
-                    return;
-                }
-
-                const response = await fetch(`${API_URL}/ops/user/cat/${key}/rename`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        newName
-                    })
-                });
-
-                // 获取响应并解析
-                const responseText = await response.text();
-                let data;
-
-                try {
-                    data = JSON.parse(responseText);
-                } catch (error) {
-                    console.error('JSON解析失败:', error);
-                    console.log('原始响应:', responseText);
-
-                    data = {
-                        success: response.ok,
-                        message: '响应解析失败，请查看控制台',
-                        rawText: responseText
-                    };
-                }
-
-                if (response.ok) {
-                    resultElement.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
-                }
-            } catch (error) {
-                resultElement.textContent = `错误: ${error.message}`;
-            }
-        }
-
-        // 删除猫咪
-        async function deleteCat() {
-            const resultElement = document.getElementById('delete-cat-result');
-            resultElement.textContent = '处理中...';
-
-            try {
-                const token = localStorage.getItem('token');
-
-                if (!token) {
-                    resultElement.textContent = '错误: 未登录，请先登录';
-                    return;
-                }
-
-                const key = document.getElementById('delete-cat-key').value;
-
-                if (!key) {
-                    resultElement.textContent = '错误: 请输入猫咪的Key';
-                    return;
-                }
-
-                const response = await fetch(`${API_URL}/ops/user/cat/${key}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                // 获取响应并解析
-                const responseText = await response.text();
-                let data;
-
-                try {
-                    data = JSON.parse(responseText);
-                } catch (error) {
-                    console.error('JSON解析失败:', error);
-                    console.log('原始响应:', responseText);
-
-                    data = {
-                        success: response.ok,
-                        message: '响应解析失败，请查看控制台',
-                        rawText: responseText
-                    };
-                }
 
                 if (response.ok) {
                     resultElement.textContent = JSON.stringify(data, null, 2);
@@ -1162,6 +1259,526 @@
                     // 重新获取图鉴数据
                     getEncyclopedia();
 
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 设置猫咪准备出游状态
+        async function setCatReadyForTravel() {
+            const resultElement = document.getElementById('set-cat-ready-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const catKey = document.getElementById('ready-cat-key').value;
+
+                if (!catKey) {
+                    resultElement.textContent = '错误: 请输入猫咪的Key';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/setCatReady`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        Cat: catKey
+                    })
+                });
+
+                // 获取响应并解析
+                const responseText = await response.text();
+                let data;
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error('JSON解析失败:', error);
+                    console.log('原始响应:', responseText);
+
+                    data = {
+                        success: response.ok,
+                        message: '响应解析失败，请查看控制台',
+                        rawText: responseText
+                    };
+                }
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                    // 成功后刷新猫咪列表（如果需要的话）
+                    // getUserCats();
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 初始化加载目的地列表
+        async function loadDestinations() {
+            try {
+                const response = await fetch(`${API_URL}/travel/destinations`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const selectElement = document.getElementById('ticket-destination');
+
+                    // 清空现有选项
+                    selectElement.innerHTML = '<option value="">请选择目的地</option>';
+
+                    // 添加从API获取的目的地
+                    if (data && data.destinations) {
+                        Object.entries(data.destinations).forEach(([id, destination]) => {
+                            const option = document.createElement('option');
+                            option.value = id;
+                            option.textContent = `${destination.name} - ${destination.description}`;
+                            selectElement.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('加载目的地失败:', error);
+            }
+        }
+
+        // 页面加载时初始化目的地列表
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                loadDestinations();
+            }
+        });
+
+        // 登录成功后也加载目的地列表
+        const originalLogin = login;
+        login = async function() {
+            await originalLogin();
+            loadDestinations();
+        };
+
+        // 查询可用机票
+        async function getAvailableTickets() {
+            const resultElement = document.getElementById('available-tickets-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/travel/tickets/available`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取机票商店列表
+        async function getTicketShop() {
+            const resultElement = document.getElementById('ticket-shop-result');
+            const displayElement = document.getElementById('ticket-shop-display');
+            resultElement.textContent = '处理中...';
+            displayElement.innerHTML = '';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/test/getShopTickets`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+
+                    // 创建可视化的机票展示
+                    if (data.success && data.tickets.tickets) {
+                        let html = '<div style="display: flex; flex-wrap: wrap; gap: 15px;">';
+                        data.tickets.tickets.forEach(ticket => {
+                            let destination = ticket.destination === "0" ? "随机目的地" :
+                                ticket.destination === "-1" ? "任意目的地" :
+                                `目的地ID: ${ticket.destination}`;
+
+                            let typeLabel = {
+                                'regular': '普通',
+                                'premium': '高级',
+                                'business': '商务',
+                                'special': '特殊'
+                            }[ticket.type] || ticket.type;
+
+                            html += `
+                                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; width: 200px;">
+                                    <h4>${typeLabel}机票</h4>
+                                    <p>${destination}</p>
+                                    <p>价格: ${ticket.price} 金币</p>
+                                    <p>ID: ${ticket.key}</p>
+                                    <p>时长: ${(ticket.duration / (60*60*1000)).toFixed(1)}小时</p>
+                                    <button onclick="buyTicket('${ticket.key}')" style="background-color: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+                                        购买此机票
+                                    </button>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        displayElement.innerHTML = html;
+                    } else {
+                        displayElement.innerHTML = '<p>商店中没有可用的机票</p>';
+                    }
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 购买机票
+        async function buyTicket(ticketKey) {
+            const resultElement = document.getElementById('buy-ticket-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                // 如果没有提供ticketKey参数，则从输入框获取
+                if (!ticketKey) {
+                    ticketKey = document.getElementById('buy-ticket-key').value;
+                }
+
+                if (!ticketKey) {
+                    resultElement.textContent = '错误: 请输入要购买的机票Key';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/buyTicket`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        ticket: ticketKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+
+                    // 购买成功后刷新机票商店和我的机票列表
+                    getTicketShop();
+                    getMyTickets();
+
+                    // 显示购买成功消息
+                    alert(`购买成功！\n获得机票: ${ticketKey}`);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 查看我的机票
+        async function getMyTickets() {
+            const resultElement = document.getElementById('my-tickets-shop-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/test/getTickets`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 刷新机票商店
+        async function refreshTicketShop() {
+            const resultElement = document.getElementById('refresh-ticket-shop-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/shop/refreshTickets`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+
+                    // 刷新成功后更新机票商店列表
+                    getTicketShop();
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 开始出游
+        async function startJourney() {
+            const resultElement = document.getElementById('start-journey-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/CatTrip`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                // 尝试解析响应为JSON
+                let data;
+                const responseText = await response.text();
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    data = {
+                        success: response.ok,
+                        message: responseText
+                    };
+                }
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 获取出游状态
+        async function getJourneyStatus() {
+            const resultElement = document.getElementById('journey-status-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 使用机票
+        async function useTicket() {
+            const resultElement = document.getElementById('use-ticket-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const ticketKey = document.getElementById('use-ticket-key').value;
+
+                if (!ticketKey) {
+                    resultElement.textContent = '错误: 请输入要使用的机票Key';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/useTicket`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        ticket: ticketKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 从行程移除机票
+        async function removeTicketFromTrip() {
+            const resultElement = document.getElementById('remove-ticket-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const ticketKey = document.getElementById('remove-ticket-key').value;
+
+                if (!ticketKey) {
+                    resultElement.textContent = '错误: 请输入要移除的机票Key';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/removeTicket`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        ticket: ticketKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 结束出游
+        async function endJourney() {
+            const resultElement = document.getElementById('end-journey-result');
+            resultElement.textContent = '处理中...';
+
+            try {
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    resultElement.textContent = '错误: 未登录，请先登录';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/ops/user/end`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
                     resultElement.textContent = JSON.stringify(data, null, 2);
                 } else {
                     resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;

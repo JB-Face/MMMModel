@@ -1338,6 +1338,9 @@ body {
     margin: 0 auto 10px;
     border: 3px solid white;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
 .color-card h4 {
