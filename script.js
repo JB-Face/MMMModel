@@ -374,6 +374,146 @@ let BREED_GENE_PROBABILITY = [
 ]
 
 
+let locationData = {
+    "0": {
+        "name": "北京",
+        "description": "北京故宫博物院"
+    },
+    "1": {
+        "name": "上海",
+        "description": "上海东方明珠"
+    },
+    "2": {
+        "name": "天津",
+        "description": "天津海河"
+    },
+    "3": {
+        "name": "重庆",
+        "description": "重庆洪崖洞"
+    },
+    "4": {
+        "name": "河北",
+        "description": "河北承德避暑山庄"
+    },
+    "5": {
+        "name": "山西",
+        "description": "山西平遥古城"
+    },
+    "6": {
+        "name": "辽宁",
+        "description": "辽宁沈阳故宫"
+    },
+    "7": {
+        "name": "吉林",
+        "description": "吉林长白山"
+    },
+    "8": {
+        "name": "黑龙江",
+        "description": "黑龙江雪乡"
+    },
+    "9": {
+        "name": "江苏",
+        "description": "江苏苏州园林"
+    },
+    "10": {
+        "name": "浙江",
+        "description": "浙江西湖"
+    },
+    "11": {
+        "name": "安徽",
+        "description": "安徽黄山"
+    },
+    "12": {
+        "name": "福建",
+        "description": "福建土楼"
+    },
+    "13": {
+        "name": "江西",
+        "description": "江西庐山"
+    },
+    "14": {
+        "name": "山东",
+        "description": "山东泰山"
+    },
+    "15": {
+        "name": "河南",
+        "description": "河南少林寺"
+    },
+    "16": {
+        "name": "湖北",
+        "description": "湖北武当山"
+    },
+    "17": {
+        "name": "湖南",
+        "description": "湖南张家界"
+    },
+    "18": {
+        "name": "广东",
+        "description": "广东广州塔"
+    },
+    "19": {
+        "name": "海南",
+        "description": "海南三亚湾"
+    },
+    "20": {
+        "name": "四川",
+        "description": "四川九寨沟"
+    },
+    "21": {
+        "name": "贵州",
+        "description": "贵州黄果树瀑布"
+    },
+    "22": {
+        "name": "云南",
+        "description": "云南丽江古城"
+    },
+    "23": {
+        "name": "陕西",
+        "description": "陕西兵马俑"
+    },
+    "24": {
+        "name": "甘肃",
+        "description": "甘肃敦煌莫高窟"
+    },
+    "25": {
+        "name": "青海",
+        "description": "青海湖"
+    },
+    "26": {
+        "name": "台湾",
+        "description": "台湾日月潭"
+    },
+    "27": {
+        "name": "内蒙古",
+        "description": "内蒙古呼伦贝尔草原"
+    },
+    "28": {
+        "name": "广西",
+        "description": "广西桂林山水"
+    },
+    "29": {
+        "name": "西藏",
+        "description": "西藏布达拉宫"
+    },
+    "30": {
+        "name": "宁夏",
+        "description": "宁夏沙湖"
+    },
+    "31": {
+        "name": "新疆",
+        "description": "新疆天山天池"
+    },
+    "32": {
+        "name": "香港",
+        "description": "香港维多利亚港"
+    },
+    "33": {
+        "name": "澳门",
+        "description": "澳门大三巴牌坊"
+    }
+};
+
+
 // 添加金币相关变量
 let playerCoins = 1000; // 初始金币
 
@@ -872,7 +1012,7 @@ async function initGame() {
 
         updateBreedingPoolDisplay();
         updateParentSelectors();
-
+        loadPostcardGallery();
         generateShopCats();
         
         // // 绑定事件监听器
@@ -1668,7 +1808,7 @@ function displayCurrentCat(cat) {
     catCard.className = 'cat-card';
     catCard.innerHTML = `
         <div class="cat-header">
-            <h3>颜色: ${cat.Color}</h3>
+            <h3> ${cat.Color}</h3>
             <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>   
             <span class="cat-gender gender-稀有度">${cat.totalRarity}</span>        
         </div>
@@ -2095,7 +2235,7 @@ function displayBreedingResults(results, cats, allCats, day = 0, previousDayRari
         
         catCard.innerHTML = `
             <div class="cat-header">
-                        <h3>颜色: ${cat.Color || 0}</h3>
+                        <h3> ${cat.Color || 0}</h3>
                         <span class="cat-gender gender-${cat.性别.value}">${cat.性别.value}</span>   
                         <span class="cat-gender gender-稀有度">${cat.totalRarity}</span>                     
             </div>
@@ -2149,7 +2289,7 @@ function displayShopCats() {
         
         catCard.innerHTML = `
             <div class="cat-header">
-                <h3>颜色: ${cat.geneData.Color}</h3>
+                <h3>${cat.geneData.Color}</h3>
                 <span class="cat-gender gender-${cat.geneData.性别.value}">${cat.geneData.性别.value}</span>
                 <span class="cat-gender gender-稀有度">${cat.geneData.totalRarity}</span>
             </div>
@@ -2358,19 +2498,40 @@ function updateBreedingPoolDisplay() {
             
             // 翻译状态
             const state = catData.state ? catData.state.replace('active', '活跃').replace('breeding', '培育').replace('idle', '空闲') : '未知';
-
+            
+            // 检查猫咪是否已准备出游
+            const isTravelReady = catData.state === 'ready' ? true : false;
+            let travelButtonText = isTravelReady ? '取消出游' : '准备出游';
+            const isInTrip = catData.state === 'Outdoor' ? true : false;
+            // 如果已经出门了 那么不能操作
+            if (isInTrip) {
+                travelButtonText = '已出门';
+                travelButtonClass = 'travel-button-disabled';
+            }
+            else{
+                travelButtonClass = isTravelReady ? 'travel-button-ready' : 'travel-button';
+            }
     
             // 
             catCard.innerHTML = `
                 <div class="cat-header">
-                    <h3>颜色: ${color}</h3>
+                    <h3>${color}</h3>
                     <span class="cat-gender gender-${gender}">${gender}</span>
-                   <div class="color-preview" style="background-image: url('${getColorCode(color)}'); background-size: cover; background-position: center;"></div>
+                   
                 </div>
+
+                <div class="color-preview" style="background-image: url('${getColorCode(color)}'); background-size: cover; background-position: center;"></div>
+
                 <div class="cat-name">${name}</div>
                 ${displayCatAttributes(catData)}
-                <h2>状态：${state}</h2>
+                <h3>状态：${state}</h3>
+                <div class="cat-actions">
                     <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
+                    ${isInTrip 
+                        ? `<span class="cat-travel-status">已出门</span>` 
+                        : `<button onclick="toggleCatTravelReady('${key}')" class="${travelButtonClass}">${travelButtonText}</button>`
+                    }
+                </div>
             `;
 
                 //                <p>值: ${item.value}</p>
@@ -2394,28 +2555,29 @@ function updateBreedingPoolDisplay() {
 
 // 更新父母选择器
 function updateParentSelectors() {
-    const parent1Select = document.getElementById('parent1');
-    const parent2Select = document.getElementById('parent2');
+    return;
+    // const parent1Select = document.getElementById('parent1');
+    // const parent2Select = document.getElementById('parent2');
     
-    parent1Select.innerHTML = '<option value="">选择父本</option>';
-    parent2Select.innerHTML = '<option value="">选择母本</option>';
+    // parent1Select.innerHTML = '<option value="">选择父本</option>';
+    // parent2Select.innerHTML = '<option value="">选择母本</option>';
     
-    const requiredCD = 0;  // 修改这里，默认值改为24
+    // const requiredCD = 0;  // 修改这里，默认值改为24
     
-    currentGenerationCats.forEach(cat => {
-        const catData = cat.value || cat;
-        if (catData.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
-            const option = document.createElement('option');
-            option.value = catData.id;
-            option.textContent = `${catData.name} (${catData.Color}, CD: ${catData.breedingCooldown}/${catData.maxBreedingCooldown})`;
+    // currentGenerationCats.forEach(cat => {
+    //     const catData = cat.value || cat;
+    //     if (catData.breedingCooldown >= requiredCD) { // 使用设置的CD减少值作为门槛
+    //         const option = document.createElement('option');
+    //         option.value = catData.id;
+    //         option.textContent = `${catData.name} (${catData.Color}, CD: ${catData.breedingCooldown}/${catData.maxBreedingCooldown})`;
             
-            if (catData.性别.value === '公') {
-                parent1Select.appendChild(option);
-            } else {
-                parent2Select.appendChild(option);
-            }
-        }
-    });
+    //         if (catData.性别.value === '公') {
+    //             parent1Select.appendChild(option);
+    //         } else {
+    //             parent2Select.appendChild(option);
+    //         }
+    //     }
+    // });
 }
 
 // 从培育池移除猫咪
@@ -2663,30 +2825,30 @@ async function proceedToNextGeneration() {
         }
 
 
-        // 记录当前的繁殖结果
-        const results = document.getElementById('breedingResults');
-        if (!results) {
-            throw new Error('找不到繁殖结果显示区域 (breedingResults)');
-        }
-        console.log('获取到繁殖结果显示区域');
+        // // 记录当前的繁殖结果
+        // const results = document.getElementById('breedingResults');
+        // if (!results) {
+        //     throw new Error('找不到繁殖结果显示区域 (breedingResults)');
+        // }
+        // console.log('获取到繁殖结果显示区域');
 
-        // 转换当前猫咪数据
-        const currentCats = Array.from(currentGenerationCats.values());
-        console.log('当前猫咪数组长度:', currentCats.length);
+        // // 转换当前猫咪数据
+        // const currentCats = Array.from(currentGenerationCats.values());
+        // console.log('当前猫咪数组长度:', currentCats.length);
 
-        if (!currentCats || currentCats.length === 0) {
-            throw new Error('当前猫咪数据转换失败');
-        }
+        // if (!currentCats || currentCats.length === 0) {
+        //     throw new Error('当前猫咪数据转换失败');
+        // }
 
-        try {
-            // 显示繁殖结果
-            console.log('开始显示繁殖结果...');
-            displayBreedingResults(results, currentCats, currentGenerationCats, currentDay);
-            console.log('繁殖结果显示完成');
-        } catch (displayError) {
-            console.error('显示繁殖结果时出错:', displayError);
-            throw new Error('显示繁殖结果失败: ' + displayError.message);
-        }
+        // try {
+        //     // 显示繁殖结果
+        //     console.log('开始显示繁殖结果...');
+        //     displayBreedingResults(results, currentCats, currentGenerationCats, currentDay);
+        //     console.log('繁殖结果显示完成');
+        // } catch (displayError) {
+        //     console.error('显示繁殖结果时出错:', displayError);
+        //     throw new Error('显示繁殖结果失败: ' + displayError.message);
+        // }
 
         // // 增加天数
         // currentDay++;
@@ -3475,6 +3637,11 @@ async function RefreshUser() {
     const user = await ApiManager.get('auth/me');
     if (user) {
         playerCoins = user.gold;
+        //刷新出游状态
+        gameData.trip_status = user.trip.status;
+        gameData.trip_tickets = user.trip.tickets;
+        gameData.postcard_discovered = user.postcardInventory?.discovered || [];
+
     }
 //刷新猫咪
     try {
@@ -3496,7 +3663,7 @@ async function RefreshUser() {
             // 将获取的猫咪数据转换成Map
             userCats.forEach(cat => {
                 const key = cat.key || cat._id || cat.id;
-                cat.state = cat.state;
+                cat.value.state = cat.state;
                 if (key) {
                     // 保存到Map中
                     currentGenerationCats.set(key, cat.value);
@@ -3530,6 +3697,7 @@ async function RefreshUser() {
     console.error('刷新图鉴失败:', error);
     alert('刷新图鉴失败:' + error);
     }
+
 
     
 }
@@ -3573,5 +3741,499 @@ async function RefreshCats() {
         console.error('刷新猫咪列表失败:', error);
         alert('刷新猫咪列表失败:' + error);
         throw error;
+    }
+}
+
+// 初始化选项卡功能
+function initTabs() {
+    // 商店选项卡
+    document.querySelectorAll('.shop-tab-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // 移除所有激活状态
+            document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.shop-tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 激活点击的选项卡
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
+        });
+    });
+    
+    // 出游选项卡
+    document.querySelectorAll('.travel-tab-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.travel-tab-content').forEach(content => content.classList.remove('active'));
+            
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
+        });
+    });
+}
+
+// 加载机票商店
+async function loadTicketShop() {
+    const shopTicketsElement = document.getElementById('shopTickets');
+    shopTicketsElement.innerHTML = '加载中...';
+    
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/ops/test/getShopTickets`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            shopTicketsElement.innerHTML = `<p>加载失败: ${data.message}</p>`;
+            return;
+        }
+        
+        if (!data.tickets || !data.tickets.tickets || data.tickets.tickets.length === 0) {
+            shopTicketsElement.innerHTML = '<p>商店中没有可用的机票</p>';
+            return;
+        }
+        
+        let html = '';
+        data.tickets.tickets.forEach(ticket => {
+            const destinationText = ticket.destination === "0" ? "随机目的地" : 
+                                  ticket.destination === "-1" ? "任意目的地" : 
+                                  `目的地 ${ticket.destination}`;
+            
+            html += `
+                <div class="ticket-item">
+                    <div class="ticket-type">${getTicketTypeText(ticket.type)}</div>
+                    <div class="ticket-destination">${destinationText}</div>
+                    <div class="ticket-price">价格: ${ticket.price} 金币</div>
+                    <div class="ticket-duration">出游时长: ${formatDuration(ticket.duration)}</div>
+                    <div class="ticket-actions">
+                        <button onclick="buyTicket('${ticket.key}')" class="primary-button">购买</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        shopTicketsElement.innerHTML = html;
+        
+    } catch (error) {
+        console.error('加载机票商店失败:', error);
+        shopTicketsElement.innerHTML = '<p>加载失败，请稍后再试</p>';
+    }
+}
+
+// 加载我的机票
+async function loadMyTickets() {
+    const ticketInventoryElement = document.getElementById('ticketInventory');
+    ticketInventoryElement.innerHTML = '加载中...';
+    
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/ops/test/getTickets`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            ticketInventoryElement.innerHTML = `<p>加载失败: ${data.message}</p>`;
+            return;
+        }
+        
+        if (!data.tickets || data.tickets.length === 0) {
+            ticketInventoryElement.innerHTML = '<p>您还没有机票</p>';
+            return;
+        }
+        
+        let html = '';
+        data.tickets.forEach(ticket => {
+            const destinationText = ticket.destination === "0" ? "随机目的地" : 
+                                  ticket.destination === "-1" ? "任意目的地" : 
+                                  `目的地 ${ticket.destination}`;
+            
+            html += `
+                <div class="ticket-item">
+                    <div class="ticket-type">${getTicketTypeText(ticket.type)}</div>
+                    <div class="ticket-destination">${destinationText}</div>
+                    <div class="ticket-duration">出游时长: ${formatDuration(ticket.duration)}</div>
+                    <div class="ticket-actions">
+                        <button onclick="useTicket('${ticket.key}')" class="primary-button">使用</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        ticketInventoryElement.innerHTML = html;
+        
+    } catch (error) {
+        console.error('加载机票失败:', error);
+        ticketInventoryElement.innerHTML = '<p>加载失败，请稍后再试</p>';
+    }
+}
+
+// 加载出游状态
+async function loadTravelStatus() {
+    const travelStatusElement = document.getElementById('travelStatus');
+    const startTravelButton = document.getElementById('startTravel');
+    const endTravelButton = document.getElementById('endTravel');
+    const travelTicketsElement = document.getElementById('travelTickets');
+    
+    try {
+        // const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        // const response = await fetch(`${API_URL}/ops/user/status`, {
+        //     headers: {
+        //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+        //     }
+        // });
+        
+        // const data = await response.json();
+        if (gameData.trip_status === 'in_progress') {
+            travelStatusElement.textContent = '出游中';
+            travelStatusElement.classList.add('in-progress');
+            startTravelButton.disabled = true;
+            endTravelButton.disabled = false;
+        }
+        else{
+            travelStatusElement.textContent = '未出游';
+            travelStatusElement.classList.remove('in-progress');
+            startTravelButton.disabled = false;
+            endTravelButton.disabled = true;
+        }
+            // 显示当前使用的机票
+            if (gameData.trip_tickets && gameData.trip_tickets.length > 0) {
+                let html = '';
+                gameData.trip_tickets.forEach(ticket => {
+                    const destinationText = ticket.destination === "0" ? "随机目的地" : 
+                                          ticket.destination === "-1" ? "任意目的地" : 
+                                          `目的地 ${ticket.destination}`;
+                    
+                    html += `
+                        <div class="ticket-item">
+                            <div class="ticket-type">${getTicketTypeText(ticket.type)}</div>
+                            <div class="ticket-destination">${destinationText}</div>
+                            <div class="ticket-duration">出游时长: ${formatDuration(ticket.duration)}</div>
+                            <div class="ticket-actions">
+                                <button onclick="removeTicket('${ticket.key}')" class="secondary-button">移除</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                travelTicketsElement.innerHTML = html;
+            } else {
+                travelTicketsElement.innerHTML = '<p>没有使用中的机票</p>';
+            }
+        // } else {
+        //     travelStatusElement.textContent = '未出游';
+        //     travelStatusElement.classList.remove('in-progress');
+        //     startTravelButton.disabled = false;
+        //     endTravelButton.disabled = true;
+        //     travelTicketsElement.innerHTML = '<p>未出游状态</p>';
+        // }
+        
+    } catch (error) {
+        console.error('加载出游状态失败:', error);
+        travelStatusElement.textContent = '状态加载失败';
+    }
+}
+
+// 加载明信片图鉴
+async function loadPostcardGallery() {
+    const postcardGalleryElement = document.getElementById('postcardGallery');
+    const postcardCountElement = document.getElementById('postcardCount');
+    
+    postcardGalleryElement.innerHTML = '加载中...';
+    
+    try {
+
+        
+        // 检查是否有明信片集合
+        const postcards = gameData.postcard_discovered;
+        
+        if (postcards.length === 0) {
+            postcardGalleryElement.innerHTML = '<p>您还没有收集到明信片</p>';
+            postcardCountElement.textContent = '0';
+            return;
+        }
+        
+        postcardCountElement.textContent = postcards.length;
+        
+        let html = '';
+        postcards.forEach(postcard => {
+            const typeClass = postcard.postcardType === 'N' ? 'normal' : 
+                            postcard.postcardType === 'SR' ? 'rare' : 'ultra-rare';
+            
+            const typeText = postcard.postcardType === 'N' ? '普通' : 
+                           postcard.postcardType === 'SR' ? '稀有' : '珍稀';
+            
+            // 获取地点信息
+            const location = locationData[postcard.addressId.toString()];
+            
+            html += `
+                <div class="postcard-item ${typeClass}">
+                    <div class="postcard-type">${typeText}</div>
+                    <div class="postcard-place">${location.name}</div>
+                    <div class="postcard-desc">${location.description}</div>
+                    <div class="postcard-id">编号 ${postcard.postcardId}</div>
+                </div>
+            `;
+        });
+        
+        postcardGalleryElement.innerHTML = html;
+        
+    } catch (error) {
+        console.error('加载明信片图鉴失败:', error);
+        postcardGalleryElement.innerHTML = '<p>加载失败，请稍后再试</p>';
+    }
+}
+
+// 刷新机票商店
+async function refreshTicketShop() {
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/shop/refreshTickets`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('机票商店刷新成功!');
+            loadTicketShop();
+            updateCoins();
+        } else {
+            alert(`刷新失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('刷新机票商店失败:', error);
+        alert('操作失败，请稍后再试');
+    }
+}
+
+// 购买机票
+async function buyTicket(ticketKey) {
+    try {
+        // const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        // const response = await fetch(`${API_URL}/ops/user/buyTicket`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+        //     },
+        //     body: JSON.stringify({ ticket: ticketKey })
+        // });
+        
+        const data = await ApiManager.post('ops/user/buyTicket',{ticket:ticketKey});
+
+        
+        if (data.success) {
+            alert('机票购买成功!');
+            await RefreshUser();
+            loadTicketShop();
+            loadMyTickets();
+        } else {
+            alert(`购买失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('购买机票失败:', error);
+        alert('操作失败，请稍后再试');
+    }
+}
+
+// 使用机票
+async function useTicket(ticketKey) {
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/ops/user/useTicket`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ ticket: ticketKey })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('机票使用成功，已添加到行程!');
+            // 刷新用户信息
+            await RefreshUser();
+            loadMyTickets();
+            loadTravelStatus();
+        } else {
+            alert(`使用失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('使用机票失败:', error);
+        alert('操作失败，请稍后再试');
+    }
+}
+
+// 从行程中移除机票
+async function removeTicket(ticketKey) {
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/ops/user/removeTicket`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ ticket: ticketKey })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('机票已从行程中移除!');
+            loadMyTickets();
+            loadTravelStatus();
+        } else {
+            alert(`移除失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('移除机票失败:', error);
+        alert('操作失败，请稍后再试');
+    }
+}
+
+// 开始出游
+async function startTravel() {
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/ops/user/CatTrip`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        // 尝试解析响应为JSON
+        let data;
+        const responseText = await response.text();
+
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            data = {
+                success: response.ok,
+                message: responseText
+            };
+        }
+        
+        if (data.success) {
+            alert('出游开始!');
+            await RefreshUser();
+            loadTravelStatus();
+        } else {
+            alert(`开始出游失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('开始出游失败:', error);
+        alert('操作失败，请稍后再试');
+    }
+}
+
+// 结束出游
+async function endTravel() {
+    try {
+        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/ops/user/end`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('出游结束!');
+            loadTravelStatus();
+            loadPostcardGallery();
+        } else {
+            alert(`结束出游失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('结束出游失败:', error);
+        alert('操作失败，请稍后再试');
+    }
+}
+
+// 辅助函数 - 格式化机票类型文本
+function getTicketTypeText(type) {
+    switch(type) {
+        case 'regular': return '普通机票';
+        case 'premium': return '高级机票';
+        case 'business': return '商务机票';
+        case 'special': return '特殊机票';
+        default: return type;
+    }
+}
+
+// 辅助函数 - 格式化时长显示
+function formatDuration(milliseconds) {
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${hours}小时${minutes > 0 ? ` ${minutes}分钟` : ''}`;
+}
+
+// 添加直接初始化代码，确保即使没有正确调用window.onload也能工作
+document.addEventListener('DOMContentLoaded', function() {
+    // 确保元素存在再绑定事件
+    if (document.getElementById('refreshTicketShop')) {
+        document.getElementById('refreshTicketShop').addEventListener('click', refreshTicketShop);
+    }
+    
+    if (document.getElementById('startTravel')) {
+        document.getElementById('startTravel').addEventListener('click', startTravel);
+    }
+    
+    if (document.getElementById('endTravel')) {
+        document.getElementById('endTravel').addEventListener('click', endTravel);
+    }
+    
+    // 初始化选项卡
+    initTabs();
+    
+    // 加载数据
+    try {
+        loadTicketShop();
+        loadMyTickets(); 
+        loadTravelStatus();
+
+    } catch (error) {
+        console.error('加载旅行数据失败', error);
+    }
+});
+
+// 切换猫咪的准备出游状态
+async function toggleCatTravelReady(catId) {
+    const cat = currentGenerationCats.get(catId);
+    if (!cat) return;
+    
+    try {
+        
+        const data = await ApiManager.post('ops/user/setCatReady',{Cat:catId});
+        
+        if (data.success) {
+            // 更新本地状态
+            await RefreshUser();
+            // 更新显示
+            updateBreedingPoolDisplay();
+        } else {
+            alert(`操作失败: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        console.error('设置猫咪准备出游状态失败:', error);
+        alert('操作失败，请稍后再试');
     }
 }

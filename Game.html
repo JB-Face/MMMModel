@@ -25,15 +25,63 @@
             <!-- 商店区域 -->
             <div class="shop-section">
                 <h2>商店</h2>
-                <div class="parameter-group">
-                    <button id="openEncyclopedia" class="primary-button">打开猫咪图鉴</button>
+                <div class="shop-tabs">
+                    <button class="shop-tab-btn active" data-tab="cat-shop">猫咪商店</button>
+                    <button class="shop-tab-btn" data-tab="ticket-shop">机票商店</button>
+                </div>
 
+                <div class="shop-tab-content active" id="cat-shop">
+                    <div class="parameter-group">
+                        <button id="openEncyclopedia" class="primary-button">打开猫咪图鉴</button>
+                    </div>
+                    <div class="shop-controls">
+                        <button id="refreshShop" class="secondary-button">刷新商店（50金币）</button>
+                        <span id="shopCoins" class="coin-display">金币: 1000</span>
+                    </div>
+                    <div id="shopCats" class="shop-items"></div>
                 </div>
-                <div class="shop-controls">
-                    <button id="refreshShop" class="secondary-button">刷新商店（50金币）</button>
-                    <span id="shopCoins" class="coin-display">金币: 1000</span>
+
+                <div class="shop-tab-content" id="ticket-shop">
+                    <div class="shop-controls">
+                        <button id="refreshTicketShop" class="secondary-button">刷新机票商店（50金币）</button>
+                    </div>
+                    <div id="shopTickets" class="shop-items"></div>
                 </div>
-                <div id="shopCats" class="shop-items"></div>
+            </div>
+
+            <!-- 出游和机票管理区域 -->
+            <div class="travel-section">
+                <div class="travel-tabs">
+                    <button class="travel-tab-btn active" data-tab="my-tickets">我的机票</button>
+                    <button class="travel-tab-btn" data-tab="travel-plan">出游行程</button>
+                    <button class="travel-tab-btn" data-tab="postcard-gallery">明信片图鉴</button>
+                </div>
+
+                <!-- 我的机票 -->
+                <div class="travel-tab-content active" id="my-tickets">
+                    <h2>我的机票</h2>
+                    <div id="ticketInventory" class="tickets-display"></div>
+                </div>
+
+                <!-- 出游行程 -->
+                <div class="travel-tab-content" id="travel-plan">
+                    <h2>出游行程</h2>
+                    <div class="travel-status">
+                        <div id="travelStatus" class="status-display">未出游</div>
+                        <button id="startTravel" class="primary-button">开始出游</button>
+                        <button id="endTravel" class="secondary-button" disabled>结束出游</button>
+                    </div>
+                    <div id="travelTickets" class="tickets-display"></div>
+                </div>
+
+                <!-- 明信片图鉴 -->
+                <div class="travel-tab-content" id="postcard-gallery">
+                    <h2>明信片图鉴</h2>
+                    <div class="gallery-stats">
+                        <span>已收集: <span id="postcardCount">0</span> 张</span>
+                    </div>
+                    <div id="postcardGallery" class="gallery-display"></div>
+                </div>
             </div>
 
             <!-- 手动培育区域 -->
@@ -43,7 +91,8 @@
                     <div id="breedingPool" class="cats-display"></div>
                     <button id="addRandomCat" class="secondary-button">添加随机猫咪</button>
                     <button id="getgenevalue" class="secondary-button">输出基因数据</button>
-                    <button id="showGene" class="secondary-button">显示基因: 关</button>
+                    <button id="showGene" class="secondary-button">显示基因</button>
+                    <button id="hideGene" class="secondary-button">隐藏基因</button>
                 </div>
 
                 <!-- 添加下一天按钮 -->
@@ -51,7 +100,7 @@
                     <button id="nextGeneration" class="primary-button">进入下一天</button>
                 </div>
 
-                <div class="breeding-pair">
+                <!-- <div class="breeding-pair">
                     <h2>配对选择</h2>
                     <div class="pair-selection">
                         <select id="parent1" class="parent-select" aria-label="选择父本">
@@ -63,7 +112,7 @@
                         </select>
                         <button id="breedPair" class="primary-button">配对</button>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="offspring-section">
                     <h2>后代展示</h2>

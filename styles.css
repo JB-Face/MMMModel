@@ -216,8 +216,8 @@ body {
 .cats-display {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
+    gap: 10px;
+    padding: 10px 0;
 }
 
 .generation-container {
@@ -407,8 +407,8 @@ body {
 .cats-display {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
+    gap: 10px;
+    padding: 10px 0;
 }
 
 .cat-card {
@@ -418,11 +418,13 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-left: 4px solid #3498db;
     transition: transform 0.2s ease;
+    width: 200px;
+    text-align: center;
 }
 
 .cat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .cat-card.high-rarity {
@@ -432,32 +434,43 @@ body {
 
 .cat-card .cat-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 10px;
+    flex-direction: column;
+    margin-bottom: 5px;
+}
+
+.cat-card .cat-header h3 {
+    margin: 0 0 5px 0;
+    font-size: 0.95em;
 }
 
 .cat-card .cat-name {
-    font-size: 1.1em;
-    padding: 5px 0;
-    margin: 5px 0;
+    font-size: 1.2em;
+    padding: 3px 0;
+    margin: 3px 0;
     font-weight: bold;
     color: #2c3e50;
 }
 
 .cat-card .cat-attribute {
-    padding: 5px;
-    margin: 5px 0;
-    font-size: 0.95em;
+    padding: 3px;
+    margin: 3px 0;
+    font-size: 0.85em;
     background: #f8f9fa;
     border-radius: 4px;
 }
 
+.cat-card .cat-actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 8px;
+}
+
 .cat-card .delete-button {
-    width: 25%;
-    padding: 8px 12px;
-    margin-top: 10px;
-    font-size: 0.95em;
+    padding: 6px 10px;
+    margin-top: 5px;
+    font-size: 0.85em;
     background: #e74c3c;
     color: white;
     border: none;
@@ -472,14 +485,13 @@ body {
 
 .cat-gender {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 3px 8px;
     border-radius: 15px;
     font-weight: bold;
     color: #fff;
-    margin-left: 10px;
-    font-size: 1.1em;
+    margin: 5px 3px;
+    font-size: 0.85em;
     background-color: #2ecc71;
-    /* 默认绿色（公） */
 }
 
 .cat-gender.gender-母 {
@@ -941,24 +953,39 @@ body {
 /* 修改培育池中猫咪卡片的宽度 */
 
 #breedingPool .cat-card {
-    width: 375px;
-    /* 250px的1.5倍 */
-    margin: 0 auto;
+    width: 200px;
+    padding: 10px;
+    margin: 3px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 #breedingPool.cats-display {
-    grid-template-columns: repeat(auto-fill, minmax(375px, 1fr));
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: 5px;
+    max-width: 100%;
+}
+
+#breedingPool .cat-card {
+    width: 200px;
+    padding: 10px;
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 @media (max-width: 1200px) {
     #breedingPool.cats-display {
-        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
     #breedingPool.cats-display {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
 }
 
@@ -1191,18 +1218,19 @@ body {
 }
 
 .travel-button {
-    background: #4CAF50;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.95em;
+    background: #3498db;
     color: white;
-    padding: 8px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 10px;
-    transition: background-color 0.3s;
+    transition: background 0.2s ease;
 }
 
 .travel-button:hover {
-    background: #45a049;
+    background: #2980b9;
 }
 
 .travel-button:disabled {
@@ -1332,10 +1360,10 @@ body {
 }
 
 .color-preview {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin: 0 auto 10px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    margin: 10px 0;
     border: 3px solid white;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
     background-position: center;
@@ -1416,7 +1444,7 @@ body {
 
 .cat-info-row .cat-name {
     font-weight: bold;
-    font-size: 1.1em;
+    font-size: 1.4em;
     flex-grow: 1;
 }
 
@@ -1433,4 +1461,241 @@ body {
 
 .cat-info-row .delete-button:hover {
     background-color: #ff3333;
+}
+
+
+/* 商店和出游选项卡样式 */
+
+.shop-tabs,
+.travel-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.shop-tab-btn,
+.travel-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.shop-tab-btn.active,
+.travel-tab-btn.active {
+    border-bottom: 2px solid #4CAF50;
+    font-weight: bold;
+}
+
+.shop-tab-content,
+.travel-tab-content {
+    display: none;
+}
+
+.shop-tab-content.active,
+.travel-tab-content.active {
+    display: block;
+}
+
+
+/* 机票展示样式 */
+
+.tickets-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.ticket-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    width: 200px;
+    background-color: #f9f9f9;
+}
+
+.ticket-type {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.ticket-destination {
+    margin: 5px 0;
+}
+
+.ticket-actions {
+    margin-top: 10px;
+}
+
+
+/* 明信片图鉴样式 */
+
+.gallery-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.postcard-item {
+    width: 150px;
+    height: 200px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.postcard-item.normal {
+    background-color: #f0f0f0;
+}
+
+.postcard-item.rare {
+    background-color: #e0f0ff;
+}
+
+.postcard-item.ultra-rare {
+    background-color: #ffe0e0;
+}
+
+.postcard-place {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.postcard-type {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.travel-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.status-display {
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+}
+
+.status-display.in-progress {
+    background-color: #e0f0ff;
+    color: #0066cc;
+}
+
+.status-display.completed {
+    background-color: #e0ffe0;
+    color: #006600;
+}
+
+
+/* 旅行部分整体样式 */
+
+.travel-section {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+/* 猫咪卡片中的操作按钮容器 */
+
+.cat-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+
+/* 出游按钮样式 */
+
+.travel-button {
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.95em;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.travel-button:hover {
+    background: #2980b9;
+}
+
+
+/* 已准备出游状态的按钮样式 */
+
+.travel-button-ready {
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.95em;
+    background: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.travel-button-ready:hover {
+    background: #d35400;
+}
+
+
+/* 确保删除按钮样式与出游按钮一致 */
+
+.cat-card .delete-button {
+    width: auto;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.95em;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.cat-card .delete-button:hover {
+    background: #c0392b;
+}
+
+.postcard-desc {
+    font-size: 0.85em;
+    color: #666;
+    margin: 5px 0;
+    text-align: center;
+    font-style: italic;
+}
+
+
+/* 猫咪已出门状态的文本样式 */
+
+.cat-travel-status {
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.95em;
+    color: #777;
+    font-style: italic;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    display: inline-block;
 }

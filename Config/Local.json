@@ -1,0 +1,140 @@
+{
+    "Local": {
+        "0": {
+            "name": "北京",
+            "description": "北京故宫博物院"
+        },
+        "1": {
+            "name": "上海",
+            "description": "上海东方明珠"
+        },
+        "2": {
+            "name": "天津",
+            "description": "天津海河"
+        },
+        "3": {
+            "name": "重庆",
+            "description": "重庆洪崖洞"
+        },
+        "4": {
+            "name": "河北",
+            "description": "河北承德避暑山庄"
+        },
+        "5": {
+            "name": "山西",
+            "description": "山西平遥古城"
+        },
+        "6": {
+            "name": "辽宁",
+            "description": "辽宁沈阳故宫"
+        },
+        "7": {
+            "name": "吉林",
+            "description": "吉林长白山"
+        },
+        "8": {
+            "name": "黑龙江",
+            "description": "黑龙江雪乡"
+        },
+        "9": {
+            "name": "江苏",
+            "description": "江苏苏州园林"
+        },
+        "10": {
+            "name": "浙江",
+            "description": "浙江西湖"
+        },
+        "11": {
+            "name": "安徽",
+            "description": "安徽黄山"
+        },
+        "12": {
+            "name": "福建",
+            "description": "福建土楼"
+        },
+        "13": {
+            "name": "江西",
+            "description": "江西庐山"
+        },
+        "14": {
+            "name": "山东",
+            "description": "山东泰山"
+        },
+        "15": {
+            "name": "河南",
+            "description": "河南少林寺"
+        },
+        "16": {
+            "name": "湖北",
+            "description": "湖北武当山"
+        },
+        "17": {
+            "name": "湖南",
+            "description": "湖南张家界"
+        },
+        "18": {
+            "name": "广东",
+            "description": "广东广州塔"
+        },
+        "19": {
+            "name": "海南",
+            "description": "海南三亚湾"
+        },
+        "20": {
+            "name": "四川",
+            "description": "四川九寨沟"
+        },
+        "21": {
+            "name": "贵州",
+            "description": "贵州黄果树瀑布"
+        },
+        "22": {
+            "name": "云南",
+            "description": "云南丽江古城"
+        },
+        "23": {
+            "name": "陕西",
+            "description": "陕西兵马俑"
+        },
+        "24": {
+            "name": "甘肃",
+            "description": "甘肃敦煌莫高窟"
+        },
+        "25": {
+            "name": "青海",
+            "description": "青海湖"
+        },
+        "26": {
+            "name": "台湾",
+            "description": "台湾日月潭"
+        },
+        "27": {
+            "name": "内蒙古",
+            "description": "内蒙古呼伦贝尔草原"
+        },
+        "28": {
+            "name": "广西",
+            "description": "广西桂林山水"
+        },
+        "29": {
+            "name": "西藏",
+            "description": "西藏布达拉宫"
+        },
+        "30": {
+            "name": "宁夏",
+            "description": "宁夏沙湖"
+        },
+        "31": {
+            "name": "新疆",
+            "description": "新疆天山天池"
+        },
+        "32": {
+            "name": "香港",
+            "description": "香港维多利亚港"
+        },
+        "33": {
+            "name": "澳门",
+            "description": "澳门大三巴牌坊"
+        }
+    }
+}
