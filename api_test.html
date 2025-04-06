@@ -471,6 +471,25 @@
                     <pre id="start-journey-result">等待操作...</pre>
                 </div>
 
+                <!-- CatTrip出游接口详细测试 -->
+                <div class="form-group">
+                    <h3>CatTrip出游接口详细测试</h3>
+                    <div class="form-group">
+                        <label for="cat-trip-cat-key">猫咪Key (可选):</label>
+                        <input type="text" id="cat-trip-cat-key" placeholder="如果不填写则使用当前已准备出游的猫咪">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat-trip-ticket-key">机票Key (可选):</label>
+                        <input type="text" id="cat-trip-ticket-key" placeholder="如果不填写则使用当前已选的机票">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat-trip-destination-id">目的地ID (可选):</label>
+                        <input type="text" id="cat-trip-destination-id" placeholder="如果不填写则根据机票决定">
+                    </div>
+                    <button onclick="testCatTrip()">测试CatTrip</button>
+                    <pre id="cat-trip-test-result">等待操作...</pre>
+                </div>
+
                 <!-- 查看当前出游状态 -->
                 <div class="form-group">
                     <h3>查看出游状态</h3>
@@ -1651,7 +1670,7 @@
                     return;
                 }
 
-                const response = await fetch(`${API_URL}/ops/user/status`, {
+                const response = await fetch(`${API_URL}/auth/me`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1661,7 +1680,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    resultElement.textContent = JSON.stringify(data, null, 2);
+                    resultElement.textContent = JSON.stringify(data.trip.status, null, 2);
                 } else {
                     resultElement.textContent = `错误: ${JSON.stringify(data, null, 2)}`;
                 }
