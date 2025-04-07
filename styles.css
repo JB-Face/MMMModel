@@ -408,7 +408,7 @@ body {
 
 .cats-display {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
     padding: 10px 0;
 }
@@ -424,12 +424,14 @@ body {
     text-align: center;
 }
 
-@media (min-width: 768px) {
+
+/* @media (max-width: 100px) {
     .cat-card {
+        background: rgb(242, 19, 19);
         width: 5px;
         margin-right: 1rem;
     }
-}
+} */
 
 .cat-card:hover {
     transform: translateY(-5px);
@@ -1003,10 +1005,23 @@ body {
 
 @media (max-width: 480px) {
     #breedingPool.cats-display {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-auto-rows: minmax(100px, auto);
+        /* 自动调整行高 */
+        gap: 1rem;
     }
     #breedingPool .cat-card {
         width: 100%;
+    }
+    #breedingPool .cat-card .cat-name {
+        font-size: 0.75em;
+    }
+    #breedingPool .cat-card .cat-header h3 {
+        font-size: 0.75em;
+    }
+    #breedingPool .cat-card .cat-attribute {
+        font-size: 0.1em;
     }
 }
 
@@ -1262,7 +1277,58 @@ body {
 }
 
 
-/* 添加图鉴面板样式 */
+/* 图鉴面板专用样式 */
+
+.encyclopedia-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 900px;
+    max-height: 80vh;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+}
+
+.encyclopedia-panel.active {
+    display: block;
+}
+
+.encyclopedia-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.encyclopedia-panel .panel-header h2 {
+    margin: 0;
+    color: #343a40;
+}
+
+.encyclopedia-panel .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #495057;
+    cursor: pointer;
+}
+
+.encyclopedia-panel .panel-content {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(80vh - 60px);
+}
+
+
+/* 保持原始的.panel定义用于兼容其他地方 */
 
 .panel {
     position: fixed;
@@ -1282,34 +1348,6 @@ body {
 
 .panel.active {
     display: block;
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.panel-header h2 {
-    margin: 0;
-    color: #343a40;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #495057;
-    cursor: pointer;
-}
-
-.panel-content {
-    padding: 20px;
-    overflow-y: auto;
-    max-height: calc(80vh - 60px);
 }
 
 
@@ -1710,4 +1748,70 @@ body {
     background-color: #f0f0f0;
     border-radius: 4px;
     display: inline-block;
+}
+
+
+/* 折叠面板样式 */
+
+.collapsible-panel {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--background-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    background: var(--secondary-color-light);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.panel-header.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.panel-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+    padding: 0 1rem;
+}
+
+.panel-content.open {
+    max-height: 2000px;
+    /* 足够大的高度以容纳内容 */
+    padding: 1rem;
+}
+
+
+/* 移动端优化 */
+
+@media (max-width: 768px) {
+    .panel-header h2 {
+        font-size: 1.1rem;
+    }
+    .shop-items {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+    .panel-content.open {
+        padding: 0.8rem;
+    }
 }

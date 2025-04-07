@@ -3242,7 +3242,7 @@ function openEncyclopedia() {
         // 创建图鉴面板
         panel = document.createElement('div');
         panel.id = 'encyclopediaPanel';
-        panel.className = 'panel';
+        panel.className = 'encyclopedia-panel';
         
         // 添加内容
         panel.innerHTML = `
@@ -3287,6 +3287,7 @@ function openEncyclopedia() {
         // 直接显示面板
         console.log('直接显示面板');
         panel.style.display = 'block';
+        panel.classList.add('active');
         console.log('面板显示已设置为block');
     } catch (error) {
         console.error('打开图鉴出错:', error);
@@ -3301,6 +3302,7 @@ function closeEncyclopedia() {
     if (panel) {
         console.log('找到图鉴面板,关闭它');
         panel.style.display = 'none';
+        panel.classList.remove('active');
         console.log('面板已隐藏');
     } else {
         console.log('找不到图鉴面板');

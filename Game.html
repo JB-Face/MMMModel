@@ -10,11 +10,7 @@
 
 <body>
     <div class="container">
-        <header class="main-header">
-            <h1>MMM_Model 0.5</h1>
-            <a href="javascript:void(0)" onclick="logout()" class="back-link">退出登录</a>
-            <a href="api_test.html" class="back-link">API测试</a>
-        </header>
+
 
         <!-- 游戏主要内容 -->
         <div class="game-content">
@@ -22,69 +18,79 @@
 
             </div>
 
-            <!-- 商店区域 -->
-            <div class="shop-section">
-                <h2>商店</h2>
-                <span id="shopCoins" class="coin-display">金币: 1000</span>
-                <div class="shop-tabs">
-                    <button class="shop-tab-btn active" data-tab="cat-shop">猫咪商店</button>
-                    <button class="shop-tab-btn" data-tab="ticket-shop">机票商店</button>
+            <!-- 商店区域 - 改为折叠面板 -->
+            <div class="collapsible-panel">
+                <div class="panel-header" onclick="togglePanel('shop-section')">
+                    <h2>商店</h2>
+                    <span class="toggle-icon">▼</span>
                 </div>
-
-                <div class="shop-tab-content active" id="cat-shop">
-                    <div class="parameter-group">
-                        <button id="openEncyclopedia" class="primary-button">打开猫咪图鉴</button>
+                <div class="panel-content" id="shop-section">
+                    <span id="shopCoins" class="coin-display">金币: 1000</span>
+                    <div class="shop-tabs">
+                        <button class="shop-tab-btn active" data-tab="cat-shop">猫咪商店</button>
+                        <button class="shop-tab-btn" data-tab="ticket-shop">机票商店</button>
                     </div>
-                    <div class="shop-controls">
-                        <button id="refreshShop" class="secondary-button">刷新商店（50金币）</button>
 
+                    <div class="shop-tab-content active" id="cat-shop">
+                        <div class="shop-controls">
+                            <button id="refreshShop" class="secondary-button">刷新商店（50金币）</button>
+                        </div>
+                        <div id="shopCats" class="shop-items"></div>
                     </div>
-                    <div id="shopCats" class="shop-items"></div>
-                </div>
 
-                <div class="shop-tab-content" id="ticket-shop">
-                    <div id="shopTickets" class="shop-items"></div>
+                    <div class="shop-tab-content" id="ticket-shop">
+                        <div id="shopTickets" class="shop-items"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 出游和机票管理区域 -->
-            <div class="travel-section">
-                <div class="travel-tabs">
-                    <button class="travel-tab-btn active" data-tab="my-tickets">我的机票</button>
-                    <button class="travel-tab-btn" data-tab="travel-plan">出游行程</button>
-                    <button class="travel-tab-btn" data-tab="postcard-gallery">明信片图鉴</button>
+            <!-- 出游和机票管理区域 - 也改为折叠面板 -->
+            <div class="collapsible-panel">
+                <div class="panel-header" onclick="togglePanel('travel-section')">
+                    <h2>出游与机票</h2>
+                    <span class="toggle-icon">▼</span>
                 </div>
-
-                <!-- 我的机票 -->
-                <div class="travel-tab-content active" id="my-tickets">
-                    <h2>我的机票</h2>
-                    <div id="ticketInventory" class="tickets-display"></div>
-                </div>
-
-                <!-- 出游行程 -->
-                <div class="travel-tab-content" id="travel-plan">
-                    <h2>出游行程</h2>
-                    <div class="travel-status">
-                        <div id="travelStatus" class="status-display">未出游</div>
-                        <button id="startTravel" class="primary-button">开始出游</button>
-                        <button id="endTravel" class="secondary-button" disabled>结束出游</button>
+                <div class="panel-content" id="travel-section">
+                    <div class="travel-tabs">
+                        <button class="travel-tab-btn active" data-tab="my-tickets">我的机票</button>
+                        <button class="travel-tab-btn" data-tab="travel-plan">出游行程</button>
+                        <button class="travel-tab-btn" data-tab="postcard-gallery">明信片图鉴</button>
                     </div>
-                    <div id="travelTickets" class="tickets-display"></div>
-                </div>
 
-                <!-- 明信片图鉴 -->
-                <div class="travel-tab-content" id="postcard-gallery">
-                    <h2>明信片图鉴</h2>
-                    <div class="gallery-stats">
-                        <span>已收集: <span id="postcardCount">0</span> 张</span>
+                    <!-- 我的机票 -->
+                    <div class="travel-tab-content active" id="my-tickets">
+                        <h3>我的机票</h3>
+                        <div id="ticketInventory" class="tickets-display"></div>
                     </div>
-                    <div id="postcardGallery" class="gallery-display"></div>
+
+                    <!-- 出游行程 -->
+                    <div class="travel-tab-content" id="travel-plan">
+                        <h3>出游行程</h3>
+                        <div class="travel-status">
+                            <div id="travelStatus" class="status-display">未出游</div>
+                            <button id="startTravel" class="primary-button">开始出游</button>
+                            <button id="endTravel" class="secondary-button" disabled>结束出游</button>
+                        </div>
+                        <div id="travelTickets" class="tickets-display"></div>
+                    </div>
+
+                    <!-- 明信片图鉴 -->
+                    <div class="travel-tab-content" id="postcard-gallery">
+                        <h3>明信片图鉴</h3>
+                        <div class="gallery-stats">
+                            <span>已收集: <span id="postcardCount">0</span> 张</span>
+                        </div>
+                        <div id="postcardGallery" class="gallery-display"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- 手动培育区域 -->
             <div class="manual-breeding-section">
                 <div class="breeding-pool">
+                    <div class="parameter-group">
+                        <button id="openEncyclopedia" class="primary-button">打开猫咪图鉴</button>
+                    </div>
                     <h2>培育池</h2>
                     <div id="breedingPool" class="cats-display"></div>
                     <button id="addRandomCat" class="secondary-button">添加随机猫咪</button>
@@ -112,25 +118,13 @@
                     </div>
                 </div> -->
 
-                <div class="offspring-section">
-                    <h2>后代展示</h2>
-                    <div id="offspringDisplay" class="cats-display"></div>
-                </div>
-            </div>
 
-            <!-- 结果展示区域 -->
-            <div class="results-section">
-                <div class="breeding-history">
-                    <div class="history-header">
-                        <h2>培育历史</h2>
-                        <div class="history-actions">
-                            <button id="exportResults" class="secondary-button">导出结果</button>
-                            <button id="clearResults" class="secondary-button">清空结果</button>
-                        </div>
-                    </div>
-                    <div id="breedingResults" class="history-content"></div>
-                </div>
             </div>
+            <header class="main-header">
+                <a href="javascript:void(0)" onclick="logout()" class="back-link">退出登录</a>
+                <a href="api_test.html" class="back-link">API测试</a>
+            </header>
+
         </div>
     </div>
 
@@ -148,6 +142,17 @@
 
         function APITest() {
             window.open('api_test.html', 'API测试', 'width=800,height=600');
+        }
+
+        // 折叠面板切换函数
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            panel.classList.toggle('open');
+            const header = panel.previousElementSibling;
+            header.classList.toggle('active');
+
+            // 保存状态到本地存储
+            localStorage.setItem(panelId + '-state', panel.classList.contains('open'));
         }
 
         // 退出登录功能
@@ -172,6 +177,20 @@
                 // 如果未登录，跳转回登录页
                 window.location.href = 'index.html';
                 return;
+            }
+
+            // 初始化折叠面板状态
+            const shopPanel = document.getElementById('shop-section');
+            const travelPanel = document.getElementById('travel-section');
+
+            if (localStorage.getItem('shop-section-state') === 'true') {
+                shopPanel.classList.add('open');
+                shopPanel.previousElementSibling.classList.add('active');
+            }
+
+            if (localStorage.getItem('travel-section-state') === 'true') {
+                travelPanel.classList.add('open');
+                travelPanel.previousElementSibling.classList.add('active');
             }
 
             // 已登录，启动游戏
