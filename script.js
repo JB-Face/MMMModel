@@ -2290,10 +2290,9 @@ function displayShopCats() {
         catCard.innerHTML = `
             <div class="cat-header">
                 <h3>${cat.geneData.Color}</h3>
-                <span class="cat-gender gender-${cat.geneData.性别.value}">${cat.geneData.性别.value}</span>
-                <span class="cat-gender gender-稀有度">${cat.geneData.totalRarity}</span>
+                
             </div>
-            <div class="cat-name">${cat.geneData.name || '未知'}</div>
+            <span class="cat-gender gender-${cat.geneData.性别.value}">${cat.geneData.性别.value}</span>
             ${displayCatAttributes(cat.geneData)}
             <p>价格: ${Math.floor(cat.price)} 金币</p>
             <button onclick="addShopCatToPool(${index})" class="primary-button">购买</button>
