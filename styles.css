@@ -1393,6 +1393,19 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+@media (max-width: 480px) {
+    #color-card {
+        width: 45%;
+    }
+    #encyclopediaContent {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-auto-rows: minmax(100px, auto);
+        /* 自动调整行高 */
+        gap: 1rem;
+    }
+}
+
 .color-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
