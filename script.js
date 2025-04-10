@@ -6,7 +6,7 @@
 const ApiManager = {
     // 获取存储的API URL或使用默认值
     getApiUrl: function() {
-        return localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        return localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
     },
 
     // 在页面上显示当前API URL
@@ -2526,6 +2526,7 @@ function updateBreedingPoolDisplay() {
                 <h3>状态：${state}</h3>
                 <div class="cat-actions">
                     <button onclick="removeCatFromPool('${key}')" class="delete-button">回收</button>
+                    <button class="action-btn share-btn" title="分享" onclick="shareCat('${cat.id}')">📤</button>
                     ${isInTrip 
                         ? `<span class="cat-travel-status">已出门</span>` 
                         : `<button onclick="toggleCatTravelReady('${key}')" class="${travelButtonClass}">${travelButtonText}</button>`
@@ -3757,19 +3758,59 @@ function initTabs() {
             // 激活点击的选项卡
             this.classList.add('active');
             document.getElementById(this.dataset.tab).classList.add('active');
+            
+            // 根据标签加载相应内容
+            const tabId = this.dataset.tab;
+            if (tabId === 'cat-shop') {
+                // 刷新猫咪商店
+                generateShopCats();
+            } else if (tabId === 'ticket-shop') {
+                // 加载机票商店
+                loadTicketShop();
+            }
         });
     });
     
     // 出游选项卡
     document.querySelectorAll('.travel-tab-btn').forEach(button => {
         button.addEventListener('click', function() {
+            // 移除所有激活状态
             document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.travel-tab-content').forEach(content => content.classList.remove('active'));
             
+            // 激活点击的选项卡
             this.classList.add('active');
             document.getElementById(this.dataset.tab).classList.add('active');
+            
+            // 根据标签加载相应内容
+            const tabId = this.dataset.tab;
+            if (tabId === 'my-tickets') {
+                loadMyTickets();
+            } else if (tabId === 'travel-plan') {
+                loadTravelStatus();
+            } else if (tabId === 'postcard-gallery') {
+                loadPostcardGallery();
+            } else if (tabId === 'my-shares') {
+                loadMyShares();
+            }
         });
     });
+
+
+    const mySharesBtn = document.querySelector('.travel-tab-btn[data-tab="my-shares"]');
+    if (mySharesBtn) {
+        mySharesBtn.addEventListener('click', function() {
+            // 切换标签页
+            document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            document.querySelectorAll('.travel-tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('my-shares').classList.add('active');
+            
+            // 加载分享内容
+            loadMyShares();
+        });
+    }
 }
 
 // 加载机票商店
@@ -3778,7 +3819,7 @@ async function loadTicketShop() {
     shopTicketsElement.innerHTML = '加载中...';
     
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/ops/test/getShopTickets`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -3830,7 +3871,7 @@ async function loadMyTickets() {
     ticketInventoryElement.innerHTML = '加载中...';
     
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/ops/test/getTickets`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -3883,7 +3924,7 @@ async function loadTravelStatus() {
     const travelTicketsElement = document.getElementById('travelTickets');
     
     try {
-        // const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        // const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         // const response = await fetch(`${API_URL}/ops/user/status`, {
         //     headers: {
         //         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -3994,7 +4035,7 @@ async function loadPostcardGallery() {
 // 刷新机票商店
 async function refreshTicketShop() {
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/shop/refreshTickets`, {
             method: 'POST',
             headers: {
@@ -4020,7 +4061,7 @@ async function refreshTicketShop() {
 // 购买机票
 async function buyTicket(ticketKey) {
     try {
-        // const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        // const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         // const response = await fetch(`${API_URL}/ops/user/buyTicket`, {
         //     method: 'POST',
         //     headers: {
@@ -4050,7 +4091,7 @@ async function buyTicket(ticketKey) {
 // 使用机票
 async function useTicket(ticketKey) {
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/ops/user/useTicket`, {
             method: 'POST',
             headers: {
@@ -4080,7 +4121,7 @@ async function useTicket(ticketKey) {
 // 从行程中移除机票
 async function removeTicket(ticketKey) {
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/ops/user/removeTicket`, {
             method: 'POST',
             headers: {
@@ -4108,7 +4149,7 @@ async function removeTicket(ticketKey) {
 // 开始出游
 async function startTravel() {
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/ops/user/CatTrip`, {
             method: 'POST',
             headers: {
@@ -4145,7 +4186,7 @@ async function startTravel() {
 // 结束出游
 async function endTravel() {
     try {
-        const API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        const API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
         const response = await fetch(`${API_URL}/ops/user/end`, {
             method: 'POST',
             headers: {
@@ -4238,3 +4279,566 @@ async function toggleCatTravelReady(catId) {
         alert('操作失败，请稍后再试');
     }
 }
+
+// 分享功能
+async function shareCat(catKey) {
+    try {
+        console.log('开始分享猫咪，ID:', catKey);
+        
+        // 验证登录状态
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showStatusMessage('请先登录', 'error');
+            return;
+        }
+
+        // 检查猫咪是否存在
+        const cat = currentGenerationCats.get(catKey);
+        if (!cat) {
+            console.error('找不到猫咪:', catKey);
+            showStatusMessage('找不到该猫咪，请刷新页面后重试', 'error');
+            return;
+        }
+
+        // 使用正确的key
+        const correctKey = cat.key || catKey;
+        console.log('使用的猫咪key:', correctKey);
+        
+        const response = await ApiManager.post('share/generate', {
+            type: 'cat',
+            itemId: correctKey
+        });
+        
+        console.log('分享请求响应:', response);
+        
+        if (response.shareUrl) {
+            showShareDialog(response.shareUrl, response.shareCode);
+        } else {
+            console.error('分享响应中没有URL:', response);
+            showStatusMessage('分享失败：服务器响应异常', 'error');
+        }
+    } catch (error) {
+        console.error('分享猫咪错误:', error);
+        showStatusMessage(`分享失败: ${error.message}`, 'error');
+    }
+}
+
+async function shareTicket(ticketKey) {
+    try {
+        // 验证登录状态
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showStatusMessage('请先登录', 'error');
+            return;
+        }
+        
+        const response = await ApiManager.post('share/generate', {
+            type: 'ticket',
+            itemId: ticketKey
+        });
+        
+        if (response.shareUrl) {
+            showShareDialog(response.shareUrl, response.shareCode);
+        } else {
+            showStatusMessage('分享失败', 'error');
+        }
+    } catch (error) {
+        console.error('分享机票错误:', error);
+        showStatusMessage(`分享失败: ${error.message}`, 'error');
+    }
+}
+
+// 显示分享弹窗
+function showShareDialog(shareUrl, shareCode) {
+    console.log('显示分享对话框:', { shareUrl, shareCode });
+    
+    // 创建对话框
+    const dialog = document.createElement('div');
+    dialog.className = 'share-dialog';
+    dialog.innerHTML = `
+        <div class="share-dialog-header">
+            <h3>分享</h3>
+            <button class="close-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="share-dialog-content">
+            <div id="qrcode-container" class="qrcode-container">
+                <div id="qrcode"></div>
+            </div>
+            <div class="share-info">
+                <p>使用此链接或二维码分享：</p>
+                <div class="share-url-container">
+                    <input type="text" readonly value="${shareUrl}" class="share-url-input" />
+                    <button class="copy-btn" onclick="copyShareUrl(this)">复制</button>
+                </div>
+                <p class="share-code">分享码: <span>${shareCode}</span></p>
+                <p class="share-note">扫描二维码或复制链接可查看、添加猫咪或获取机票</p>
+            </div>
+        </div>
+    `;
+
+    // 添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .share-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-width: 90%;
+            width: 400px;
+        }
+        
+        .share-dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .qrcode-container {
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 128px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .share-url-container {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .share-url-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .copy-btn {
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .copy-btn:hover {
+            background: #45a049;
+        }
+        
+        .share-code {
+            margin: 10px 0;
+            color: #666;
+        }
+        
+        .share-note {
+            font-size: 0.9em;
+            color: #999;
+            text-align: center;
+        }
+    `;
+    
+    document.head.appendChild(style);
+    document.body.appendChild(dialog);
+
+    // 生成二维码
+    setTimeout(() => {
+        try {
+            console.log('开始生成二维码');
+            if (typeof QRCode === 'undefined') {
+                throw new Error('QRCode library not loaded');
+            }
+            
+            const qrcodeElement = document.getElementById('qrcode');
+            if (!qrcodeElement) {
+                throw new Error('QRCode container not found');
+            }
+            
+            // 清空容器
+            qrcodeElement.innerHTML = '';
+            
+            const qrcode = new QRCode(qrcodeElement, {
+                text: shareUrl,
+                width: 128,
+                height: 128,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            console.log('二维码生成完成');
+        } catch (error) {
+            console.error('生成二维码失败:', error);
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            if (qrcodeContainer) {
+                qrcodeContainer.innerHTML = `
+                    <div style="text-align: center; padding: 10px;">
+                        <p style="color: #666;">二维码生成失败</p>
+                        <p style="color: #999; font-size: 0.9em;">请使用分享链接</p>
+                    </div>
+                `;
+            }
+        }
+    }, 100); // 给页面一点时间加载QRCode库
+}
+
+// 复制分享链接
+function copyShareUrl(button) {
+    const container = button.closest('.share-dialog-content');
+    const input = container.querySelector('.share-url-input');
+    input.select();
+    document.execCommand('copy');
+    
+    // 显示复制成功提示
+    const originalText = button.textContent;
+    button.textContent = '已复制';
+    button.style.backgroundColor = '#45a049';
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.style.backgroundColor = '';
+    }, 1500);
+}
+
+// 修改渲染猫咪卡片函数，添加分享按钮
+function renderCatCard(cat, container, options = {}) {
+    const catCard = document.createElement('div');
+    catCard.className = 'cat-card';
+    catCard.dataset.key = cat.key;
+    
+    // 基本信息部分
+    let cardHTML = `
+        <div class="cat-header">
+            <h3>${cat.name || '未命名猫咪'}</h3>
+            <div class="cat-actions">
+                <button class="action-btn rename-btn" title="重命名" data-key="${cat.key}">✏️</button>
+                <button class="action-btn share-btn" title="分享" onclick="shareCat('${cat.key}')">📤</button>
+    `;
+    
+    // 添加可选按钮
+    if (options.showDelete !== false) {
+        cardHTML += `<button class="action-btn delete-btn" title="删除" data-key="${cat.key}">🗑️</button>`;
+    }
+    
+    if (options.showBreed) {
+        cardHTML += `<button class="action-btn breed-btn" title="培育" data-key="${cat.key}">🧬</button>`;
+    }
+    
+    cardHTML += `
+            </div>
+        </div>
+        <div class="cat-body">
+            <div class="cat-attribute">性别: <span>${cat.性别 ? cat.性别.value : '未知'}</span></div>
+            <div class="cat-attribute">颜色: <span>${cat.color || calculateColor(cat)}</span></div>
+    `;
+    
+    // 显示基因信息
+    if (showGene) {
+        cardHTML += `<div class="cat-gene">基因: <span>${formatGene(cat.Gene)}</span></div>`;
+    }
+    
+    // 添加卡片状态
+    if (cat.state) {
+        let stateClass = '';
+        switch (cat.state) {
+            case 'breeding':
+                stateClass = 'breeding-state';
+                break;
+            case 'cooldown':
+                stateClass = 'cooldown-state';
+                break;
+            case 'ready':
+                stateClass = 'ready-state';
+                break;
+            case 'Outdoor':
+                stateClass = 'outdoor-state';
+                break;
+        }
+        
+        cardHTML += `<div class="cat-state ${stateClass}">${getCatStateText(cat)}</div>`;
+    }
+    
+    cardHTML += `
+        </div>
+    `;
+    
+    catCard.innerHTML = cardHTML;
+    container.appendChild(catCard);
+    
+    // 添加事件监听器
+    const renameBtn = catCard.querySelector('.rename-btn');
+    if (renameBtn) {
+        renameBtn.addEventListener('click', function() {
+            const key = this.dataset.key;
+            renameCat(key);
+        });
+    }
+    
+    const deleteBtn = catCard.querySelector('.delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            const key = this.dataset.key;
+            deleteCat(key);
+        });
+    }
+    
+    // 培育按钮事件
+    const breedBtn = catCard.querySelector('.breed-btn');
+    if (breedBtn) {
+        breedBtn.addEventListener('click', function() {
+            const key = this.dataset.key;
+            startBreeding(key);
+        });
+    }
+    
+    return catCard;
+}
+
+// 修改渲染机票函数，添加分享按钮
+function renderTicket(ticket, container, options = {}) {
+    const ticketEl = document.createElement('div');
+    ticketEl.className = 'ticket-item';
+    ticketEl.dataset.key = ticket.key;
+    
+    let ticketHTML = `
+        <div class="ticket-header">
+            <h3>${ticket.destination || '未知目的地'}</h3>
+            <div class="ticket-actions">
+                <button class="action-btn share-btn" title="分享" onclick="shareTicket('${ticket.key}')">📤</button>
+    `;
+    
+    // 添加使用按钮
+    if (options.showUse !== false) {
+        ticketHTML += `<button class="action-btn use-btn" title="使用" data-key="${ticket.key}">✈️</button>`;
+    }
+    
+    // 添加删除按钮
+    if (options.showRemove !== false) {
+        ticketHTML += `<button class="action-btn remove-btn" title="删除" data-key="${ticket.key}">🗑️</button>`;
+    }
+    
+    ticketHTML += `
+            </div>
+        </div>
+        <div class="ticket-body">
+            <div class="ticket-attribute">类型: <span>${ticket.type || '普通'}</span></div>
+            <div class="ticket-attribute">有效期: <span>${formatDate(ticket.expireTime)}</span></div>
+            <div class="ticket-attribute">价格: <span>${ticket.price || 0}金币</span></div>
+            <div class="ticket-description">${ticket.description || '无描述'}</div>
+        </div>
+    `;
+    
+    ticketEl.innerHTML = ticketHTML;
+    container.appendChild(ticketEl);
+    
+    // 添加事件监听器
+    const useBtn = ticketEl.querySelector('.use-btn');
+    if (useBtn) {
+        useBtn.addEventListener('click', function() {
+            const key = this.dataset.key;
+            useTicket(key);
+        });
+    }
+    
+    const removeBtn = ticketEl.querySelector('.remove-btn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function() {
+            const key = this.dataset.key;
+            removeTicket(key);
+        });
+    }
+    
+    return ticketEl;
+}
+
+// 格式化日期
+function formatDate(dateString) {
+    if (!dateString) return '未知';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '无效日期';
+    
+    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+}
+
+// 辅助函数 - 显示状态消息
+function showStatusMessage(message, type = 'info') {
+    const statusEl = document.createElement('div');
+    statusEl.className = `status-message ${type}`;
+    statusEl.textContent = message;
+    
+    document.body.appendChild(statusEl);
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+        statusEl.classList.add('fade-out');
+        setTimeout(() => statusEl.remove(), 500);
+    }, 3000);
+}
+
+// 加载用户的分享列表
+async function loadMyShares() {
+    try {
+        const sharesContainer = document.getElementById('sharesDisplay');
+        if (!sharesContainer) return;
+        
+        sharesContainer.innerHTML = '<div class="loading">加载中...</div>';
+        
+        const shares = await ApiManager.get('share/my-shares');
+        
+        if (!shares || shares.length === 0) {
+            sharesContainer.innerHTML = '<div class="no-data">暂无分享内容</div>';
+            document.getElementById('sharesCount').textContent = '0';
+            return;
+        }
+        
+        // 更新分享计数
+        document.getElementById('sharesCount').textContent = shares.length.toString();
+        
+        // 清空容器
+        sharesContainer.innerHTML = '';
+        
+        // 渲染分享项目
+        shares.forEach(share => {
+            const shareItem = document.createElement('div');
+            shareItem.className = 'share-item';
+            
+            let itemName = '未知项目';
+            let itemType = share.type === 'cat' ? '猫咪' : '机票';
+            
+            if (share.itemDetails) {
+                if (share.type === 'cat') {
+                    itemName = share.itemDetails.name || '未命名猫咪';
+                } else {
+                    itemName = `前往${share.itemDetails.destination || '未知'}的机票`;
+                }
+            }
+            
+            const expireDate = new Date(share.expireAt);
+            const now = new Date();
+            const daysLeft = Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24));
+            
+            shareItem.innerHTML = `
+                <div class="share-item-header">
+                    <span class="share-item-type">${itemType}</span>
+                    <span class="share-item-name">${itemName}</span>
+                    <div class="share-item-actions">
+                        <button class="action-btn share-again-btn" title="再次分享" onclick="showShareDialog('${share.shareUrl}', '${share.code}')">📤</button>
+                        <button class="action-btn delete-share-btn" title="删除分享" data-code="${share.code}">🗑️</button>
+                    </div>
+                </div>
+                <div class="share-item-body">
+                    <div class="share-item-info">
+                        <span class="share-item-code">分享码: ${share.code}</span>
+                        <span class="share-item-expire">有效期: 还剩 ${daysLeft} 天</span>
+                    </div>
+                    <div class="share-item-url-container">
+                        <input type="text" readonly value="${share.shareUrl}" class="share-item-url" />
+                        <button class="copy-btn" onclick="copyShareItemUrl(this)">复制</button>
+                    </div>
+                </div>
+            `;
+            
+            sharesContainer.appendChild(shareItem);
+            
+            // 添加删除事件监听器
+            const deleteBtn = shareItem.querySelector('.delete-share-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    const code = this.dataset.code;
+                    deleteShare(code);
+                });
+            }
+        });
+    } catch (error) {
+        console.error('加载分享列表失败:', error);
+        const sharesContainer = document.getElementById('sharesDisplay');
+        if (sharesContainer) {
+            sharesContainer.innerHTML = '<div class="error">加载失败，请重试</div>';
+        }
+    }
+}
+
+// 删除分享
+async function deleteShare(shareCode) {
+    try {
+        if (!confirm('确定要删除这个分享吗？')) {
+            return;
+        }
+        
+        await ApiManager.delete(`share/delete/${shareCode}`);
+        showStatusMessage('分享已删除', 'success');
+        
+        // 重新加载分享列表
+        loadMyShares();
+    } catch (error) {
+        console.error('删除分享失败:', error);
+        showStatusMessage(`删除失败: ${error.message}`, 'error');
+    }
+}
+
+// 复制分享项目的URL
+function copyShareItemUrl(button) {
+    const urlInput = button.parentElement.querySelector('.share-item-url');
+    urlInput.select();
+    document.execCommand('copy');
+    
+    const originalText = button.textContent;
+    button.textContent = '已复制';
+    button.style.background = '#4caf50';
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '';
+    }, 1500);
+}
+
+// // 在初始化标签页函数中添加我的分享标签页
+// function initTabs() {
+//     // ... existing code ...
+    
+//     // 添加缺少的我的分享标签页初始化
+//     const mySharesBtn = document.querySelector('.travel-tab-btn[data-tab="my-shares"]');
+//     if (mySharesBtn) {
+//         mySharesBtn.addEventListener('click', function() {
+//             // 切换标签页
+//             document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+//             this.classList.add('active');
+            
+//             document.querySelectorAll('.travel-tab-content').forEach(content => content.classList.remove('active'));
+//             document.getElementById('my-shares').classList.add('active');
+            
+//             // 加载分享内容
+//             loadMyShares();
+//         });
+//     }
+// }       mySharesBtn.addEventListener('click', function() {
+//             // 切换标签页
+//             document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+//             this.classList.add('active');
+            
+//             document.querySelectorAll('.travel-tab-content').forEach(content => content.classList.remove('active'));
+//             document.getElementById('my-shares').classList.add('active');
+            
+//             // 加载分享内容
+//             loadMyShares();
+//         });
+//     }
+// }

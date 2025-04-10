@@ -5,7 +5,7 @@
 const ApiManager = {
     // 获取存储的API URL或使用默认值
     getApiUrl: function() {
-        return localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        return localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
     },
 
     // 在页面上显示当前API URL

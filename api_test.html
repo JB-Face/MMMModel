@@ -93,11 +93,11 @@
     <div class="url-config">
         <h2>API服务器配置</h2>
         <div class="form-group">
-            <input type="text" id="api-base-url" value="http://localhost:3000/api" placeholder="输入API基础URL">
+            <input type="text" id="api-base-url" value="http://42.194.144.13:90/api" placeholder="输入API基础URL">
             <button onclick="updateApiUrl()">更新URL</button>
         </div>
         <div class="current-url">
-            当前API地址: <span id="current-api-url">http://localhost:3000/api</span>
+            当前API地址: <span id="current-api-url">http://42.194.144.13:90/api</span>
         </div>
     </div>
 
@@ -528,7 +528,7 @@
 
     <script>
         // 基础URL - 改为从localStorage获取或使用默认值
-        let API_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+        let API_URL = localStorage.getItem('api_base_url') || 'http://42.194.144.13:90/api';
 
         // 初始化显示当前URL
         document.getElementById('current-api-url').textContent = API_URL;

@@ -3,9 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMM_Model 0.5</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -55,6 +56,7 @@
                         <button class="travel-tab-btn active" data-tab="my-tickets">我的机票</button>
                         <button class="travel-tab-btn" data-tab="travel-plan">出游行程</button>
                         <button class="travel-tab-btn" data-tab="postcard-gallery">明信片图鉴</button>
+                        <button class="travel-tab-btn" data-tab="my-shares">我的分享</button>
                     </div>
 
                     <!-- 我的机票 -->
@@ -81,6 +83,15 @@
                             <span>已收集: <span id="postcardCount">0</span> 张</span>
                         </div>
                         <div id="postcardGallery" class="gallery-display"></div>
+                    </div>
+
+                    <!-- 我的分享 -->
+                    <div class="travel-tab-content" id="my-shares">
+                        <h3>我的分享</h3>
+                        <div class="shares-stats">
+                            <span>当前分享: <span id="sharesCount">0</span> 个</span>
+                        </div>
+                        <div id="sharesDisplay" class="shares-display"></div>
                     </div>
                 </div>
             </div>
@@ -192,6 +203,18 @@
                 travelPanel.classList.add('open');
                 travelPanel.previousElementSibling.classList.add('active');
             }
+
+            // 确保标签页正确初始化
+            setTimeout(() => {
+                // 手动初始化标签页，确保所有点击事件绑定正确
+                try {
+                    // 初始化标签页
+                    initTabs();
+                    console.log('标签页初始化成功');
+                } catch (e) {
+                    console.error('标签页初始化失败:', e);
+                }
+            }, 1000);
 
             // 已登录，启动游戏
             startGame();

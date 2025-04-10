@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分享内容 - MMM Model</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .share-content {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .share-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .share-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        
+        .share-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .share-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .primary-button {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .primary-button:hover {
+            background: #45a049;
+        }
+        
+        .secondary-button {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .secondary-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .owner-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="share-content">
+            <div class="share-header">
+                <h1>分享内容</h1>
+            </div>
+            <div id="shareContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取分享代码
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareCode = urlParams.get('code');
+
+        // API管理器
+        const ApiManager = {
+            getApiUrl: function() {
+                return localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+            },
+
+            get: async function(endpoint) {
+                try {
+                    const url = `${this.getApiUrl()}/${endpoint}`;
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || '请求失败');
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求错误:', error);
+                    throw error;
+                }
+            },
+
+            post: async function(endpoint, data) {
+                try {
+                    const url = `${this.getApiUrl()}/${endpoint}`;
+                    const token = localStorage.getItem('token');
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || '请求失败');
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求错误:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // 加载分享内容
+        async function loadShareContent() {
+            if (!shareCode) {
+                showError('无效的分享链接');
+                return;
+            }
+
+            try {
+                const data = await ApiManager.get(`share/view/${shareCode}`);
+                displayShareContent(data);
+            } catch (error) {
+                showError(error.message || '加载分享内容失败');
+            }
+        }
+
+        // 显示分享内容
+        function displayShareContent(data) {
+            const contentDiv = document.getElementById('shareContent');
+
+            if (!data || !data.item) {
+                showError('分享内容不存在或已过期');
+                return;
+            }
+
+            let html = '';
+            if (data.type === 'cat') {
+                html = displayCatContent(data);
+            } else if (data.type === 'ticket') {
+                html = displayTicketContent(data);
+            }
+
+            contentDiv.innerHTML = html;
+        }
+
+        // 显示猫咪内容
+        function displayCatContent(data) {
+            const cat = data.item;
+            return `
+                <div class="share-info">
+                    <h2>${cat.name || '未命名猫咪'}</h2>
+                    <div class="cat-details">
+                        <p>颜色: ${cat.Color || '未知'}</p>
+                        <p>性别: ${cat.性别?.value || '未知'}</p>
+                    </div>
+                    <div class="owner-info">
+                        <p>分享者: ${data.owner?.username || '未知'}</p>
+                    </div>
+                </div>
+                <div class="share-actions">
+                    <button onclick="addToBreedingPool()" class="share-button primary-button">添加到培育池</button>
+                    <button onclick="window.location.href='Game.html'" class="share-button secondary-button">返回游戏</button>
+                </div>
+            `;
+        }
+
+        // 显示机票内容
+        function displayTicketContent(data) {
+            const ticket = data.item;
+            return `
+                <div class="share-info">
+                    <h2>${getDestinationText(ticket.destination)}</h2>
+                    <div class="ticket-details">
+                        <p>类型: ${getTicketTypeText(ticket.type)}</p>
+                        <p>时长: ${formatDuration(ticket.duration)}</p>
+                    </div>
+                    <div class="owner-info">
+                        <p>分享者: ${data.owner?.username || '未知'}</p>
+                    </div>
+                </div>
+                <div class="share-actions">
+                    <button onclick="getTicket()" class="share-button primary-button">获取机票</button>
+                    <button onclick="window.location.href='Game.html'" class="share-button secondary-button">返回游戏</button>
+                </div>
+            `;
+        }
+
+        // 添加到培育池
+        async function addToBreedingPool() {
+            try {
+                const result = await ApiManager.post('share/cats/add', {
+                    shareCode
+                });
+                alert('成功添加到培育池！');
+                window.location.href = 'Game.html';
+            } catch (error) {
+                alert(error.message || '添加失败，请稍后再试');
+            }
+        }
+
+        // 获取机票
+        async function getTicket() {
+            try {
+                const result = await ApiManager.post('share/tickets/get', {
+                    shareCode
+                });
+                alert('成功获取机票！');
+                window.location.href = 'Game.html';
+            } catch (error) {
+                alert(error.message || '获取失败，请稍后再试');
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const contentDiv = document.getElementById('shareContent');
+            contentDiv.innerHTML = `
+                <div class="error">
+                    <p>${message}</p>
+                    <button onclick="window.location.href='Game.html'" class="share-button secondary-button">返回游戏</button>
+                </div>
+            `;
+        }
+
+        // 辅助函数
+        function getDestinationText(destination) {
+            if (destination === "0") return "随机目的地";
+            if (destination === "-1") return "任意目的地";
+            return `目的地 ${destination}`;
+        }
+
+        function getTicketTypeText(type) {
+            const typeMap = {
+                'regular': '普通机票',
+                'premium': '高级机票',
+                'business': '商务机票',
+                'special': '特殊机票'
+            };
+            return typeMap[type] || type;
+        }
+
+        function formatDuration(milliseconds) {
+            const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+            const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+            return `${hours}小时${minutes > 0 ? ` ${minutes}分钟` : ''}`;
+        }
+
+        // 页面加载时执行
+        window.onload = loadShareContent;
+    </script>
+</body>
+
+</html>
