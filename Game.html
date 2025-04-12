@@ -6,7 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMM_Model 0.5</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- 加载QRCode库 -->
+    <script src="lib/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // 检查QRCode库加载状态
+        window.qrCodeLoaded = false;
+        window.addEventListener('load', function() {
+            if (typeof QRCode !== 'undefined') {
+                console.log('QRCode库已成功加载');
+                window.qrCodeLoaded = true;
+            } else {
+                console.warn('QRCode库未加载，将使用备用方法');
+                // 如果CDN和本地库都加载失败，尝试再次加载本地库
+                var script = document.createElement('script');
+                script.src = 'lib/qrcode.min.js';
+                script.onload = function() {
+                    console.log('动态加载QRCode库成功');
+                    window.qrCodeLoaded = true;
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
 </head>
 
 <body>

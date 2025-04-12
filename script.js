@@ -3903,6 +3903,7 @@ async function loadMyTickets() {
                     <div class="ticket-duration">出游时长: ${formatDuration(ticket.duration)}</div>
                     <div class="ticket-actions">
                         <button onclick="useTicket('${ticket.key}')" class="primary-button">使用</button>
+                        <button class="action-btn share-btn" title="分享" onclick="shareTicket('${ticket.key}')">📤</button>
                     </div>
                 </div>
             `;
@@ -4462,19 +4463,64 @@ function showShareDialog(shareUrl, shareCode) {
     setTimeout(() => {
         try {
             console.log('开始生成二维码');
+            
+            // 动态检查和加载QRCode库
             if (typeof QRCode === 'undefined') {
-                throw new Error('QRCode library not loaded');
+                console.warn('QRCode库未加载，尝试动态加载');
+                
+                // 检查是否已经有QRCode脚本标签
+                if (!document.querySelector('script[src*="qrcode.min.js"]')) {
+                    const qrScript = document.createElement('script');
+                    qrScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+                    qrScript.onload = function() {
+                        console.log('QRCode库加载成功，重新尝试生成二维码');
+                        generateQRCode(shareUrl);
+                    };
+                    qrScript.onerror = function() {
+                        console.error('CDN QRCode库加载失败，尝试加载本地版本');
+                        const localScript = document.createElement('script');
+                        localScript.src = 'lib/qrcode.min.js';
+                        localScript.onload = function() {
+                            console.log('本地QRCode库加载成功');
+                            generateQRCode(shareUrl);
+                        };
+                        localScript.onerror = function() {
+                            console.error('本地QRCode库也加载失败，使用备用显示');
+                            showBackupQRDisplay(shareUrl);
+                        };
+                        document.head.appendChild(localScript);
+                    };
+                    document.head.appendChild(qrScript);
+                } else {
+                    // 已有脚本标签但库未加载，使用备用显示
+                    showBackupQRDisplay(shareUrl);
+                }
+                return;
             }
             
-            const qrcodeElement = document.getElementById('qrcode');
-            if (!qrcodeElement) {
-                throw new Error('QRCode container not found');
-            }
-            
-            // 清空容器
-            qrcodeElement.innerHTML = '';
-            
-            const qrcode = new QRCode(qrcodeElement, {
+            generateQRCode(shareUrl);
+        } catch (error) {
+            console.error('生成二维码失败:', error);
+            showBackupQRDisplay(shareUrl);
+        }
+    }, 100); // 给页面一点时间加载QRCode库
+}
+
+// 生成QR码的函数
+function generateQRCode(shareUrl) {
+    const qrcodeElement = document.getElementById('qrcode');
+    if (!qrcodeElement) {
+        console.error('QRCode容器不存在');
+        return;
+    }
+    
+    // 清空容器
+    qrcodeElement.innerHTML = '';
+    
+    try {
+        // 创建新的二维码
+        if (typeof QRCode.CorrectLevel !== 'undefined') {
+            new QRCode(qrcodeElement, {
                 text: shareUrl,
                 width: 128,
                 height: 128,
@@ -4482,21 +4528,30 @@ function showShareDialog(shareUrl, shareCode) {
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-            
             console.log('二维码生成完成');
-        } catch (error) {
-            console.error('生成二维码失败:', error);
-            const qrcodeContainer = document.getElementById('qrcode-container');
-            if (qrcodeContainer) {
-                qrcodeContainer.innerHTML = `
-                    <div style="text-align: center; padding: 10px;">
-                        <p style="color: #666;">二维码生成失败</p>
-                        <p style="color: #999; font-size: 0.9em;">请使用分享链接</p>
-                    </div>
-                `;
-            }
+        } else {
+            // 如果QRCode库不完整，使用备用显示
+            showBackupQRDisplay(shareUrl);
         }
-    }, 100); // 给页面一点时间加载QRCode库
+    } catch (error) {
+        console.error('生成QR码时出错:', error);
+        showBackupQRDisplay(shareUrl);
+    }
+}
+
+// 备用QR显示
+function showBackupQRDisplay(shareUrl) {
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    if (qrcodeContainer) {
+        qrcodeContainer.innerHTML = `
+            <div style="text-align: center; padding: 10px;">
+                <p style="color: #666;">无法生成二维码</p>
+                <a href="${shareUrl}" target="_blank" style="color: #4CAF50; text-decoration: underline;">
+                    打开分享链接
+                </a>
+            </div>
+        `;
+    }
 }
 
 // 复制分享链接

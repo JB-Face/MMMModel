@@ -6,6 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>分享内容 - MMM Model</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- 确保QRCode库先加载 -->
+    <script src="lib/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // 添加全局调试变量以检查QRCode状态
+        window.qrCodeStatus = {
+            cdnLoaded: false,
+            localLoaded: false,
+            available: false
+        };
+
+        // 在文档加载前检查QRCode
+        if (typeof QRCode !== 'undefined') {
+            console.log('QRCode 已经在头部加载');
+            window.qrCodeStatus.available = true;
+        }
+
+        // 检查CDN版本加载
+        const cdnScript = document.querySelector('script[src*="cdnjs.cloudflare.com/ajax/libs/qrcodejs"]');
+        if (cdnScript) {
+            cdnScript.onload = function() {
+                console.log('CDN QRCode 库加载成功');
+                window.qrCodeStatus.cdnLoaded = true;
+                window.qrCodeStatus.available = true;
+            };
+            cdnScript.onerror = function() {
+                console.error('CDN QRCode 库加载失败');
+            };
+        }
+
+        // 检查本地版本加载
+        const localScript = document.querySelector('script[src*="lib/qrcode.min.js"]');
+        if (localScript) {
+            localScript.onload = function() {
+                console.log('本地 QRCode 库加载成功');
+                window.qrCodeStatus.localLoaded = true;
+                window.qrCodeStatus.available = true;
+            };
+            localScript.onerror = function() {
+                console.error('本地 QRCode 库加载失败');
+            };
+        }
+    </script>
     <style>
         .share-content {
             max-width: 800px;
@@ -86,9 +129,10 @@
         <div class="share-content">
             <div class="share-header">
                 <h1>分享内容</h1>
+
             </div>
             <div id="shareContent">
-                <div class="loading">加载中...</div>
+
             </div>
         </div>
     </div>
@@ -164,6 +208,97 @@
             }
         }
 
+        // 生成二维码
+        function generateQRCode() {
+            console.log('开始生成二维码, QRCode状态:', typeof QRCode, window.qrCodeStatus);
+
+            // 如果QRCode未定义，尝试从window获取
+            if (typeof QRCode === 'undefined' && typeof window.QRCode !== 'undefined') {
+                console.log('从window中找到QRCode');
+                QRCode = window.QRCode;
+            }
+
+            // 如果仍然未定义，尝试再次加载
+            if (typeof QRCode === 'undefined') {
+                console.warn('QRCode仍然未定义，尝试重新加载库');
+                const script = document.createElement('script');
+                script.src = 'lib/qrcode.min.js';
+                script.onload = function() {
+                    console.log('动态加载QRCode库成功');
+                    createQRCode();
+                };
+                script.onerror = function() {
+                    console.error('动态加载QRCode库失败');
+                };
+                document.head.appendChild(script);
+                return;
+            }
+
+            createQRCode();
+        }
+
+        // 创建二维码的实际函数
+        function createQRCode() {
+            setTimeout(() => {
+                try {
+                    console.log('createQRCode: QRCode状态:', typeof QRCode);
+                    if (typeof QRCode === 'undefined') {
+                        throw new Error('QRCode library not loaded');
+                    }
+
+                    const qrcodeElement = document.getElementById('qrcode');
+                    if (!qrcodeElement) {
+                        throw new Error('QRCode container not found');
+                    }
+
+                    // 清空已有的二维码
+                    qrcodeElement.innerHTML = '';
+
+                    // 生成分享链接
+                    const shareUrl = window.location.href;
+
+                    // 直接使用JavaScript创建简单二维码
+                    if (typeof QRCode.CorrectLevel === 'undefined') {
+                        console.warn('使用简单模式生成二维码');
+                        qrcodeElement.innerHTML = `
+                            <div style="text-align:center;padding:10px;border:1px solid #000;width:128px;height:128px;margin:0 auto;">
+                                <p style="font-size:12px;">扫描分享链接</p>
+                                <a href="${shareUrl}" target="_blank">查看链接</a>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    console.log('使用QRCode库生成二维码:', shareUrl);
+
+                    // 创建新的二维码
+                    new QRCode(qrcodeElement, {
+                        text: shareUrl,
+                        width: 128,
+                        height: 128,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    console.log('二维码生成完成');
+                } catch (error) {
+                    console.error('生成二维码失败:', error);
+
+                    // 显示错误信息
+                    const qrcodeContainer = document.getElementById('qrcode-container');
+                    if (qrcodeContainer) {
+                        qrcodeContainer.innerHTML = `
+                            <div style="text-align: center; padding: 10px;">
+                                <p style="color: #666;">二维码生成失败: ${error.message}</p>
+                                <p style="color: #999; font-size: 0.9em;">请使用分享链接</p>
+                            </div>
+                        `;
+                    }
+                }
+            }, 500); // 增加延迟确保DOM和库都已加载
+        }
+
         // 显示分享内容
         function displayShareContent(data) {
             const contentDiv = document.getElementById('shareContent');
@@ -181,13 +316,22 @@
             }
 
             contentDiv.innerHTML = html;
+
+            // 生成二维码
+            console.log('内容显示完成，准备生成二维码');
+            // 确保页面渲染完成后再生成二维码
+            setTimeout(generateQRCode, 100);
         }
 
         // 显示猫咪内容
         function displayCatContent(data) {
-            const cat = data.item;
+            const cat = data.item.value;
+            const targetColor = cat.Color.replace(/\(淡化\d\)/g, '');
             return `
-                <div class="share-info">
+                <div class="share-info">                    
+                <div class="share-image">
+                    <img src="cropped_cats_webp/${targetColor}.webp" alt="分享的猫咪图片" style="max-width: 100%; height: auto;">
+                </div>
                     <h2>${cat.name || '未命名猫咪'}</h2>
                     <div class="cat-details">
                         <p>颜色: ${cat.Color || '未知'}</p>
@@ -195,6 +339,10 @@
                     </div>
                     <div class="owner-info">
                         <p>分享者: ${data.owner?.username || '未知'}</p>
+                    </div>
+                    <div id="qrcode-container" class="qrcode-container" style="text-align: center; margin-top: 20px;">
+                        <h3>分享二维码</h3>
+                        <div id="qrcode"></div>
                     </div>
                 </div>
                 <div class="share-actions">
@@ -216,6 +364,10 @@
                     </div>
                     <div class="owner-info">
                         <p>分享者: ${data.owner?.username || '未知'}</p>
+                    </div>
+                    <div id="qrcode-container" class="qrcode-container" style="text-align: center; margin-top: 20px;">
+                        <h3>分享二维码</h3>
+                        <div id="qrcode"></div>
                     </div>
                 </div>
                 <div class="share-actions">
@@ -286,7 +438,28 @@
         }
 
         // 页面加载时执行
-        window.onload = loadShareContent;
+        window.onload = function() {
+            console.log('页面加载完成，QRCode状态:', typeof QRCode, window.qrCodeStatus);
+            
+            // 如果QRCode未定义，确保加载库
+            if (typeof QRCode === 'undefined') {
+                console.warn('页面加载完成但QRCode未定义，尝试加载库');
+                var script = document.createElement('script');
+                script.src = 'lib/qrcode.min.js';
+                script.onload = function() {
+                    console.log('onload加载库成功');
+                    loadShareContent();
+                };
+                script.onerror = function() {
+                    console.error('onload加载库失败，仍将尝试加载内容');
+                    loadShareContent();
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log('QRCode已定义，直接加载内容');
+                loadShareContent();
+            }
+        };
     </script>
 </body>
 
